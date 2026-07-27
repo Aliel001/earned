@@ -1,0 +1,111 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum WithdrawStatus {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  username           String             @unique
+  phone_country_code String
+  phone_number       String             @unique
+  password_hash      String
+  language           String             @default("rn")
+  status             UserStatus         @default(pending)
+  created_at         DateTime           @default(now())
+  updated_at         DateTime           @updatedAt
+
+  wallet             Wallet?
+  image_likes        ImageLike[]
+  withdraw_requests  WithdrawRequest[]
+  notifications      Notification[]
+}
+
+model Admin {
+  id            String   @id @default(uuid())
+  username      String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+}
+
+model Wallet {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  balance    Float    @default(15000.0)
+  currency   String   @default("BIF")
+  updated_at DateTime @updatedAt
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Image {
+  id         String      @id @default(uuid())
+  image_url  String
+  title      String
+  reward     Int         @default(1000)
+  active     Boolean     @default(true)
+  created_at DateTime    @default(now())
+
+  likes      ImageLike[]
+}
+
+model ImageLike {
+  id         String   @id @default(uuid())
+  user_id    String
+  image_id   String
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  image      Image    @relation(fields: [image_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, image_id])
+}
+
+model WithdrawRequest {
+  id              String         @id @default(uuid())
+  user_id         String
+  amount          Float
+  payment_account String
+  status          WithdrawStatus @default(pending)
+  admin_message   String?
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  user            User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model PaymentSettings {
+  id                   String   @id @default("default")
+  account_number       String   @default("+257 69 00 11 22")
+  whatsapp_number      String   @default("+257 69 00 11 22")
+  ussd_code            String   @default("*163#")
+  payment_instructions String   @default("Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.")
+  updated_at           DateTime @updatedAt
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  user_id    String
+  title      String
+  message    String
+  read       Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
