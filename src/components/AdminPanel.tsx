@@ -52,8 +52,8 @@ export const AdminPanel: React.FC = () => {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadAllAdminData = async () => {
-    setLoading(true);
+  const loadAllAdminData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const [sData, uData, wData, pData, iData] = await Promise.all([
         adminApi.getStats().catch(() => null),
@@ -63,20 +63,26 @@ export const AdminPanel: React.FC = () => {
         adminApi.getImages().catch(() => []),
       ]);
 
-      setStats(sData);
-      setUsers(uData);
-      setWithdraws(wData);
-      setPaymentSettings(pData);
-      setImages(iData);
+      if (sData) setStats(sData);
+      setUsers(Array.isArray(uData) ? uData : []);
+      setWithdraws(Array.isArray(wData) ? wData : []);
+      if (pData) setPaymentSettings(pData);
+      setImages(Array.isArray(iData) ? iData : []);
     } catch {
       // ignore
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadAllAdminData();
+    // Real-time polling every 3 seconds for admin dashboard
+    const interval = setInterval(() => {
+      loadAllAdminData(true);
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   interface NavItem {
@@ -240,7 +246,7 @@ export const AdminPanel: React.FC = () => {
           </div>
 
           <button
-            onClick={loadAllAdminData}
+            onClick={() => loadAllAdminData()}
             disabled={loading}
             className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition"
             title="Refresh Data"

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
+import { PrismaClient } from '@prisma/client';
 import { PRODUCT_LIBRARY } from '../data/productLibrary';
 import {
   AdminStats,
@@ -15,6 +16,36 @@ import {
   WithdrawRequest,
   WithdrawStatus,
 } from '../types';
+
+let prisma: PrismaClient | null = null;
+if (process.env.DATABASE_URL) {
+  try {
+    prisma = new PrismaClient();
+    console.log('[Database] PrismaClient initialized for PostgreSQL connection.');
+  } catch (err) {
+    console.error('[Database] PrismaClient initialization error:', err);
+  }
+}
+
+async function seedDefaultAdmin() {
+  if (prisma) {
+    try {
+      const adminCount = await prisma.admin.count();
+      if (adminCount === 0) {
+        await prisma.admin.create({
+          data: {
+            username: 'admin',
+            password_hash: bcrypt.hashSync('admin123', 10),
+          },
+        });
+        console.log('[Database] Default admin account seeded in PostgreSQL.');
+      }
+    } catch (err) {
+      console.error('[Database] Error seeding default admin:', err);
+    }
+  }
+}
+seedDefaultAdmin();
 
 interface StoreData {
   users: (User & { password_hash: string })[];
@@ -60,7 +91,7 @@ const INITIAL_STORE: StoreData = {
       phone_number: '79887766',
       password_hash: bcrypt.hashSync('password123', 10),
       language: 'rn',
-      status: 'pending',
+      status: 'approved',
       created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
     },
   ],
@@ -171,9 +202,10 @@ class LocalDatabase {
         const parsed = JSON.parse(raw);
         if (!parsed.images || parsed.images.length < 100) {
           parsed.images = PRODUCT_LIBRARY;
-          this.saveStore({ ...INITIAL_STORE, ...parsed });
         }
-        return { ...INITIAL_STORE, ...parsed };
+        const merged = { ...INITIAL_STORE, ...parsed };
+        this.saveStore(merged);
+        return merged;
       }
     } catch (err) {
       console.error('Failed to load store, using defaults:', err);
@@ -191,19 +223,219 @@ class LocalDatabase {
     }
   }
 
+  private async syncUserToPrismaIfNeeded(userId: string) {
+    if (!prisma) return null;
+    try {
+      let dbUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (!dbUser) {
+        const memUser = this.store.users.find((u) => u.id === userId);
+        if (memUser) {
+          dbUser = await prisma.user.create({
+            data: {
+              id: memUser.id,
+              username: memUser.username,
+              phone_country_code: memUser.phone_country_code || '+257',
+              phone_number: memUser.phone_number || '',
+              password_hash: memUser.password_hash || '',
+              language: memUser.language || 'rn',
+              status: memUser.status || 'approved',
+            },
+          });
+          await prisma.wallet.upsert({
+            where: { user_id: memUser.id },
+            create: { user_id: memUser.id, balance: 15000.0, currency: 'BIF' },
+            update: {},
+          }).catch(() => {});
+        }
+      }
+      return dbUser;
+    } catch (err) {
+      console.warn('[Prisma] syncUserToPrismaIfNeeded warning:', err);
+      return null;
+    }
+  }
+
+  private async syncImageToPrismaIfNeeded(imageId: string) {
+    if (!prisma) return null;
+    try {
+      let dbImage = await prisma.image.findUnique({ where: { id: imageId } });
+      if (!dbImage) {
+        const memImg = this.store.images.find((i) => i.id === imageId) || PRODUCT_LIBRARY.find((p) => p.id === imageId);
+        if (memImg) {
+          dbImage = await prisma.image.create({
+            data: {
+              id: memImg.id,
+              title: memImg.title,
+              image_url: memImg.image_url,
+              reward: memImg.reward || 1000,
+              active: memImg.active ?? true,
+            },
+          });
+        }
+      }
+      return dbImage;
+    } catch (err) {
+      console.warn('[Prisma] syncImageToPrismaIfNeeded warning:', err);
+      return null;
+    }
+  }
+
   // Users
+  async findUserExactByUsername(username: string) {
+    const clean = username.trim().toLowerCase().replace(/^@/, '');
+    if (prisma) {
+      try {
+        const dbUser = await prisma.user.findFirst({
+          where: {
+            username: {
+              equals: clean,
+              mode: 'insensitive',
+            },
+          },
+        });
+        if (dbUser) {
+          return {
+            id: dbUser.id,
+            username: dbUser.username,
+            phone_country_code: dbUser.phone_country_code,
+            phone_number: dbUser.phone_number,
+            password_hash: dbUser.password_hash,
+            language: dbUser.language as any,
+            status: dbUser.status as UserStatus,
+            created_at: dbUser.created_at.toISOString(),
+          };
+        }
+      } catch (err) {
+        console.error('[Prisma] findUserExactByUsername error:', err);
+      }
+    }
+    return this.store.users.find((u) => u.username.toLowerCase().replace(/^@/, '') === clean);
+  }
+
   async findUserByUsername(username: string) {
-    return this.store.users.find((u) => u.username.toLowerCase() === username.toLowerCase());
+    const clean = username.trim().toLowerCase().replace(/^@/, '');
+    const digitsOnly = username.replace(/\D/g, '');
+
+    if (prisma) {
+      try {
+        let dbUser = await prisma.user.findFirst({
+          where: {
+            username: {
+              equals: clean,
+              mode: 'insensitive',
+            },
+          },
+        });
+
+        if (!dbUser && digitsOnly.length >= 6) {
+          dbUser = await prisma.user.findFirst({
+            where: {
+              phone_number: {
+                contains: digitsOnly,
+              },
+            },
+          });
+        }
+
+        if (dbUser) {
+          return {
+            id: dbUser.id,
+            username: dbUser.username,
+            phone_country_code: dbUser.phone_country_code,
+            phone_number: dbUser.phone_number,
+            password_hash: dbUser.password_hash,
+            language: dbUser.language as any,
+            status: dbUser.status as UserStatus,
+            created_at: dbUser.created_at.toISOString(),
+          };
+        }
+      } catch (err) {
+        console.error('[Prisma] findUserByUsername error:', err);
+      }
+    }
+
+    return this.store.users.find((u) => {
+      // Direct username match
+      if (u.username.toLowerCase() === clean) return true;
+
+      // Phone number match if user typed phone number into login username field
+      if (digitsOnly.length >= 6) {
+        const fullPhoneDigits = (u.phone_country_code + u.phone_number).replace(/\D/g, '');
+        const phoneOnlyDigits = u.phone_number.replace(/\D/g, '');
+        if (
+          fullPhoneDigits === digitsOnly ||
+          phoneOnlyDigits === digitsOnly ||
+          (digitsOnly.length >= 8 && (digitsOnly.endsWith(phoneOnlyDigits) || phoneOnlyDigits.endsWith(digitsOnly)))
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    });
   }
 
   async findUserByPhone(phoneCountryCode: string, phoneNumber: string) {
-    const cleanNumber = phoneNumber.replace(/\s+/g, '');
-    return this.store.users.find(
-      (u) => u.phone_country_code === phoneCountryCode && u.phone_number.replace(/\s+/g, '') === cleanNumber
-    );
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    const cleanCode = phoneCountryCode.replace(/\D/g, '');
+
+    if (prisma) {
+      try {
+        const dbUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { phone_number: phoneNumber.trim() },
+              ...(cleanNumber ? [{ phone_number: cleanNumber }] : []),
+              ...(cleanNumber ? [{ phone_number: { contains: cleanNumber } }] : []),
+            ],
+          },
+        });
+        if (dbUser) {
+          return {
+            id: dbUser.id,
+            username: dbUser.username,
+            phone_country_code: dbUser.phone_country_code,
+            phone_number: dbUser.phone_number,
+            password_hash: dbUser.password_hash,
+            language: dbUser.language as any,
+            status: dbUser.status as UserStatus,
+            created_at: dbUser.created_at.toISOString(),
+          };
+        }
+      } catch (err) {
+        console.error('[Prisma] findUserByPhone error:', err);
+      }
+    }
+
+    return this.store.users.find((u) => {
+      const dbPhone = u.phone_number.replace(/\D/g, '');
+      const dbCode = u.phone_country_code.replace(/\D/g, '');
+      return (dbCode === cleanCode && dbPhone === cleanNumber) || u.phone_number.trim() === phoneNumber.trim();
+    });
   }
 
   async findUserById(id: string) {
+    if (prisma) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { id },
+        });
+        if (dbUser) {
+          return {
+            id: dbUser.id,
+            username: dbUser.username,
+            phone_country_code: dbUser.phone_country_code,
+            phone_number: dbUser.phone_number,
+            password_hash: dbUser.password_hash,
+            language: dbUser.language as any,
+            status: dbUser.status as UserStatus,
+            created_at: dbUser.created_at.toISOString(),
+          };
+        }
+      } catch (err) {
+        console.error('[Prisma] findUserById error:', err);
+      }
+    }
     return this.store.users.find((u) => u.id === id);
   }
 
@@ -214,6 +446,63 @@ class LocalDatabase {
     password_hash: string;
     language: 'rn' | 'rw' | 'en' | 'fr';
   }) {
+    if (prisma) {
+      const createdUser = await prisma.user.create({
+        data: {
+          username: data.username,
+          phone_country_code: data.phone_country_code,
+          phone_number: data.phone_number,
+          password_hash: data.password_hash,
+          language: data.language || 'rn',
+          status: 'pending',
+          wallet: {
+            create: {
+              balance: 15000.0,
+              currency: 'BIF',
+            },
+          },
+          notifications: {
+            create: {
+              title: "Bonus y'Ikaze (Welcome Bonus)",
+              message:
+                'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa.',
+              read: false,
+            },
+          },
+        },
+        include: {
+          wallet: true,
+        },
+      });
+
+      const formattedUser = {
+        id: createdUser.id,
+        username: createdUser.username,
+        phone_country_code: createdUser.phone_country_code,
+        phone_number: createdUser.phone_number,
+        password_hash: createdUser.password_hash,
+        language: createdUser.language as any,
+        status: createdUser.status as UserStatus,
+        created_at: createdUser.created_at.toISOString(),
+      };
+
+      // Sync into store
+      this.store.users.unshift(formattedUser);
+      if (createdUser.wallet) {
+        this.store.wallets.unshift({
+          id: createdUser.wallet.id,
+          user_id: createdUser.wallet.user_id,
+          balance: createdUser.wallet.balance,
+          currency: createdUser.wallet.currency,
+          updated_at: createdUser.wallet.updated_at.toISOString(),
+        });
+      }
+      this.saveStore();
+
+      const { password_hash, ...userWithoutPassword } = formattedUser;
+      return { ...userWithoutPassword, wallet: createdUser.wallet };
+    }
+
     const id = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const user = {
       id,
@@ -226,7 +515,7 @@ class LocalDatabase {
       created_at: new Date().toISOString(),
     };
 
-    this.store.users.push(user);
+    this.store.users.unshift(user);
 
     // Create wallet with 15000 BIF welcome bonus
     const wallet: Wallet = {
@@ -236,7 +525,7 @@ class LocalDatabase {
       currency: 'BIF',
       updated_at: new Date().toISOString(),
     };
-    this.store.wallets.push(wallet);
+    this.store.wallets.unshift(wallet);
 
     // Create notification
     const notif: NotificationItem = {
@@ -247,7 +536,7 @@ class LocalDatabase {
       read: false,
       created_at: new Date().toISOString(),
     };
-    this.store.notifications.push(notif);
+    this.store.notifications.unshift(notif);
 
     this.saveStore();
 
@@ -266,12 +555,38 @@ class LocalDatabase {
   }
 
   async updateUserStatus(id: string, status: UserStatus) {
+    if (prisma) {
+      try {
+        const statusMsgs: Record<UserStatus, string> = {
+          approved: 'Konte yawe yemewe n\'Ubuyobozi! Mutangure gukoresha TwigaMart ukunde amafoto n\'okugira inyungu.',
+          pending: 'Konte yawe irarindiriye kwemerwa.',
+          rejected: 'Ubusabe bwa konte yawe bwanzwe n\'ubuyobozi.',
+          suspended: 'Konte yawe irahagaritswe by\'agateganyo.',
+        };
+
+        await prisma.user.update({
+          where: { id },
+          data: {
+            status: status as any,
+            notifications: {
+              create: {
+                title: `Hindura Inyifato: ${status.toUpperCase()}`,
+                message: statusMsgs[status] || `Inyifato ya konte yawe yahindutse: ${status}`,
+                read: false,
+              },
+            },
+          },
+        });
+      } catch (err) {
+        console.error('[Prisma] updateUserStatus error:', err);
+      }
+    }
+
     const user = this.store.users.find((u) => u.id === id);
     if (user) {
       user.status = status;
       user.updated_at = new Date().toISOString();
 
-      // Add status update notification
       const statusMsgs: Record<UserStatus, string> = {
         approved: 'Konte yawe yemewe n\'Ubuyobozi! Mutangure gukoresha TwigaMart ukunde amafoto n\'okugira inyungu.',
         pending: 'Konte yawe irarindiriye kwemerwa.',
@@ -279,7 +594,7 @@ class LocalDatabase {
         suspended: 'Konte yawe irahagaritswe by\'agateganyo.',
       };
 
-      this.store.notifications.push({
+      this.store.notifications.unshift({
         id: `notif_${Date.now()}`,
         user_id: id,
         title: `Hindura Inyifato: ${status.toUpperCase()}`,
@@ -297,6 +612,22 @@ class LocalDatabase {
     id: string,
     updates: { username?: string; phone_country_code?: string; phone_number?: string; status?: UserStatus }
   ) {
+    if (prisma) {
+      try {
+        await prisma.user.update({
+          where: { id },
+          data: {
+            ...(updates.username ? { username: updates.username } : {}),
+            ...(updates.phone_country_code ? { phone_country_code: updates.phone_country_code } : {}),
+            ...(updates.phone_number ? { phone_number: updates.phone_number } : {}),
+            ...(updates.status ? { status: updates.status as any } : {}),
+          },
+        });
+      } catch (err) {
+        console.error('[Prisma] updateUserAccount error:', err);
+      }
+    }
+
     const user = this.store.users.find((u) => u.id === id);
     if (!user) throw new Error('User not found');
 
@@ -327,6 +658,38 @@ class LocalDatabase {
   }
 
   async getAllUsers() {
+    if (prisma) {
+      try {
+        const dbUsers = await prisma.user.findMany({
+          include: { wallet: true },
+          orderBy: { created_at: 'desc' },
+        });
+        if (dbUsers) {
+          return dbUsers.map((u) => {
+            const { password_hash, ...rest } = u;
+            return {
+              ...rest,
+              language: u.language as any,
+              status: u.status as UserStatus,
+              created_at: u.created_at.toISOString(),
+              updated_at: u.updated_at.toISOString(),
+              wallet: u.wallet
+                ? {
+                    id: u.wallet.id,
+                    user_id: u.wallet.user_id,
+                    balance: u.wallet.balance,
+                    currency: u.wallet.currency,
+                    updated_at: u.wallet.updated_at.toISOString(),
+                  }
+                : undefined,
+            };
+          });
+        }
+      } catch (err) {
+        console.error('[Prisma] getAllUsers error:', err);
+      }
+    }
+
     return this.store.users.map((u) => {
       const { password_hash, ...rest } = u;
       const wallet = this.store.wallets.find((w) => w.user_id === u.id);
@@ -378,6 +741,37 @@ class LocalDatabase {
 
   // Wallet
   async getWalletByUserId(userId: string) {
+    if (prisma) {
+      try {
+        let wallet = await prisma.wallet.findUnique({ where: { user_id: userId } });
+        if (!wallet) {
+          const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+          if (dbUser) {
+            wallet = await prisma.wallet.upsert({
+              where: { user_id: userId },
+              create: {
+                user_id: userId,
+                balance: 15000.0,
+                currency: 'BIF',
+              },
+              update: {},
+            });
+          }
+        }
+        if (wallet) {
+          return {
+            id: wallet.id,
+            user_id: wallet.user_id,
+            balance: wallet.balance,
+            currency: wallet.currency,
+            updated_at: wallet.updated_at.toISOString(),
+          };
+        }
+      } catch (err: any) {
+        console.warn('[Prisma] getWalletByUserId warning:', err?.message || err);
+      }
+    }
+
     let wallet = this.store.wallets.find((w) => w.user_id === userId);
     if (!wallet) {
       wallet = {
@@ -394,6 +788,49 @@ class LocalDatabase {
   }
 
   async updateUserBalance(userId: string, action: 'add' | 'reduce' | 'set', amount: number, note?: string) {
+    if (prisma) {
+      try {
+        const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (dbUser) {
+          const current = await this.getWalletByUserId(userId);
+          let newBal = current.balance;
+          if (action === 'add') newBal += amount;
+          else if (action === 'reduce') newBal = Math.max(0, newBal - amount);
+          else if (action === 'set') newBal = Math.max(0, amount);
+
+          const updated = await prisma.wallet.upsert({
+            where: { user_id: userId },
+            create: {
+              user_id: userId,
+              balance: newBal,
+              currency: 'BIF',
+            },
+            update: { balance: newBal },
+          });
+
+          await prisma.notification.create({
+            data: {
+              user_id: userId,
+              title: 'Igapuri Yawe Yahindutse (Wallet Balance Updated)',
+              message: `Amafaranga ari mu gapuri kawe ubu ni: ${newBal.toLocaleString()} BIF.${
+                note ? ` Ubumenyeshi bw'Admin: "${note}"` : ''
+              }`,
+            },
+          }).catch((e) => console.warn('[Prisma] notification create error:', e?.message));
+
+          return {
+            id: updated.id,
+            user_id: updated.user_id,
+            balance: updated.balance,
+            currency: updated.currency,
+            updated_at: updated.updated_at.toISOString(),
+          };
+        }
+      } catch (err: any) {
+        console.warn('[Prisma] updateUserBalance warning:', err?.message || err);
+      }
+    }
+
     const wallet = await this.getWalletByUserId(userId);
     if (action === 'add') {
       wallet.balance += amount;
@@ -422,11 +859,71 @@ class LocalDatabase {
 
   // Admin
   async getAdminByUsername(username: string) {
+    if (prisma) {
+      try {
+        const dbAdmin = await prisma.admin.findFirst({
+          where: { username: { equals: username, mode: 'insensitive' } },
+        });
+        if (dbAdmin) {
+          return {
+            id: dbAdmin.id,
+            username: dbAdmin.username,
+            password_hash: dbAdmin.password_hash,
+          };
+        }
+      } catch (err) {
+        console.error('[Prisma] getAdminByUsername error:', err);
+      }
+    }
     return this.store.admins.find((a) => a.username.toLowerCase() === username.toLowerCase());
   }
 
   // Images & Likes
   async getAllImages(userId?: string) {
+    if (prisma) {
+      try {
+        const count = await prisma.image.count();
+        if (count === 0 && PRODUCT_LIBRARY && PRODUCT_LIBRARY.length > 0) {
+          console.log('[Prisma] Seeding PRODUCT_LIBRARY into Neon PostgreSQL Image table...');
+          for (const item of PRODUCT_LIBRARY) {
+            await prisma.image.create({
+              data: {
+                id: item.id,
+                title: item.title,
+                image_url: item.image_url,
+                reward: item.reward || 1000,
+                active: item.active ?? true,
+              },
+            }).catch((err) => console.error('[Prisma] Seed image error:', err));
+          }
+        }
+
+        const dbImages = await prisma.image.findMany({
+          include: { likes: true },
+          orderBy: { created_at: 'asc' },
+        });
+
+        if (dbImages && dbImages.length > 0) {
+          return dbImages.map((img) => {
+            const likes_count = img.likes.length;
+            const user_liked = userId ? img.likes.some((l) => l.user_id === userId) : false;
+            return {
+              id: img.id,
+              title: img.title,
+              image_url: img.image_url,
+              reward: img.reward,
+              active: img.active,
+              likes_count,
+              user_liked,
+              created_at: img.created_at.toISOString(),
+            };
+          });
+        }
+      } catch (err) {
+        console.error('[Prisma] getAllImages error:', err);
+      }
+    }
+
     return this.store.images.map((img) => {
       const likes_count = this.store.likes.filter((l) => l.image_id === img.id).length;
       const user_liked = userId ? this.store.likes.some((l) => l.image_id === img.id && l.user_id === userId) : false;
@@ -435,6 +932,29 @@ class LocalDatabase {
   }
 
   async createImage(data: { title: string; image_url: string; reward: number; active: boolean }) {
+    if (prisma) {
+      try {
+        const img = await prisma.image.create({
+          data: {
+            title: data.title,
+            image_url: data.image_url,
+            reward: Number(data.reward) || 1000,
+            active: data.active ?? true,
+          },
+        });
+        return {
+          id: img.id,
+          title: img.title,
+          image_url: img.image_url,
+          reward: img.reward,
+          active: img.active,
+          created_at: img.created_at.toISOString(),
+        };
+      } catch (err) {
+        console.error('[Prisma] createImage error:', err);
+      }
+    }
+
     const image: ImageItem = {
       id: `img_${Date.now()}`,
       title: data.title,
@@ -449,6 +969,30 @@ class LocalDatabase {
   }
 
   async updateImage(id: string, data: Partial<ImageItem>) {
+    if (prisma) {
+      try {
+        const updated = await prisma.image.update({
+          where: { id },
+          data: {
+            ...(data.title !== undefined && { title: data.title }),
+            ...(data.image_url !== undefined && { image_url: data.image_url }),
+            ...(data.reward !== undefined && { reward: Number(data.reward) }),
+            ...(data.active !== undefined && { active: data.active }),
+          },
+        });
+        return {
+          id: updated.id,
+          title: updated.title,
+          image_url: updated.image_url,
+          reward: updated.reward,
+          active: updated.active,
+          created_at: updated.created_at.toISOString(),
+        };
+      } catch (err) {
+        console.error('[Prisma] updateImage error:', err);
+      }
+    }
+
     const img = this.store.images.find((i) => i.id === id);
     if (img) {
       if (data.title !== undefined) img.title = data.title;
@@ -461,6 +1005,14 @@ class LocalDatabase {
   }
 
   async deleteImage(id: string) {
+    if (prisma) {
+      try {
+        await prisma.image.delete({ where: { id } });
+      } catch (err) {
+        console.error('[Prisma] deleteImage error:', err);
+      }
+    }
+
     this.store.images = this.store.images.filter((i) => i.id !== id);
     this.store.likes = this.store.likes.filter((l) => l.image_id !== id);
     this.saveStore();
@@ -468,6 +1020,64 @@ class LocalDatabase {
   }
 
   async likeImage(userId: string, imageId: string) {
+    if (prisma) {
+      try {
+        const dbUser = await this.syncUserToPrismaIfNeeded(userId);
+        const dbImage = await this.syncImageToPrismaIfNeeded(imageId);
+
+        if (dbUser && dbImage) {
+          if (dbUser.status !== 'approved') {
+            throw new Error('Konte yawe igomba kwemerwa n\'ubuyobozi mbere yo gukunda amafoto (Account must be approved first).');
+          }
+          if (!dbImage.active) {
+            throw new Error('Iyi foto ntiyakora mu gihe gihaye');
+          }
+
+          const existing = await prisma.imageLike.findUnique({
+            where: {
+              user_id_image_id: { user_id: userId, image_id: imageId },
+            },
+          });
+          if (existing) {
+            throw new Error('Wamaze gukunda iyi foto! (Already liked this image)');
+          }
+
+          await prisma.imageLike.create({
+            data: {
+              user_id: userId,
+              image_id: imageId,
+            },
+          });
+
+          const rewardAmount = dbImage.reward || 1000;
+          const wallet = await prisma.wallet.upsert({
+            where: { user_id: userId },
+            create: { user_id: userId, balance: 15000.0 + rewardAmount, currency: 'BIF' },
+            update: { balance: { increment: rewardAmount } },
+          });
+
+          await prisma.notification.create({
+            data: {
+              user_id: userId,
+              title: `Wakoreye ${rewardAmount.toLocaleString()} BIF!`,
+              message: `Urakoze gukunda: "${dbImage.title}". Agashimwe k'amafaranga ${rewardAmount.toLocaleString()} BIF kagiriwe mu gapuri kawe.`,
+            },
+          }).catch((e) => console.warn('[Prisma] notification warning:', e?.message));
+
+          return {
+            success: true,
+            reward: rewardAmount,
+            new_balance: wallet.balance,
+          };
+        }
+      } catch (err: any) {
+        if (err.message && (err.message.includes('not found') || err.message.includes('Wamaze') || err.message.includes('Konte'))) {
+          throw err;
+        }
+        console.warn('[Prisma] likeImage warning, falling back to memory:', err?.message || err);
+      }
+    }
+
     const user = await this.findUserById(userId);
     if (!user) throw new Error('User not found');
     if (user.status !== 'approved') {
@@ -520,6 +1130,64 @@ class LocalDatabase {
 
   // Withdrawals
   async createWithdrawRequest(userId: string, amount: number, paymentAccount: string) {
+    if (prisma) {
+      try {
+        const dbUser = await this.syncUserToPrismaIfNeeded(userId);
+        if (dbUser) {
+          if (dbUser.status !== 'approved') throw new Error('Konte yawe igomba kwemerwa n\'ubuyobozi (Account pending approval).');
+
+          if (amount < 5000) {
+            throw new Error('Ingano ya muke yo kwaka ni 5,000 BIF (Minimum withdrawal is 5,000 BIF).');
+          }
+
+          const wallet = await this.getWalletByUserId(userId);
+          if (wallet.balance < amount) {
+            throw new Error('Nta mafaranga ahagije ari mu gapuri kawe (Insufficient wallet balance).');
+          }
+
+          // Deduct pending balance from wallet
+          await prisma.wallet.update({
+            where: { user_id: userId },
+            data: { balance: { decrement: amount } },
+          });
+
+          const request = await prisma.withdrawRequest.create({
+            data: {
+              user_id: userId,
+              amount,
+              payment_account: paymentAccount,
+              status: 'pending',
+            },
+          });
+
+          await prisma.notification.create({
+            data: {
+              user_id: userId,
+              title: 'Ubusabe bwo kwaka amafaranga bwagize success',
+              message: `Ubusabe bwawe bwa ${amount.toLocaleString()} BIF BIF kuri numero ${paymentAccount} bwagize success. Buririndiriye kuremurwa n'ubuyobozi.`,
+            },
+          }).catch(() => {});
+
+          return {
+            id: request.id,
+            user_id: request.user_id,
+            username: dbUser.username,
+            phone_number: `${dbUser.phone_country_code}${dbUser.phone_number}`,
+            amount: request.amount,
+            payment_account: request.payment_account,
+            status: request.status as any,
+            created_at: request.created_at.toISOString(),
+            updated_at: request.updated_at.toISOString(),
+          };
+        }
+      } catch (err: any) {
+        if (err.message && (err.message.includes('not found') || err.message.includes('pending') || err.message.includes('Minimum') || err.message.includes('Insufficient'))) {
+          throw err;
+        }
+        console.warn('[Prisma] createWithdrawRequest warning, falling back to memory:', err?.message || err);
+      }
+    }
+
     const user = await this.findUserById(userId);
     if (!user) throw new Error('User not found');
     if (user.status !== 'approved') throw new Error('Konte yawe igomba kwemerwa n\'ubuyobozi (Account pending approval).');
@@ -564,14 +1232,114 @@ class LocalDatabase {
   }
 
   async getUserWithdrawRequests(userId: string) {
+    if (prisma) {
+      try {
+        const dbRequests = await prisma.withdrawRequest.findMany({
+          where: { user_id: userId },
+          include: { user: true },
+          orderBy: { created_at: 'desc' },
+        });
+        if (dbRequests) {
+          return dbRequests.map((w) => ({
+            id: w.id,
+            user_id: w.user_id,
+            username: w.user?.username || '',
+            phone_number: w.user ? `${w.user.phone_country_code}${w.user.phone_number}` : '',
+            amount: w.amount,
+            payment_account: w.payment_account,
+            status: w.status as any,
+            admin_message: w.admin_message || undefined,
+            created_at: w.created_at.toISOString(),
+            updated_at: w.updated_at.toISOString(),
+          }));
+        }
+      } catch (err) {
+        console.error('[Prisma] getUserWithdrawRequests error:', err);
+      }
+    }
     return this.store.withdraws.filter((w) => w.user_id === userId);
   }
 
   async getAllWithdrawRequests() {
+    if (prisma) {
+      try {
+        const dbRequests = await prisma.withdrawRequest.findMany({
+          include: { user: true },
+          orderBy: { created_at: 'desc' },
+        });
+        if (dbRequests) {
+          return dbRequests.map((w) => ({
+            id: w.id,
+            user_id: w.user_id,
+            username: w.user?.username || '',
+            phone_number: w.user ? `${w.user.phone_country_code}${w.user.phone_number}` : '',
+            amount: w.amount,
+            payment_account: w.payment_account,
+            status: w.status as any,
+            admin_message: w.admin_message || undefined,
+            created_at: w.created_at.toISOString(),
+            updated_at: w.updated_at.toISOString(),
+          }));
+        }
+      } catch (err) {
+        console.error('[Prisma] getAllWithdrawRequests error:', err);
+      }
+    }
     return this.store.withdraws;
   }
 
   async updateWithdrawRequestStatus(id: string, status: WithdrawStatus, adminMessage?: string) {
+    if (prisma) {
+      try {
+        const req = await prisma.withdrawRequest.findUnique({ where: { id } });
+        if (!req) throw new Error('Withdrawal request not found');
+
+        const oldStatus = req.status;
+        const updated = await prisma.withdrawRequest.update({
+          where: { id },
+          data: {
+            status,
+            admin_message: adminMessage,
+          },
+          include: { user: true },
+        });
+
+        // Refund if rejected from pending
+        if (oldStatus === 'pending' && status === 'rejected') {
+          await prisma.wallet.update({
+            where: { user_id: req.user_id },
+            data: { balance: { increment: req.amount } },
+          });
+        }
+
+        await prisma.notification.create({
+          data: {
+            user_id: req.user_id,
+            title: `Ubusabe bwa ${req.amount.toLocaleString()} BIF: ${status.toUpperCase()}`,
+            message: `Ubusabe bwawe bwa ${req.amount.toLocaleString()} BIF BIF bwagize inyifato: ${status}.${
+              adminMessage ? ` Ubumenyeshi bw'Admin: "${adminMessage}"` : ''
+            }`,
+          },
+        });
+
+        return {
+          id: updated.id,
+          user_id: updated.user_id,
+          username: updated.user?.username || '',
+          phone_number: updated.user ? `${updated.user.phone_country_code}${updated.user.phone_number}` : '',
+          amount: updated.amount,
+          payment_account: updated.payment_account,
+          status: updated.status as any,
+          admin_message: updated.admin_message || undefined,
+          created_at: updated.created_at.toISOString(),
+          updated_at: updated.updated_at.toISOString(),
+        };
+      } catch (err: any) {
+        if (err.message && err.message.includes('not found')) throw err;
+        console.error('[Prisma] updateWithdrawRequestStatus error:', err);
+      }
+    }
+
     const req = this.store.withdraws.find((w) => w.id === id);
     if (!req) throw new Error('Withdrawal request not found');
 
@@ -607,10 +1375,62 @@ class LocalDatabase {
 
   // Payment Settings
   async getPaymentSettings(): Promise<PaymentSettings> {
+    if (prisma) {
+      try {
+        let ps = await prisma.paymentSettings.findUnique({ where: { id: 'default' } });
+        if (!ps) {
+          ps = await prisma.paymentSettings.create({
+            data: {
+              id: 'default',
+              account_number: '+257 69 00 11 22',
+              whatsapp_number: '+257 69 00 11 22',
+              ussd_code: '*163#',
+              payment_instructions: 'Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.',
+            },
+          });
+        }
+        return {
+          account_number: ps.account_number,
+          whatsapp_number: ps.whatsapp_number,
+          ussd_code: ps.ussd_code,
+          payment_instructions: ps.payment_instructions,
+        };
+      } catch (err) {
+        console.error('[Prisma] getPaymentSettings error:', err);
+      }
+    }
     return this.store.paymentSettings;
   }
 
   async updatePaymentSettings(data: Partial<PaymentSettings>) {
+    if (prisma) {
+      try {
+        const ps = await prisma.paymentSettings.upsert({
+          where: { id: 'default' },
+          create: {
+            id: 'default',
+            account_number: data.account_number || '+257 69 00 11 22',
+            whatsapp_number: data.whatsapp_number || '+257 69 00 11 22',
+            ussd_code: data.ussd_code || '*163#',
+            payment_instructions: data.payment_instructions || '',
+          },
+          update: {
+            ...(data.account_number !== undefined && { account_number: data.account_number }),
+            ...(data.whatsapp_number !== undefined && { whatsapp_number: data.whatsapp_number }),
+            ...(data.ussd_code !== undefined && { ussd_code: data.ussd_code }),
+            ...(data.payment_instructions !== undefined && { payment_instructions: data.payment_instructions }),
+          },
+        });
+        return {
+          account_number: ps.account_number,
+          whatsapp_number: ps.whatsapp_number,
+          ussd_code: ps.ussd_code,
+          payment_instructions: ps.payment_instructions,
+        };
+      } catch (err) {
+        console.error('[Prisma] updatePaymentSettings error:', err);
+      }
+    }
     this.store.paymentSettings = { ...this.store.paymentSettings, ...data };
     this.saveStore();
     return this.store.paymentSettings;
@@ -618,10 +1438,40 @@ class LocalDatabase {
 
   // Notifications
   async getUserNotifications(userId: string) {
+    if (prisma) {
+      try {
+        const dbNotifs = await prisma.notification.findMany({
+          where: { user_id: userId },
+          orderBy: { created_at: 'desc' },
+        });
+        if (dbNotifs) {
+          return dbNotifs.map((n) => ({
+            id: n.id,
+            user_id: n.user_id,
+            title: n.title,
+            message: n.message,
+            read: n.read,
+            created_at: n.created_at.toISOString(),
+          }));
+        }
+      } catch (err) {
+        console.error('[Prisma] getUserNotifications error:', err);
+      }
+    }
     return this.store.notifications.filter((n) => n.user_id === userId);
   }
 
   async markNotificationsRead(userId: string) {
+    if (prisma) {
+      try {
+        await prisma.notification.updateMany({
+          where: { user_id: userId, read: false },
+          data: { read: true },
+        });
+      } catch (err) {
+        console.error('[Prisma] markNotificationsRead error:', err);
+      }
+    }
     this.store.notifications.forEach((n) => {
       if (n.user_id === userId) n.read = true;
     });
@@ -631,6 +1481,32 @@ class LocalDatabase {
 
   // User Profile Updates
   async updateUserProfile(userId: string, data: Partial<User>) {
+    if (prisma) {
+      try {
+        const updatedUser = await prisma.user.update({
+          where: { id: userId },
+          data: {
+            ...(data.username && { username: data.username }),
+            ...(data.phone_number && { phone_number: data.phone_number }),
+            ...(data.phone_country_code && { phone_country_code: data.phone_country_code }),
+            ...(data.language && { language: data.language }),
+          },
+        });
+        const { password_hash, ...rest } = updatedUser;
+        const wallet = await this.getWalletByUserId(userId);
+        return {
+          ...rest,
+          language: rest.language as any,
+          status: rest.status as any,
+          created_at: rest.created_at.toISOString(),
+          updated_at: rest.updated_at.toISOString(),
+          wallet,
+        };
+      } catch (err) {
+        console.error('[Prisma] updateUserProfile error:', err);
+      }
+    }
+
     const user = this.store.users.find((u) => u.id === userId);
     if (!user) throw new Error('User not found');
 
@@ -675,6 +1551,67 @@ class LocalDatabase {
 
   // Admin stats
   async getAdminStats(): Promise<AdminStats> {
+    if (prisma) {
+      try {
+        const total_users = await prisma.user.count();
+        const pending_users = await prisma.user.count({ where: { status: 'pending' } });
+        const approved_users = await prisma.user.count({ where: { status: 'approved' } });
+        const total_images = await prisma.image.count();
+        const active_images = await prisma.image.count({ where: { active: true } });
+        const total_withdrawals_count = await prisma.withdrawRequest.count();
+        const pending_withdraws = await prisma.withdrawRequest.count({ where: { status: 'pending' } });
+        
+        const approvedWithdraws = await prisma.withdrawRequest.findMany({ where: { status: 'approved' } });
+        const total_payouts = approvedWithdraws.reduce((sum, w) => sum + w.amount, 0);
+
+        const walletAgg = await prisma.wallet.aggregate({ _sum: { balance: true } });
+        const total_wallet_balance = walletAgg._sum.balance || 0;
+
+        const gen = await this.getGeneralSettings();
+
+        const recentUsers = await prisma.user.findMany({ take: 5, orderBy: { created_at: 'desc' } });
+        const recentWithdraws = await prisma.withdrawRequest.findMany({ take: 5, orderBy: { created_at: 'desc' }, include: { user: true } });
+
+        const userActs = recentUsers.map((u) => ({
+          id: `act-u-${u.id}`,
+          type: 'user',
+          title: `New User: @${u.username}`,
+          description: `Registered with status [${u.status.toUpperCase()}]`,
+          time: u.created_at.toISOString(),
+        }));
+
+        const withdrawActs = recentWithdraws.map((w) => ({
+          id: `act-w-${w.id}`,
+          type: 'withdraw',
+          title: `Withdrawal: ${w.amount.toLocaleString()} BIF`,
+          description: `Requested by @${w.user?.username || 'User'} - Status: ${w.status.toUpperCase()}`,
+          time: w.created_at.toISOString(),
+        }));
+
+        const recent_activities = [...userActs, ...withdrawActs]
+          .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+          .slice(0, 8);
+
+        return {
+          total_users,
+          pending_users,
+          approved_users,
+          total_images,
+          active_images,
+          pending_withdraws,
+          total_withdrawals_count,
+          total_payouts,
+          todays_withdrawals: recentWithdraws.length,
+          total_wallet_balance,
+          registration_bonus: gen.registration_bonus,
+          app_status: gen.maintenance_mode ? 'maintenance' : 'online',
+          recent_activities,
+        };
+      } catch (err) {
+        console.error('[Prisma] getAdminStats error:', err);
+      }
+    }
+
     const total_users = this.store.users.length;
     const pending_users = this.store.users.filter((u) => u.status === 'pending').length;
     const approved_users = this.store.users.filter((u) => u.status === 'approved').length;

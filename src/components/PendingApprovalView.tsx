@@ -67,12 +67,19 @@ export const PendingApprovalView: React.FC = () => {
           </p>
         </div>
 
-        {/* Explanation Description */}
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed px-2">
-          {isPending && t('registration_pending_desc', language)}
-          {isRejected && 'Ubusabe bwa konte yawe bwanzwe n\'ubuyobozi. Vugana n\'ubuyobozi kuri WhatsApp niba ufise ikibazo.'}
-          {isSuspended && 'Konte yawe irahagaritswe by\'agateganyo. Vugana n\'Ubuyobozi kuri WhatsApp.'}
-        </p>
+        {/* Registration Success & Pending Approval Notification Card */}
+        {isPending && (
+          <div className="bg-amber-500/10 dark:bg-amber-500/15 border-2 border-amber-500/40 rounded-2xl p-4 text-left space-y-2 text-xs backdrop-blur-md">
+            <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-amber-500" />
+              <span>ITANGAZO: Konte Irindiriye Kwemerwa (Pending Approval)</span>
+            </div>
+            <p className="text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
+              Urakoze kwiyandikisha! Konte yawe yaremewe neza. Nyamuneka tegereza ko Ubuyobozi (Admin) buyemeza ("gutegereza admin approval"). 
+              Ukimara kwemerwa, utangira gukora amafaranga no kubikuza.
+            </p>
+          </div>
+        )}
 
         {/* Contact Admin Actions */}
         {paymentSettings && (() => {

@@ -53,7 +53,7 @@ export const UserLayout: React.FC = () => {
   const loadData = async () => {
     if (!user) {
       paymentApi.getSettings().then(setPaymentSettings).catch(console.error);
-      imagesApi.getImages().then(setImages).catch(console.error);
+      imagesApi.getImages().then((res) => setImages(Array.isArray(res) ? res : [])).catch(console.error);
       return;
     }
 
@@ -66,10 +66,10 @@ export const UserLayout: React.FC = () => {
         paymentApi.getSettings().catch(() => null),
       ]);
 
-      setImages(imgRes);
+      setImages(Array.isArray(imgRes) ? imgRes : []);
       setWallet(wallRes);
-      setWithdrawRequests(wdrRes);
-      setNotifications(notifRes);
+      setWithdrawRequests(Array.isArray(wdrRes) ? wdrRes : []);
+      setNotifications(Array.isArray(notifRes) ? notifRes : []);
       setPaymentSettings(payRes);
     } catch (err) {
       console.error('Failed to load user data:', err);
@@ -78,6 +78,13 @@ export const UserLayout: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    // Real-time background sync every 3 seconds
+    const interval = setInterval(() => {
+      loadData();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleOpenAuth = (mode: 'login' | 'register') => {

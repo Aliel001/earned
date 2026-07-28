@@ -74,63 +74,89 @@ async function startServer() {
 
   // Register User
   app.post('/api/auth/register', async (req: Request, res: Response) => {
+    console.log('[API] POST /api/auth/register - Body:', JSON.stringify({ ...req.body, password: '***' }, null, 2));
+
     try {
       const { username, phone_country_code, phone_number, password, language } = req.body;
 
-      if (!username || !phone_country_code || !phone_number || !password) {
-        return res.status(400).json({ error: 'Nyamuneka uzuze imyanya yose ikenewe (Please fill in all required fields)' });
+      if (!username || !username.trim()) {
+        console.warn('[Register Validation Failed] Username missing');
+        return res.status(400).json({ error: 'Nyamuneka uzuze izina ry\'umukoresha (Please enter a username)' });
+      }
+
+      if (!phone_country_code || !phone_number || !phone_number.trim()) {
+        console.warn('[Register Validation Failed] Phone number missing');
+        return res.status(400).json({ error: 'Nyamuneka uzuze numero ya telefoni (Please enter a phone number)' });
+      }
+
+      if (!password) {
+        console.warn('[Register Validation Failed] Password missing');
+        return res.status(400).json({ error: 'Nyamuneka uzuze inyandiko y\'ibanga (Please enter a password)' });
       }
 
       if (password.length < 6) {
+        console.warn('[Register Validation Failed] Password length < 6');
         return res.status(400).json({ error: 'Inyandiko y\'ibanga igomba kuba ifite inyuguti nibura 6 (Password must be at least 6 characters)' });
       }
 
+      const cleanUsername = username.trim();
+      const cleanPhone = phone_number.trim();
+
       // Check existing username
-      const existingUser = await db.findUserByUsername(username);
+      const existingUser = await db.findUserExactByUsername(cleanUsername);
       if (existingUser) {
-        return res.status(400).json({ error: 'Iri zina ry\'umukoresha ryarakoreshejwe (Username is already taken)' });
+        console.warn(`[Register Validation Failed] Duplicate username: ${cleanUsername}`);
+        return res.status(409).json({ error: 'Iri zina ry\'umukoresha ryarakoreshejwe (Username is already taken)' });
       }
 
       // Check existing phone number
-      const existingPhone = await db.findUserByPhone(phone_country_code, phone_number);
+      const existingPhone = await db.findUserByPhone(phone_country_code, cleanPhone);
       if (existingPhone) {
-        return res.status(400).json({ error: 'Iyi numero ya telefoni yarakoreshejwe (Phone number is already registered)' });
+        console.warn(`[Register Validation Failed] Duplicate phone: ${cleanPhone}`);
+        return res.status(409).json({ error: 'Iyi numero ya telefoni yarakoreshejwe (Phone number is already registered)' });
       }
 
-      const password_hash = await bcrypt.hash(password, 10);
+      const password_hash = await bcrypt.hash(password.trim(), 10);
 
-      const user = await db.createUser({
-        username,
+      const createdUser = await db.createUser({
+        username: cleanUsername,
         phone_country_code,
-        phone_number,
+        phone_number: cleanPhone,
         password_hash,
         language: language || 'rn',
       });
 
-      const token = jwt.sign(
-        { id: user.id, username: user.username, role: 'user' },
-        JWT_SECRET,
-        { expiresIn: '30d' }
-      );
+      console.log(`[Register Success] Created user: ${createdUser.id} (@${createdUser.username}) in database.`);
 
       res.status(201).json({
-        token,
-        user,
-        role: 'user',
-        message: 'Kwirangisha byagenze neza! Bonus ya 15,000 BIF yongewe mu gapuri kawe.',
+        success: true,
+        message: 'Your account has been created successfully. It is waiting for administrator approval. You will be able to log in after your account is approved.',
+        user: createdUser,
       });
     } catch (err: any) {
-      console.error('Register error:', err);
-      res.status(500).json({ error: err.message || 'Server error during registration' });
+      console.error('[Register Server Error]:', err);
+      if (err.stack) console.error(err.stack);
+
+      if (err.code === 'P2002') {
+        const target = err.meta?.target || [];
+        return res.status(409).json({
+          error: `Iri zina cyangwa numero ya telefoni byarakoreshejwe (Duplicate record: ${Array.isArray(target) ? target.join(', ') : 'unique constraint violation'})`,
+        });
+      }
+
+      res.status(500).json({ error: err.message || 'An error occurred during registration. Please try again later.' });
     }
   });
 
   // Login User or Admin
   app.post('/api/auth/login', async (req: Request, res: Response) => {
+    console.log('[API] POST /api/auth/login - Username:', req.body?.username);
+
     try {
       const { username, password } = req.body;
 
       if (!username || !password) {
+        console.warn('[Login Validation Failed] Missing credentials');
         return res.status(400).json({ error: 'Andika izina n\'inyandiko y\'ibanga (Username and password required)' });
       }
 
@@ -144,6 +170,7 @@ async function startServer() {
             JWT_SECRET,
             { expiresIn: '30d' }
           );
+          console.log(`[Login Success] Admin: @${admin.username}`);
           return res.json({
             token,
             user: { id: admin.id, username: admin.username, status: 'approved' },
@@ -155,16 +182,35 @@ async function startServer() {
       // Otherwise check user
       const user = await db.findUserByUsername(username);
       if (!user) {
-        return res.status(400).json({ error: 'Izina cyangwa inyandiko y\'ibanga si byo (Invalid credentials)' });
+        console.warn(`[Login Failed] User @${username} not found`);
+        return res.status(400).json({ error: 'Izina cyangwa inyandiko y\'ibanga si byo (Invalid username or password)' });
       }
 
-      const isMatch = await bcrypt.compare(password, user.password_hash);
+      const isMatch = (await bcrypt.compare(password, user.password_hash)) || (await bcrypt.compare(password.trim(), user.password_hash));
       if (!isMatch) {
-        return res.status(400).json({ error: 'Izina cyangwa inyandiko y\'ibanga si byo (Invalid credentials)' });
+        console.warn(`[Login Failed] Invalid password for @${username}`);
+        return res.status(400).json({ error: 'Izina cyangwa inyandiko y\'ibanga si byo (Invalid username or password)' });
+      }
+
+      // Check user status before issuing session/token
+      if (user.status === 'pending') {
+        console.warn(`[Login Blocked] User @${username} status is PENDING`);
+        return res.status(403).json({ error: 'Your account is waiting for administrator approval.' });
+      }
+
+      if (user.status === 'rejected') {
+        console.warn(`[Login Blocked] User @${username} status is REJECTED`);
+        return res.status(403).json({ error: 'Your account has been rejected. Please contact the administrator.' });
       }
 
       if (user.status === 'suspended') {
-        return res.status(403).json({ error: 'Konte yawe irahagaritswe n\'ubuyobozi (Account suspended by admin)' });
+        console.warn(`[Login Blocked] User @${username} status is SUSPENDED`);
+        return res.status(403).json({ error: 'Your account has been suspended by the administrator.' });
+      }
+
+      if (user.status !== 'approved') {
+        console.warn(`[Login Blocked] User @${username} status is ${user.status}`);
+        return res.status(403).json({ error: 'Your account is not approved for login.' });
       }
 
       const wallet = await db.getWalletByUserId(user.id);
@@ -176,14 +222,17 @@ async function startServer() {
         { expiresIn: '30d' }
       );
 
+      console.log(`[Login Success] User: @${user.username} (${user.id})`);
+
       res.json({
         token,
         user: { ...userWithoutPassword, wallet },
         role: 'user',
       });
     } catch (err: any) {
-      console.error('Login error:', err);
-      res.status(500).json({ error: err.message || 'Server error during login' });
+      console.error('[Login Server Error]:', err);
+      if (err.stack) console.error(err.stack);
+      res.status(500).json({ error: 'An error occurred during login. Please try again later.' });
     }
   });
 
@@ -265,6 +314,17 @@ async function startServer() {
       const user = await db.findUserById(req.user!.id);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (user.status !== 'approved') {
+        return res.status(403).json({
+          error:
+            user.status === 'pending'
+              ? 'Your account is waiting for administrator approval.'
+              : user.status === 'rejected'
+              ? 'Your account has been rejected. Please contact the administrator.'
+              : 'Your account has been suspended by the administrator.',
+        });
       }
 
       const wallet = await db.getWalletByUserId(user.id);

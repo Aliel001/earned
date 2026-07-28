@@ -1,0 +1,1407 @@
+{
+  "users": [
+    {
+      "id": "a046bbbf-3a24-4266-be3a-435c76da206a",
+      "username": "fk_test_1785177719066",
+      "phone_country_code": "+257",
+      "phone_number": "79553323",
+      "password_hash": "$2b$10$TKcha6m8eIaoff0tVPMU3eEgF2Z4oaUiwK2Is32nfoR4gQjOlpGT2",
+      "language": "rn",
+      "status": "pending",
+      "created_at": "2026-07-27T18:41:59.704Z"
+    },
+    {
+      "id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
+      "username": "resource_test_1785163767341",
+      "phone_country_code": "+257",
+      "phone_number": "79459408",
+      "password_hash": "$2b$10$HSvd4G/pt73nrKqwWb695ecf52s5G9qEy3Pn6tzy7ObqNbFG9TJrS",
+      "language": "rn",
+      "status": "pending",
+      "created_at": "2026-07-27T14:49:28.612Z"
+    },
+    {
+      "id": "7f717f64-32bb-49fb-9ce8-524e953c045b",
+      "username": "test_fix_1785163385364",
+      "phone_country_code": "+257",
+      "phone_number": "79408577",
+      "password_hash": "$2b$10$6HGdDaYSwsCI7g3zAvm.y.0j1PypliSkJKA8qXllmyK1GpYUd0x/u",
+      "language": "rn",
+      "status": "pending",
+      "created_at": "2026-07-27T14:43:05.759Z"
+    },
+    {
+      "id": "faf98725-0816-4da9-bc21-689b41e5ebc7",
+      "username": "test_fix_1785163371869",
+      "phone_country_code": "+257",
+      "phone_number": "79468401",
+      "password_hash": "$2b$10$wnsUByD6hjJXk.AWzdLin.EPlOWzzGvt.EXwoIuAhl4sVmngNjTU2",
+      "language": "rn",
+      "status": "pending",
+      "created_at": "2026-07-27T14:42:52.397Z"
+    },
+    {
+      "id": "b475970b-663f-41e5-a532-13b8fe673dd4",
+      "username": "test_fix_1785163356646",
+      "phone_country_code": "+257",
+      "phone_number": "79689871",
+      "password_hash": "$2b$10$XLRYL2XQSdCSMerYQBhg2.YBDGIXJsNevc.GJ42Keut1Bl.23v0gy",
+      "language": "rn",
+      "status": "pending",
+      "created_at": "2026-07-27T14:42:37.158Z"
+    },
+    {
+      "id": "b3b840d2-7cb6-49ae-bbef-4bbb24b194cf",
+      "username": "rowel",
+      "phone_country_code": "+250",
+      "phone_number": "789947858",
+      "password_hash": "$2b$10$7./EjtbP0Rn2u/j7.FYxLOyKaXOejkQpmYmQQYA34gEKys.EtX3h2",
+      "language": "rn",
+      "status": "pending",
+      "created_at": "2026-07-27T14:39:56.175Z"
+    },
+    {
+      "id": "fa83dd36-5a7c-425f-ac5c-7f7a31a0f7e6",
+      "username": "neon_verify_1785162773894",
+      "phone_country_code": "+257",
+      "phone_number": "79923471",
+      "password_hash": "$2b$10$XnEXiLojZWYiDl7aHOqrXOa5CXmg5seRSUY9XgagaaJlp4m8cHa3u",
+      "language": "rn",
+      "status": "approved",
+      "created_at": "2026-07-27T14:32:55.180Z",
+      "updated_at": "2026-07-27T14:32:58.585Z"
+    },
+    {
+      "id": "2a3ff26e-dd6f-451f-b4a6-bf4810af653f",
+      "username": "neon_test_user_1785161774209",
+      "phone_country_code": "+257",
+      "phone_number": "79228393",
+      "password_hash": "$2b$10$8r.6bP.eLFDqJveMMAHYrOhOi2yP3JpP3hp.1YNGGTy4gfnXB.OKW",
+      "language": "rn",
+      "status": "approved",
+      "created_at": "2026-07-27T14:16:15.584Z",
+      "updated_at": "2026-07-27T14:16:19.403Z"
+    },
+    {
+      "id": "26bf79d1-b607-48b1-9956-5f4ecc605cba",
+      "username": "testuser_db1",
+      "phone_country_code": "257",
+      "phone_number": "79001122",
+      "password_hash": "$2b$10$9/eoKirFTEoDBrn3ijrqu.MEiwj/p5.KTpuYFSwrJnZDvs53vDlua",
+      "language": "rn",
+      "status": "approved",
+      "created_at": "2026-07-27T14:08:21.971Z",
+      "updated_at": "2026-07-27T14:08:48.037Z"
+    },
+    {
+      "id": "usr_1785161202860_pq4k",
+      "username": "aliel",
+      "phone_country_code": "+257",
+      "phone_number": "6543123456",
+      "password_hash": "$2b$10$WYWHz1btdNxaESrIZfWNQO/2JIyjWzKMmhRNbY1SW85A8p/lA.Oe.",
+      "language": "en",
+      "status": "pending",
+      "created_at": "2026-07-27T14:06:42.860Z"
+    },
+    {
+      "id": "usr_demo_1",
+      "username": "keza_bujumbura",
+      "phone_country_code": "+257",
+      "phone_number": "69112233",
+      "password_hash": "$2b$10$w3Msagp1LrfVbsQXbdmg2u0gNLcrw1wHd3yfIMEyO7ckfFaxp2jIa",
+      "language": "rn",
+      "status": "approved",
+      "created_at": "2026-07-24T12:53:25.528Z"
+    },
+    {
+      "id": "usr_demo_2",
+      "username": "eric_gitega",
+      "phone_country_code": "+257",
+      "phone_number": "79887766",
+      "password_hash": "$2b$10$FsXyIYPIrIvkM02FzJ2wd.nJO9E1BQpqOZqxNj1O4Z0UObUPqIEh2",
+      "language": "rn",
+      "status": "approved",
+      "created_at": "2026-07-27T08:53:25.634Z"
+    },
+    {
+      "id": "usr_1785158868218_9bka",
+      "username": "amiel",
+      "phone_country_code": "+243",
+      "phone_number": "78965432",
+      "password_hash": "$2b$10$YbMBmlpq2roAsF1BXFvhM.vcQ2CiyrhbtdJ2A9x82Nws1CAbRMroW",
+      "language": "en",
+      "status": "approved",
+      "created_at": "2026-07-27T13:27:48.219Z"
+    },
+    {
+      "id": "usr_1785159818267_ebly",
+      "username": "Generas",
+      "phone_country_code": "+257",
+      "phone_number": "085236997",
+      "password_hash": "$2b$10$64bcUpFOaTsw1ykD/Ot6VebGLR.17YedVzSz/M379BOVfZ6nfViJ.",
+      "language": "fr",
+      "status": "approved",
+      "created_at": "2026-07-27T13:43:38.268Z"
+    }
+  ],
+  "admins": [
+    {
+      "id": "admin_1",
+      "username": "admin",
+      "password_hash": "$2b$10$vm4KWRP/kYBjCB0H.mLLw.d9n.SJk9UrmmTKcj8GS1RGM.qMF1.cS"
+    }
+  ],
+  "wallets": [
+    {
+      "id": "a4c68d01-cbaa-4a92-81b9-67e43ce45e3e",
+      "user_id": "a046bbbf-3a24-4266-be3a-435c76da206a",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T18:41:59.704Z"
+    },
+    {
+      "id": "4d2cd780-cd59-471c-b896-4182048aac15",
+      "user_id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
+      "balance": 12500,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:49:30.904Z"
+    },
+    {
+      "id": "fafe602f-3b10-4f02-8b76-9d8a1b7c73e9",
+      "user_id": "7f717f64-32bb-49fb-9ce8-524e953c045b",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:43:05.759Z"
+    },
+    {
+      "id": "91433619-154c-4253-ad52-61579387c870",
+      "user_id": "faf98725-0816-4da9-bc21-689b41e5ebc7",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:42:52.397Z"
+    },
+    {
+      "id": "bb3d613e-aaae-424d-b05d-5ca338976d80",
+      "user_id": "b475970b-663f-41e5-a532-13b8fe673dd4",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:42:37.158Z"
+    },
+    {
+      "id": "ff831aed-6cb5-4f5b-aef7-430b3adb49e3",
+      "user_id": "b3b840d2-7cb6-49ae-bbef-4bbb24b194cf",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:39:56.175Z"
+    },
+    {
+      "id": "742549e2-cc84-4376-a9b3-6565a2039431",
+      "user_id": "fa83dd36-5a7c-425f-ac5c-7f7a31a0f7e6",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:32:55.180Z"
+    },
+    {
+      "id": "a9905ba8-025f-4e84-8e42-328cb5f6f4a7",
+      "user_id": "2a3ff26e-dd6f-451f-b4a6-bf4810af653f",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:16:15.584Z"
+    },
+    {
+      "id": "cafed2b6-dcec-4e31-a00c-09ae958a583e",
+      "user_id": "26bf79d1-b607-48b1-9956-5f4ecc605cba",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:08:21.971Z"
+    },
+    {
+      "id": "w_1785161202860",
+      "user_id": "usr_1785161202860_pq4k",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T14:06:42.860Z"
+    },
+    {
+      "id": "w_demo_1",
+      "user_id": "usr_demo_1",
+      "balance": 18000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T12:53:25.634Z"
+    },
+    {
+      "id": "w_demo_2",
+      "user_id": "usr_demo_2",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T12:53:25.634Z"
+    },
+    {
+      "id": "w_1785158868219",
+      "user_id": "usr_1785158868218_9bka",
+      "balance": 15000,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T13:27:48.219Z"
+    },
+    {
+      "id": "w_1785159818268",
+      "user_id": "usr_1785159818267_ebly",
+      "balance": 0,
+      "currency": "BIF",
+      "updated_at": "2026-07-27T13:45:27.732Z"
+    }
+  ],
+  "images": [
+    {
+      "id": "img_car_1",
+      "title": "Mercedes-Benz S-Class Sedan - Obsidian Black",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_2",
+      "title": "BMW 7 Series Luxury Saloon - Mineral White",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_3",
+      "title": "Audi A8 Executive Sedan - Quartz Metallic",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_4",
+      "title": "Porsche Panamera Turbo - GT Silver",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_5",
+      "title": "Lexus LS 500 Executive - Sapphire Blue",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_6",
+      "title": "Toyota Land Cruiser Prado 250 - Pearl White",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_7",
+      "title": "Range Rover Velar Luxury SUV - Satin Black",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_8",
+      "title": "Hyundai Palisade Calligraphy - Dark Metallic",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_9",
+      "title": "Mazda CX-90 Turbo SUV - Soul Red Crystal",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_10",
+      "title": "Volkswagen Touareg R-Line - Shadow Grey",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_11",
+      "title": "Tesla Model S Plaid - Midnight Silver",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_12",
+      "title": "Hyundai Ioniq 5 EV - Matte Gold",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_13",
+      "title": "Porsche Taycan 4S Electric - Glacier Blue",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1570733117311-d990c3816c47?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_14",
+      "title": "BMW i4 M50 Gran Coupe - Frozen Portimao Blue",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_15",
+      "title": "Audi e-tron GT Quattro - Daytona Grey",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_16",
+      "title": "Toyota RAV4 Hybrid Family Crossover - Emerald Green",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_17",
+      "title": "Honda CR-V Executive - Radiant Red",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_18",
+      "title": "Subaru Outback All-Wheel Drive - Autumn Green",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_19",
+      "title": "Nissan X-Trail Family Edition - Champagne Silver",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_20",
+      "title": "Kia Sportage Hybrid - Steel Grey",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_21",
+      "title": "Porsche 911 Carrera S - Guards Red",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.293Z"
+    },
+    {
+      "id": "img_car_22",
+      "title": "Chevrolet Corvette C8 Stingray - Torch Red",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_car_23",
+      "title": "Ford Mustang GT V8 - Performance Blue",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_car_24",
+      "title": "Nissan GT-R Nismo - Bayside Blue",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_car_25",
+      "title": "Toyota GR Supra 3.0 - Nitro Yellow",
+      "category": "Cars",
+      "image_url": "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_1",
+      "title": "Kitenge Wax Print Ankara Maxi Dress",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_2",
+      "title": "Traditional African Modern Dashiki Shirt",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_3",
+      "title": "African Print Tailored Blazer Set",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_4",
+      "title": "Elegantly Styled Umushanana Traditional Dress",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_5",
+      "title": "African Ankara High-Waisted Trousers",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_6",
+      "title": "Italian Tailored Navy Blue Suit Jacket",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_7",
+      "title": "Classic Slim-Fit Cotton Oxford Shirt",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_8",
+      "title": "Men's Premium Wool Charcoal Trousers",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1400,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_9",
+      "title": "Handcrafted Leather Formal Tuxedo Vest",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1600,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_10",
+      "title": "Single-Breasted Charcoal Gentleman Blazer",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_11",
+      "title": "Silk Evening Gown with Accent Belt",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_12",
+      "title": "Floral Summer Sundress with Ruffle Trim",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1300,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_13",
+      "title": "Tailored Women's Cream Business Blazer",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1548624149-f1af3482b83a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1600,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_14",
+      "title": "Pleated Midi Skirt - Pastel Sage",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_15",
+      "title": "Classic Little Black Cocktail Dress",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1700,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_16",
+      "title": "Heavyweight Organic Cotton White T-Shirt",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_17",
+      "title": "Classic Blue Denim Trucker Jacket",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_18",
+      "title": "Unisex Fleece Pullover Hoodie - Moss Green",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1300,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_19",
+      "title": "Slim-Fit Chino Trousers - Beige",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_20",
+      "title": "Casual Linen Short-Sleeve Summer Shirt",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1100,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_21",
+      "title": "Genuine Biker Leather Jacket - Obsidian Black",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_22",
+      "title": "Quilted Winter Puffer Jacket - Matte Navy",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_23",
+      "title": "Waterproof Hooded Windbreaker Trench Coat",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1600,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_24",
+      "title": "Wool Blend Double-Breasted Winter Overcoat",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_fsh_25",
+      "title": "Casual Zip-Up Bomber Jacket - Olive Green",
+      "category": "Fashion",
+      "image_url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_1",
+      "title": "Minimalist Leather Low-Top White Sneakers",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_2",
+      "title": "Retro High-Top Basketball Canvas Sneakers",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1400,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_3",
+      "title": "Urban Chunky Streetwear Sneakers - Tri-Color",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_4",
+      "title": "Classic Canvas Slip-On Skate Shoes",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_5",
+      "title": "Performance Marathon Running Shoes - Neon Orange",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1600,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_6",
+      "title": "Lightweight Breathable Gym Cross-Trainers",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1300,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_7",
+      "title": "Trail Running All-Terrain Sports Shoes",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1400,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_8",
+      "title": "High-Traction Basketball Performance Sneakers",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1579338559194-a162d19bf842?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1700,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_9",
+      "title": "Handcrafted Italian Leather Oxford Dress Shoes",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_10",
+      "title": "Classic Brown Leather Monk Strap Shoes",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1614252369475-531eda835eb1?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_11",
+      "title": "Genuine Calfskin Leather Derby Dress Shoes",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1900,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_12",
+      "title": "Penny Loafer Slip-On Leather Shoes - Burgundy",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1582845844300-66970b282313?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1600,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_13",
+      "title": "Classic Pointed Stiletto Pumps - Ruby Red",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_14",
+      "title": "Nude Patent Leather High Heel Pumps",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1700,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_15",
+      "title": "Strappy Ankle-Wrap Evening Stiletto Sandals",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1900,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_16",
+      "title": "Chunky Block Heel Leather Pumps - Black",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_17",
+      "title": "Genuine Leather Casual Slide Sandals - Tan",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1603808033192-082d6919d3e1?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1100,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_18",
+      "title": "Handmade African Beaded Flat Sandals",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1562273138-f46be4ebdf33?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_19",
+      "title": "Comfortable Outdoor Sport Strap Sandals",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1621996346565-e3d5d6288019?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_sho_20",
+      "title": "Elegant Gold Metallic Leather Wedge Sandals",
+      "category": "Shoes",
+      "image_url": "https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1400,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_1",
+      "title": "Flagship Smartphone Pro - Titanium Grey",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_2",
+      "title": "Ultra-Slim OLED Display Smartphone - Phantom Black",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_3",
+      "title": "Next-Gen Foldable Dual-Screen Smartphone",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_4",
+      "title": "Ultra-Thin Metallic Laptop 15-inch - Space Gray",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_5",
+      "title": "High-Performance Gaming Laptop with RGB Keyboard",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_6",
+      "title": "Convertible 2-in-1 Touchscreen Convertible Laptop",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_7",
+      "title": "Active Noise-Cancelling Over-Ear Wireless Headphones",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_8",
+      "title": "True Wireless Studio Earbuds with Charging Case",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_9",
+      "title": "Hi-Fi Audiophile Studio Monitor Headphones",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_10",
+      "title": "Fitness Tracker Smartwatch with Heart Rate Monitor",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1300,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_11",
+      "title": "Luxury Stainless Steel Cellular Smartwatch",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_12",
+      "title": "Rugged Outdoor GPS Sports Smartwatch",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1600,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_13",
+      "title": "Professional Full-Frame Mirrorless Camera Body",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_14",
+      "title": "4K Vlogging Compact Digital Camera with Flip Screen",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_ele_15",
+      "title": "Vintage Retro-Style Instant Film Camera",
+      "category": "Electronics",
+      "image_url": "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1400,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_1",
+      "title": "Genuine Full-Grain Leather Executive Briefcase",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_2",
+      "title": "Designer Women's Shoulder Handbag - Beige",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1600,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_3",
+      "title": "Water-Resistant Travel Laptop Backpack - Charcoal",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1400,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_4",
+      "title": "Automatic Chronograph Stainless Steel Watch",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_5",
+      "title": "Classic Vintage Rose Gold Leather Watch",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_6",
+      "title": "Minimalist Matte Black Mesh Strap Wristwatch",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1500,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_7",
+      "title": "Mid-Century Modern Velvet Armchair - Emerald Green",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 2000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_8",
+      "title": "Minimalist Solid Oak Wood Coffee Table",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1532323544230-7191fd51bc1b?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1700,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_9",
+      "title": "Ergonomic Mesh Executive Office Desk Chair",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1580481072645-022f9a6d8310?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_10",
+      "title": "Organic Botanical Facial Hydrating Serum Set",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1608248597261-12501a457492?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1200,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_11",
+      "title": "Luxury Eau de Parfum Spray Bottle 100ml",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1800,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_12",
+      "title": "Natural Shea Butter Body Cream & Lip Oil",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1608248597261-12501a457492?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1100,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_13",
+      "title": "Hand-Poured Soy Scented Candle in Ceramic Jar",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1000,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_14",
+      "title": "Modern Ceramic Minimalist Flower Vase",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1100,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    },
+    {
+      "id": "img_oth_15",
+      "title": "Ultrasonic Essential Oil Aroma Diffuser with Wood Grain",
+      "category": "Other",
+      "image_url": "https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&w=800&h=800&q=80",
+      "reward": 1300,
+      "active": true,
+      "created_at": "2026-07-27T12:53:25.294Z"
+    }
+  ],
+  "likes": [
+    {
+      "id": "like_1",
+      "user_id": "usr_demo_1",
+      "image_id": "img_car_1",
+      "created_at": "2026-07-27T12:53:25.634Z"
+    },
+    {
+      "id": "like_2",
+      "user_id": "usr_demo_1",
+      "image_id": "img_fsh_1",
+      "created_at": "2026-07-27T12:53:25.634Z"
+    },
+    {
+      "id": "like_1785159873952",
+      "user_id": "usr_1785159818267_ebly",
+      "image_id": "img_car_1",
+      "created_at": "2026-07-27T13:44:33.952Z"
+    },
+    {
+      "id": "like_1785159879335",
+      "user_id": "usr_1785159818267_ebly",
+      "image_id": "img_car_2",
+      "created_at": "2026-07-27T13:44:39.335Z"
+    },
+    {
+      "id": "like_1785163770770",
+      "user_id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
+      "image_id": "img_car_1",
+      "created_at": "2026-07-27T14:49:30.770Z"
+    }
+  ],
+  "withdraws": [
+    {
+      "id": "wdr_1785163770904_no1",
+      "user_id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
+      "username": "resource_test_1785163767341",
+      "phone_number": "+25779459408",
+      "amount": 5000,
+      "payment_account": "+25779123456",
+      "status": "pending",
+      "created_at": "2026-07-27T14:49:30.904Z"
+    },
+    {
+      "id": "wdr_1785159927732_86f",
+      "user_id": "usr_1785159818267_ebly",
+      "username": "Generas",
+      "phone_number": "+257085236997",
+      "amount": 5000,
+      "payment_account": "+257 085236997",
+      "status": "pending",
+      "created_at": "2026-07-27T13:45:27.732Z"
+    },
+    {
+      "id": "wdr_1785159923625_de5",
+      "user_id": "usr_1785159818267_ebly",
+      "username": "Generas",
+      "phone_number": "+257085236997",
+      "amount": 5000,
+      "payment_account": "+257 085236997",
+      "status": "pending",
+      "created_at": "2026-07-27T13:45:23.625Z"
+    },
+    {
+      "id": "wdr_1785159912860_6q6",
+      "user_id": "usr_1785159818267_ebly",
+      "username": "Generas",
+      "phone_number": "+257085236997",
+      "amount": 5000,
+      "payment_account": "+257 085236997",
+      "status": "pending",
+      "created_at": "2026-07-27T13:45:12.860Z"
+    },
+    {
+      "id": "wdr_1785159908661_9br",
+      "user_id": "usr_1785159818267_ebly",
+      "username": "Generas",
+      "phone_number": "+257085236997",
+      "amount": 5000,
+      "payment_account": "+257 085236997",
+      "status": "pending",
+      "created_at": "2026-07-27T13:45:08.661Z"
+    },
+    {
+      "id": "wdr_1",
+      "user_id": "usr_demo_1",
+      "username": "keza_bujumbura",
+      "phone_number": "+257 69112233",
+      "amount": 5000,
+      "payment_account": "+257 69112233",
+      "status": "approved",
+      "admin_message": "Yoherejwe kuri Lumicash #25769112233 TXN #88291.",
+      "created_at": "2026-07-27T10:53:25.634Z"
+    }
+  ],
+  "paymentSettings": {
+    "account_number": "+257 69 00 11 22",
+    "whatsapp_number": "+257 69 00 11 22",
+    "ussd_code": "*163#",
+    "payment_instructions": "Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga. Ubusabe bwawe buzakorwa mu masaha 24."
+  },
+  "generalSettings": {
+    "registration_bonus": 15000,
+    "like_reward": 1000,
+    "min_withdraw_amount": 5000,
+    "enabled_languages": [
+      "rn",
+      "rw",
+      "en",
+      "fr"
+    ],
+    "maintenance_mode": false
+  },
+  "notifications": [
+    {
+      "id": "notif_1785163770904",
+      "user_id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
+      "title": "Ubusabe bwo kwaka amafaranga bwagize success",
+      "message": "Ubusabe bwawe bwa 5,000 BIF BIF kuri numero +25779123456 bwagize success. Buririndiriye kuremurwa n'ubuyobozi.",
+      "read": false,
+      "created_at": "2026-07-27T14:49:30.904Z"
+    },
+    {
+      "id": "notif_1785162778585",
+      "user_id": "fa83dd36-5a7c-425f-ac5c-7f7a31a0f7e6",
+      "title": "Hindura Inyifato: APPROVED",
+      "message": "Konte yawe yemewe n'Ubuyobozi! Mutangure gukoresha TwigaMart ukunde amafoto n'okugira inyungu.",
+      "read": false,
+      "created_at": "2026-07-27T14:32:58.585Z"
+    },
+    {
+      "id": "notif_1785161779403",
+      "user_id": "2a3ff26e-dd6f-451f-b4a6-bf4810af653f",
+      "title": "Hindura Inyifato: APPROVED",
+      "message": "Konte yawe yemewe n'Ubuyobozi! Mutangure gukoresha TwigaMart ukunde amafoto n'okugira inyungu.",
+      "read": false,
+      "created_at": "2026-07-27T14:16:19.403Z"
+    },
+    {
+      "id": "notif_1785161328037",
+      "user_id": "26bf79d1-b607-48b1-9956-5f4ecc605cba",
+      "title": "Hindura Inyifato: APPROVED",
+      "message": "Konte yawe yemewe n'Ubuyobozi! Mutangure gukoresha TwigaMart ukunde amafoto n'okugira inyungu.",
+      "read": false,
+      "created_at": "2026-07-27T14:08:48.037Z"
+    },
+    {
+      "id": "notif_1785161202860",
+      "user_id": "usr_1785161202860_pq4k",
+      "title": "Bonus y'Ikaze (Welcome Bonus)",
+      "message": "Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa.",
+      "read": false,
+      "created_at": "2026-07-27T14:06:42.860Z"
+    },
+    {
+      "id": "notif_1785159927732",
+      "user_id": "usr_1785159818267_ebly",
+      "title": "Ubusabe bwo kwaka amafaranga bwagize success",
+      "message": "Ubusabe bwawe bwa 5,000 BIF BIF kuri numero +257 085236997 bwagize success. Buririndiriye kuremurwa n'ubuyobozi.",
+      "read": false,
+      "created_at": "2026-07-27T13:45:27.732Z"
+    },
+    {
+      "id": "notif_1785159923625",
+      "user_id": "usr_1785159818267_ebly",
+      "title": "Ubusabe bwo kwaka amafaranga bwagize success",
+      "message": "Ubusabe bwawe bwa 5,000 BIF BIF kuri numero +257 085236997 bwagize success. Buririndiriye kuremurwa n'ubuyobozi.",
+      "read": false,
+      "created_at": "2026-07-27T13:45:23.625Z"
+    },
+    {
+      "id": "notif_1785159912860",
+      "user_id": "usr_1785159818267_ebly",
+      "title": "Ubusabe bwo kwaka amafaranga bwagize success",
+      "message": "Ubusabe bwawe bwa 5,000 BIF BIF kuri numero +257 085236997 bwagize success. Buririndiriye kuremurwa n'ubuyobozi.",
+      "read": false,
+      "created_at": "2026-07-27T13:45:12.860Z"
+    },
+    {
+      "id": "notif_1785159908661",
+      "user_id": "usr_1785159818267_ebly",
+      "title": "Ubusabe bwo kwaka amafaranga bwagize success",
+      "message": "Ubusabe bwawe bwa 5,000 BIF BIF kuri numero +257 085236997 bwagize success. Buririndiriye kuremurwa n'ubuyobozi.",
+      "read": false,
+      "created_at": "2026-07-27T13:45:08.661Z"
+    },
+    {
+      "id": "notif_1",
+      "user_id": "usr_demo_1",
+      "title": "Bonus y'Ikaze (Welcome Bonus)",
+      "message": "Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe.",
+      "read": true,
+      "created_at": "2026-07-24T12:53:25.634Z"
+    },
+    {
+      "id": "notif_2",
+      "user_id": "usr_demo_1",
+      "title": "Ubusabe bwo kwaka amafaranga bwemewe",
+      "message": "Ubusabe bwawe bwa 5,000 BIF bwemewe. Admin response: Yoherejwe kuri Lumicash #25769112233 TXN #88291.",
+      "read": false,
+      "created_at": "2026-07-27T10:53:25.634Z"
+    },
+    {
+      "id": "notif_3",
+      "user_id": "usr_demo_2",
+      "title": "Bonus y'Ikaze (Welcome Bonus)",
+      "message": "Urakoze kwirangisha! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa n'ubuyobozi.",
+      "read": false,
+      "created_at": "2026-07-27T08:53:25.634Z"
+    },
+    {
+      "id": "notif_1785158868219",
+      "user_id": "usr_1785158868218_9bka",
+      "title": "Bonus y'Ikaze (Welcome Bonus)",
+      "message": "Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa.",
+      "read": false,
+      "created_at": "2026-07-27T13:27:48.219Z"
+    },
+    {
+      "id": "notif_1785159818268",
+      "user_id": "usr_1785159818267_ebly",
+      "title": "Bonus y'Ikaze (Welcome Bonus)",
+      "message": "Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa.",
+      "read": false,
+      "created_at": "2026-07-27T13:43:38.268Z"
+    },
+    {
+      "id": "notif_1785159873952",
+      "user_id": "usr_1785159818267_ebly",
+      "title": "Wakoreye 2,500 BIF!",
+      "message": "Urakoze gukunda: \"Mercedes-Benz S-Class Sedan - Obsidian Black\". Agashimwe k'amafaranga 2,500 BIF kagiriwe mu gapuri kawe.",
+      "read": false,
+      "created_at": "2026-07-27T13:44:33.970Z"
+    },
+    {
+      "id": "notif_1785159879335",
+      "user_id": "usr_1785159818267_ebly",
+      "title": "Wakoreye 2,500 BIF!",
+      "message": "Urakoze gukunda: \"BMW 7 Series Luxury Saloon - Mineral White\". Agashimwe k'amafaranga 2,500 BIF kagiriwe mu gapuri kawe.",
+      "read": false,
+      "created_at": "2026-07-27T13:44:39.335Z"
+    },
+    {
+      "id": "notif_1785163770770",
+      "user_id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
+      "title": "Wakoreye 2,500 BIF!",
+      "message": "Urakoze gukunda: \"Mercedes-Benz S-Class Sedan - Obsidian Black\". Agashimwe k'amafaranga 2,500 BIF kagiriwe mu gapuri kawe.",
+      "read": false,
+      "created_at": "2026-07-27T14:49:30.785Z"
+    }
+  ]
+}

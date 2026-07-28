@@ -14,18 +14,28 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first, falling back to cache
-  if (event.request.method === 'GET') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
+  const url = new URL(event.request.url);
+
+  // Bypass service worker for API endpoints, non-GET requests, or non-http(s)
+  if (
+    event.request.method !== 'GET' ||
+    url.pathname.startsWith('/api/') ||
+    !url.protocol.startsWith('http')
+  ) {
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200 && response.type === 'basic') {
           const resClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, resClone);
+            cache.put(event.request, resClone).catch(() => {});
           });
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-  }
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });

@@ -23,8 +23,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const { user, language } = useAuth();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const totalLikes = images.filter((img) => img.user_liked).length;
-  const activeImages = images.filter((img) => img.active);
+  const safeImages = Array.isArray(images) ? images : [];
+  const totalLikes = safeImages.filter((img) => img && img.user_liked).length;
+  const activeImages = safeImages.filter((img) => img && img.active);
 
   const handleLikeWithToast = async (imageId: string) => {
     onLikeImage(imageId);

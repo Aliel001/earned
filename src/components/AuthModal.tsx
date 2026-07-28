@@ -23,6 +23,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
   const [selectedLang, setSelectedLang] = useState<Language>(language);
 
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -30,6 +31,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
 
     if (!username.trim() || !password) {
       setError(t('error', language) + ': Uzuze imyanya yose ikenewe.');
@@ -45,22 +47,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
           setIsSubmitting(false);
           return;
         }
+        if (password.length < 6) {
+          setError('Inyandiko y\'ibanga igomba kuba ifite inyuguti nibura 6 (Password must be at least 6 characters).');
+          setIsSubmitting(false);
+          return;
+        }
         if (password !== confirmPassword) {
           setError('Inyandiko y\'ibanga ntiyemezwa kimwe (Passwords do not match).');
           setIsSubmitting(false);
           return;
         }
-        await register({
-          username,
+        const res = await register({
+          username: username.trim(),
           phone_country_code: countryCode,
-          phone_number: phoneNumber,
+          phone_number: phoneNumber.trim(),
           password,
           language: selectedLang,
         });
+
+        // Auto log in so the new user lands directly on the Pending Approval view with message & notification
+        try {
+          await login(username.trim(), password);
+          onClose();
+        } catch {
+          setSuccessMessage(
+            res.message ||
+              'Konte yawe yaremewe neza! Irindiriye kwemerwa n\'ubuyobozi (Pending Admin Approval). Mutegereze ubumenyeshi bw\'admin.'
+          );
+          setPassword('');
+          setConfirmPassword('');
+          setMode('login');
+        }
       } else {
-        await login(username, password);
+        await login(username.trim(), password);
+        onClose();
       }
-      onClose();
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication.');
     } finally {
@@ -116,6 +137,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
                 Rungika form ugire 15,000 BIF ya bonus mu gapuri kawe uwo mwanya!
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Success Alert */}
+        {successMessage && (
+          <div className="mb-4 bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 p-3.5 rounded-2xl text-xs flex items-start space-x-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <span className="font-semibold leading-relaxed">{successMessage}</span>
           </div>
         )}
 
@@ -271,6 +300,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
             onClick={() => {
               setMode(mode === 'login' ? 'register' : 'login');
               setError(null);
+              setSuccessMessage(null);
             }}
             className="text-xs text-emerald-400 hover:underline font-semibold"
           >

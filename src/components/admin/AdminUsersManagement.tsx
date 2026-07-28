@@ -274,11 +274,22 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
                           </button>
                         )}
 
+                        {/* Reject */}
+                        {u.status !== 'rejected' && (
+                          <button
+                            onClick={() => handleUpdateStatus(u.id, 'rejected')}
+                            className="p-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 rounded-xl transition"
+                            title="Reject User"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
                         {/* Suspend */}
                         {u.status !== 'suspended' && (
                           <button
                             onClick={() => handleUpdateStatus(u.id, 'suspended')}
-                            className="p-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 rounded-xl transition"
+                            className="p-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 rounded-xl transition"
                             title="Suspend User"
                           >
                             <ShieldAlert className="w-3.5 h-3.5" />

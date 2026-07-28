@@ -42,14 +42,26 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       ...options,
       headers,
     });
-  } catch {
-    throw new Error('Network connection error or server unreachable');
+  } catch (err) {
+    console.warn(`Fetch to ${endpoint} failed, retrying once...`, err);
+    try {
+      await new Promise((res) => setTimeout(res, 500));
+      response = await fetch(endpoint, {
+        ...options,
+        headers,
+      });
+    } catch (retryErr) {
+      console.error(`Fetch to ${endpoint} failed after retry:`, retryErr);
+      throw new Error('Network connection error or server unreachable');
+    }
   }
 
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || 'Server request failed');
+    let msg = data.error || 'Request failed. Please try again.';
+    msg = msg.replace(/^(Error|TypeError|400|500):\s*/i, '').trim();
+    throw new Error(msg);
   }
 
   return data as T;
@@ -62,7 +74,7 @@ export const authApi = {
     phone_number: string;
     password: string;
     language: string;
-  }) => request<AuthResponse>('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  }) => request<{ success: boolean; message: string }>('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
 
   login: (data: { username: string; password: string }) =>
     request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify(data) }),

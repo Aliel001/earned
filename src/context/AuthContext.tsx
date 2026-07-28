@@ -17,7 +17,7 @@ interface AuthContextType {
     phone_number: string;
     password: string;
     language: string;
-  }) => Promise<void>;
+  }) => Promise<{ success: boolean; message: string }>;
   adminLogin: (username?: string, password?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -87,6 +87,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     refreshUser();
+    // Real-time polling every 3 seconds to auto-update user status when admin approves
+    const interval = setInterval(() => {
+      const token = getAuthToken();
+      if (token) {
+        userApi.getMe().then((res) => {
+          if (res && res.user) {
+            setUser(res.user);
+            setRole(res.role);
+          }
+        }).catch(() => {
+          // silent fail
+        });
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -114,9 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const res = await authApi.register(data);
-      setAuthToken(res.token);
-      setUser(res.user);
-      setRole(res.role);
+      return res;
     } finally {
       setIsLoading(false);
     }

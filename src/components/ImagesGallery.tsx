@@ -27,7 +27,8 @@ export const ImagesGallery: React.FC<ImagesGalleryProps> = ({ images, onLikeImag
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('All');
   const [likingId, setLikingId] = useState<string | null>(null);
 
-  const activeImages = images.filter((img) => img.active);
+  const safeImages = Array.isArray(images) ? images : [];
+  const activeImages = safeImages.filter((img) => img && img.active);
   const filteredImages = activeImages.filter((img) => {
     const matchesSearch = img.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
@@ -86,39 +87,6 @@ export const ImagesGallery: React.FC<ImagesGalleryProps> = ({ images, onLikeImag
           placeholder="Search..."
           className="w-full bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-md transition-all"
         />
-      </div>
-
-      {/* Category Filter Pills */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
-        {CATEGORIES.map((cat) => {
-          const Icon = cat.icon;
-          const isActive = selectedCategory === cat.id;
-          const count = getCategoryCount(cat.id);
-
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition backdrop-blur-md border ${
-                isActive
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 font-extrabold scale-105'
-                  : 'bg-white/90 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{cat.id === 'All' ? `All (${count})` : cat.id}</span>
-              {cat.id !== 'All' && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                    isActive ? 'bg-slate-950 text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* Images Grid */}
