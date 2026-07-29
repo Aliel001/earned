@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { COUNTRY_CODES, SUPPORTED_LANGUAGES, t } from '../locales/translations';
 import { Language } from '../types';
-import { X, Lock, Phone, User, Globe, Gift, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, Lock, Phone, User, Globe, Gift, ShieldAlert, Sparkles, CheckCircle2, Mail } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +16,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
 
   // Form states
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [countryCode, setCountryCode] = useState('+257');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -59,6 +60,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
         }
         const res = await register({
           username: username.trim(),
+          email: email.trim(),
           phone_country_code: countryCode,
           phone_number: phoneNumber.trim(),
           password,
@@ -184,6 +186,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">
                 ▼
               </div>
+            </div>
+          </div>
+
+          {/* Email Address Input (Registration & Login) */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+              <span>Email (Imeyili)</span>
+            </label>
+            <div className="relative">
+              <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="example@gmail.com"
+                className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+              />
             </div>
           </div>
 

@@ -236,19 +236,22 @@ async function startServer() {
     }
   });
 
-  // Admin Quick Login / Dedicated Login
+  // Admin Dedicated Login
   app.post('/api/auth/admin-login', async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
-      const admin = await db.getAdminByUsername(username || 'admin');
-
-      if (!admin) {
-        return res.status(400).json({ error: 'Admin account not found' });
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Nyamuneka uzuze izina n\'inyandiko y\'ibanga ya Admin (Username and password required)' });
       }
 
-      const isMatch = await bcrypt.compare(password || 'admin123', admin.password_hash);
+      const admin = await db.getAdminByUsername(username.trim());
+      if (!admin) {
+        return res.status(400).json({ error: 'Konte y\'Ubuyobozi ntizwi (Admin account not found)' });
+      }
+
+      const isMatch = await bcrypt.compare(password.trim(), admin.password_hash);
       if (!isMatch) {
-        return res.status(400).json({ error: 'Invalid admin credentials' });
+        return res.status(400).json({ error: 'Inyandiko y\'ibanga ya Admin si yo (Invalid admin password)' });
       }
 
       const token = jwt.sign(
@@ -256,6 +259,8 @@ async function startServer() {
         JWT_SECRET,
         { expiresIn: '30d' }
       );
+
+      console.log(`[Admin Login Success] @${admin.username}`);
 
       res.json({
         token,
@@ -267,7 +272,45 @@ async function startServer() {
     }
   });
 
-  // Change Password
+  // Dedicated Admin Change Password & Username Endpoint
+  app.post('/api/admin/change-password', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+      const { currentPassword, newPassword, newUsername } = req.body;
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Uzuzaza inyandiko y\'ibanga ya none n\'inshya (Fill current and new password)' });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: 'Inyandiko y\'ibanga inshya igomba kuba ifite inyuguti nibura 6 (Min 6 chars)' });
+      }
+
+      const adminId = req.user!.id;
+      const admin = (await db.getAdminById(adminId)) || (await db.getAdminByUsername(req.user!.username));
+
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin account not found' });
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, admin.password_hash);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Inyandiko y\'ibanga ya none si yo (Current password incorrect)' });
+      }
+
+      const newHash = await bcrypt.hash(newPassword, 10);
+      const cleanUsername = newUsername ? newUsername.trim() : undefined;
+      await db.updateAdminPassword(admin.id, newHash, cleanUsername);
+
+      res.json({
+        success: true,
+        message: 'Inyandiko y\'ibanga ya Admin yahinduwe neza! (Admin password updated successfully)',
+        username: cleanUsername || admin.username,
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Change Password for User or Admin
   app.post('/api/auth/change-password', authenticateToken, async (req: AuthRequest, res: Response) => {
     try {
       const { currentPassword, newPassword } = req.body;
@@ -277,6 +320,20 @@ async function startServer() {
 
       if (newPassword.length < 6) {
         return res.status(400).json({ error: 'Ijambo rishya ry\'ibanga rigomba kuba nibura rifite inyuguti 6 (Min 6 chars)' });
+      }
+
+      if (req.user?.role === 'admin') {
+        const admin = (await db.getAdminById(req.user.id)) || (await db.getAdminByUsername(req.user.username));
+        if (!admin) return res.status(404).json({ error: 'Admin not found' });
+
+        const isMatch = await bcrypt.compare(currentPassword, admin.password_hash);
+        if (!isMatch) {
+          return res.status(400).json({ error: 'Inyandiko y\'ibanga ya none si yo (Current password incorrect)' });
+        }
+
+        const newHash = await bcrypt.hash(newPassword, 10);
+        await db.updateAdminPassword(admin.id, newHash);
+        return res.json({ success: true, message: 'Inyandiko y\'ibanga ya Admin yahinduwe neza!' });
       }
 
       const userId = req.user!.id;

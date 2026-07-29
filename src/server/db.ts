@@ -698,6 +698,17 @@ class LocalDatabase {
   }
 
   async deleteUser(userId: string) {
+    if (prisma) {
+      try {
+        await prisma.withdrawRequest.deleteMany({ where: { user_id: userId } });
+        await prisma.notification.deleteMany({ where: { user_id: userId } });
+        await prisma.imageLike.deleteMany({ where: { user_id: userId } });
+        await prisma.wallet.deleteMany({ where: { user_id: userId } });
+        await prisma.user.delete({ where: { id: userId } });
+      } catch (err: any) {
+        console.warn('[Prisma] deleteUser warning:', err?.message || err);
+      }
+    }
     this.store.users = this.store.users.filter((u) => u.id !== userId);
     this.store.wallets = this.store.wallets.filter((w) => w.user_id !== userId);
     this.store.withdraws = this.store.withdraws.filter((w) => w.user_id !== userId);
@@ -708,12 +719,30 @@ class LocalDatabase {
   }
 
   async deleteWithdrawRequest(id: string) {
+    if (prisma) {
+      try {
+        await prisma.withdrawRequest.delete({ where: { id } });
+      } catch (err: any) {
+        console.warn('[Prisma] deleteWithdrawRequest warning:', err?.message || err);
+      }
+    }
     this.store.withdraws = this.store.withdraws.filter((w) => w.id !== id);
     this.saveStore();
     return true;
   }
 
   async deleteAllUsers() {
+    if (prisma) {
+      try {
+        await prisma.withdrawRequest.deleteMany({});
+        await prisma.notification.deleteMany({});
+        await prisma.imageLike.deleteMany({});
+        await prisma.wallet.deleteMany({});
+        await prisma.user.deleteMany({});
+      } catch (err: any) {
+        console.warn('[Prisma] deleteAllUsers warning:', err?.message || err);
+      }
+    }
     this.store.users = [];
     this.store.wallets = [];
     this.store.withdraws = [];
@@ -724,14 +753,35 @@ class LocalDatabase {
   }
 
   async deleteAllWithdraws() {
+    if (prisma) {
+      try {
+        await prisma.withdrawRequest.deleteMany({});
+      } catch (err: any) {
+        console.warn('[Prisma] deleteAllWithdraws warning:', err?.message || err);
+      }
+    }
     this.store.withdraws = [];
     this.saveStore();
     return true;
   }
 
   async resetAllData() {
-    this.store.users = [];
-    this.store.wallets = [];
+    if (prisma) {
+      try {
+        await prisma.withdrawRequest.deleteMany({});
+        await prisma.notification.deleteMany({});
+        await prisma.imageLike.deleteMany({});
+        await prisma.wallet.deleteMany({});
+        await prisma.user.deleteMany({});
+      } catch (err: any) {
+        console.warn('[Prisma] resetAllData warning:', err?.message || err);
+      }
+    }
+    this.store.users = this.store.users.filter(u => u.role === 'admin');
+    this.store.wallets = this.store.wallets.filter(w => {
+      const u = this.store.users.find(usr => usr.id === w.user_id);
+      return u && u.role === 'admin';
+    });
     this.store.withdraws = [];
     this.store.likes = [];
     this.store.notifications = [];
@@ -876,6 +926,49 @@ class LocalDatabase {
       }
     }
     return this.store.admins.find((a) => a.username.toLowerCase() === username.toLowerCase());
+  }
+
+  async getAdminById(id: string) {
+    if (prisma) {
+      try {
+        const dbAdmin = await prisma.admin.findUnique({ where: { id } });
+        if (dbAdmin) {
+          return {
+            id: dbAdmin.id,
+            username: dbAdmin.username,
+            password_hash: dbAdmin.password_hash,
+          };
+        }
+      } catch (err) {
+        console.error('[Prisma] getAdminById error:', err);
+      }
+    }
+    return this.store.admins.find((a) => a.id === id);
+  }
+
+  async updateAdminPassword(adminId: string, newPasswordHash: string, newUsername?: string) {
+    if (prisma) {
+      try {
+        await prisma.admin.update({
+          where: { id: adminId },
+          data: {
+            password_hash: newPasswordHash,
+            ...(newUsername ? { username: newUsername } : {}),
+          },
+        });
+      } catch (err) {
+        console.error('[Prisma] updateAdminPassword error:', err);
+      }
+    }
+
+    const admin = this.store.admins.find((a) => a.id === adminId) || this.store.admins[0];
+    if (admin) {
+      admin.password_hash = newPasswordHash;
+      if (newUsername) admin.username = newUsername;
+      this.saveStore();
+      return true;
+    }
+    return false;
   }
 
   // Images & Likes
@@ -1403,16 +1496,19 @@ class LocalDatabase {
   }
 
   async updatePaymentSettings(data: Partial<PaymentSettings>) {
+    this.store.paymentSettings = { ...this.store.paymentSettings, ...data };
+    this.saveStore();
+
     if (prisma) {
       try {
         const ps = await prisma.paymentSettings.upsert({
           where: { id: 'default' },
           create: {
             id: 'default',
-            account_number: data.account_number || '+257 69 00 11 22',
-            whatsapp_number: data.whatsapp_number || '+257 69 00 11 22',
-            ussd_code: data.ussd_code || '*163#',
-            payment_instructions: data.payment_instructions || '',
+            account_number: data.account_number ?? '',
+            whatsapp_number: data.whatsapp_number ?? '',
+            ussd_code: data.ussd_code ?? '',
+            payment_instructions: data.payment_instructions ?? '',
           },
           update: {
             ...(data.account_number !== undefined && { account_number: data.account_number }),
@@ -1431,8 +1527,6 @@ class LocalDatabase {
         console.error('[Prisma] updatePaymentSettings error:', err);
       }
     }
-    this.store.paymentSettings = { ...this.store.paymentSettings, ...data };
-    this.saveStore();
     return this.store.paymentSettings;
   }
 

@@ -18,6 +18,10 @@ import {
   Wallet,
   Globe,
   Upload,
+  ShieldCheck,
+  Lock,
+  Key,
+  UserCheck,
 } from 'lucide-react';
 
 interface AdminAppControlProps {
@@ -26,7 +30,7 @@ interface AdminAppControlProps {
 }
 
 export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefresh }) => {
-  const [activeTab, setActiveTab] = useState<'images' | 'settings'>('images');
+  const [activeTab, setActiveTab] = useState<'images' | 'settings' | 'security'>('images');
 
   // --- SECTION A: IMAGE MANAGEMENT STATES ---
   const [showImageModal, setShowImageModal] = useState(false);
@@ -46,6 +50,15 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState(false);
+
+  // --- SECTION C: ADMIN SECURITY STATES ---
+  const [adminUsername, setAdminUsername] = useState('admin');
+  const [currentAdminPassword, setCurrentAdminPassword] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [securityError, setSecurityError] = useState('');
+  const [securitySuccess, setSecuritySuccess] = useState('');
 
   useEffect(() => {
     loadGeneralSettings();
@@ -163,6 +176,40 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
     }
   };
 
+  const handleUpdateAdminPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSecurityError('');
+    setSecuritySuccess('');
+
+    if (newAdminPassword.length < 6) {
+      setSecurityError('Inyandiko y\'ibanga inshya igomba kuba ifite inyuguti nibura 6 (Min 6 characters)');
+      return;
+    }
+
+    if (newAdminPassword !== confirmAdminPassword) {
+      setSecurityError('Inyandiko z\'ibanga zombi ntizihuye (New passwords do not match)');
+      return;
+    }
+
+    setSecurityLoading(true);
+    try {
+      const res = await adminApi.changeAdminPassword({
+        currentPassword: currentAdminPassword,
+        newPassword: newAdminPassword,
+        newUsername: adminUsername.trim() || undefined,
+      });
+
+      setSecuritySuccess(res.message || 'Inyandiko y\'ibanga ya Admin yahinduwe neza!');
+      setCurrentAdminPassword('');
+      setNewAdminPassword('');
+      setConfirmAdminPassword('');
+    } catch (err: any) {
+      setSecurityError(err.message || 'Harabaye ikosa mu guhindura inyandiko y\'ibanga');
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -199,6 +246,18 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
         >
           <Settings className="w-4 h-4" />
           <span>General Settings</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('security')}
+          className={`pb-3 text-xs font-black uppercase tracking-wider flex items-center space-x-2 border-b-2 transition ${
+            activeTab === 'security'
+              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+          <span>Admin Security & Password</span>
         </button>
       </div>
 
@@ -348,6 +407,108 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
             >
               <Save className="w-4 h-4" />
               <span>{settingsLoading ? 'Saving Settings...' : 'Save General Settings'}</span>
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* SECTION C: ADMIN SECURITY & PASSWORD */}
+      {activeTab === 'security' && (
+        <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-3xl border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-lg dark:shadow-2xl max-w-xl space-y-5 transition-colors duration-300">
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              <span>Hindura Umutekano w'Admin (Admin Password & Security)</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Set your own custom Admin password so only you can access the admin dashboard securely.
+            </p>
+          </div>
+
+          {securityError && (
+            <div className="bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 p-3 rounded-2xl text-xs font-bold flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+              <span>{securityError}</span>
+            </div>
+          )}
+
+          {securitySuccess && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 p-3 rounded-2xl text-xs font-bold flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>{securitySuccess}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleUpdateAdminPassword} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1.5">
+                <UserCheck className="w-4 h-4 text-indigo-500" />
+                <span>Admin Username (Izina ry'Umuyobozi)</span>
+              </label>
+              <input
+                type="text"
+                value={adminUsername}
+                onChange={(e) => setAdminUsername(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-bold"
+                placeholder="admin"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1.5">
+                <Lock className="w-4 h-4 text-slate-500" />
+                <span>Inyandiko y'Ibanga ya None (Current Password)</span>
+              </label>
+              <input
+                type="password"
+                value={currentAdminPassword}
+                onChange={(e) => setCurrentAdminPassword(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-bold"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1.5">
+                  <Key className="w-4 h-4 text-emerald-500" />
+                  <span>Inyandiko y'Ibanga Inshya (New Password)</span>
+                </label>
+                <input
+                  type="password"
+                  value={newAdminPassword}
+                  onChange={(e) => setNewAdminPassword(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-bold"
+                  placeholder="At least 6 characters"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1.5">
+                  <Key className="w-4 h-4 text-emerald-500" />
+                  <span>Emeza Inyandiko Inshya (Confirm New)</span>
+                </label>
+                <input
+                  type="password"
+                  value={confirmAdminPassword}
+                  onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-bold"
+                  placeholder="Re-type new password"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={securityLoading}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-2xl text-xs shadow-xl flex items-center justify-center space-x-2 transition disabled:opacity-50"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>{securityLoading ? 'Guhindura Inyandiko...' : 'Bika Inyandiko y\'Ibanga Inshya (Save Admin Password)'}</span>
             </button>
           </form>
         </div>

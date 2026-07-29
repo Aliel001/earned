@@ -211,6 +211,18 @@ export const WalletView: React.FC<WalletViewProps> = ({
               <p className="text-[11px] text-slate-300 leading-relaxed pt-2 border-t border-white/10">
                 {paymentSettings.payment_instructions}
               </p>
+
+              {paymentSettings.whatsapp_number && (
+                <a
+                  href={`https://wa.me/${paymentSettings.whatsapp_number.replace(/\D/g, '')}?text=Muraho%20Admin%2C%20nshaka%20amashusho%20y%27ubwishyu%20cyangwa%20kuyaga%20muri%20TwigaMart%20(${encodeURIComponent(user?.username || '')})`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 px-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs active:scale-95 mt-2"
+                >
+                  <MessageSquare className="w-4 h-4 fill-slate-950" />
+                  <span>VUGANA NA ADMIN KURI WHATSAPP ({paymentSettings.whatsapp_number})</span>
+                </a>
+              )}
             </div>
           </div>
         );

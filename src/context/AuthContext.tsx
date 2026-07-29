@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (data: {
     username: string;
+    email?: string;
     phone_country_code: string;
     phone_number: string;
     password: string;

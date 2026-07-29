@@ -70,6 +70,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 export const authApi = {
   register: (data: {
     username: string;
+    email?: string;
     phone_country_code: string;
     phone_number: string;
     password: string;
@@ -184,6 +185,11 @@ export const adminApi = {
   updateGeneralSettings: (data: Partial<import('../types').GeneralSettings>) =>
     request<import('../types').GeneralSettings>('/api/admin/general-settings', {
       method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  changeAdminPassword: (data: { currentPassword: string; newPassword: string; newUsername?: string }) =>
+    request<{ success: boolean; message: string; username?: string }>('/api/admin/change-password', {
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 };

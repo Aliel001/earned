@@ -31,13 +31,31 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
     }
   }, [initialSettings]);
 
-  const handleClearDefaults = () => {
+  const handleClearDefaults = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
     setAccountNumber('');
     setWhatsappNumber('');
     setUssdCode('');
     setPaymentInstructions('');
-    setError(null);
-    setSuccess(false);
+
+    try {
+      await adminApi.updatePaymentSettings({
+        account_number: '',
+        whatsapp_number: '',
+        ussd_code: '',
+        payment_instructions: '',
+      });
+      setSuccess(true);
+      onRefresh();
+      setTimeout(() => setSuccess(false), 4000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to clear payment settings');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -113,7 +131,6 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
               onChange={(e) => setAccountNumber(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-mono text-sm focus:outline-none"
               placeholder="Shyiramo numero ya Lumicash/Ecocash (e.g. +257 69 12 34 56)"
-              required
             />
             <p className="text-[11px] text-slate-400 mt-1">Iyi numero ni yo abakoresha babona mu kwasaba ubwishyu.</p>
           </div>
@@ -129,7 +146,6 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
               onChange={(e) => setWhatsappNumber(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-mono text-sm focus:outline-none"
               placeholder="Shyiramo numero ya WhatsApp (e.g. +257 69 12 34 56)"
-              required
             />
             <p className="text-[11px] text-slate-400 mt-1">Iyi numero ni yo abakoresha bakoresha mu kuvugana na Admin kuri WhatsApp.</p>
           </div>
@@ -145,7 +161,6 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
               onChange={(e) => setUssdCode(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-mono text-sm focus:outline-none"
               placeholder="e.g. *163# cyangwa *182#"
-              required
             />
           </div>
 
@@ -160,7 +175,6 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
               rows={4}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl p-4 text-slate-900 dark:text-white font-medium focus:outline-none"
               placeholder="Andika amabwiriza asobanuye neza uko abakoresha bishyura cyangwa babikuza..."
-              required
             />
           </div>
 
