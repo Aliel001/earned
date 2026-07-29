@@ -130,7 +130,7 @@ async function startServer() {
 
       res.status(201).json({
         success: true,
-        message: 'Your account has been created successfully. It is waiting for administrator approval. You will be able to log in after your account is approved.',
+        message: 'Konte yawe yaremewe neza! Ubu urashobora kwinjira no gukoresha TwigaMart (Account created successfully! You can now log in).',
         user: createdUser,
       });
     } catch (err: any) {
@@ -207,25 +207,20 @@ async function startServer() {
         return res.status(400).json({ error: 'Izina cyangwa inyandiko y\'ibanga si byo (Invalid username or password)' });
       }
 
-      // Check user status before issuing session/token
+      // Auto-approve pending accounts so users can log in immediately
       if (user.status === 'pending') {
-        console.warn(`[Login Blocked] User @${username} status is PENDING`);
-        return res.status(403).json({ error: 'Your account is waiting for administrator approval.' });
+        user.status = 'approved';
+        await db.updateUserStatus(user.id, 'approved').catch(() => {});
       }
 
       if (user.status === 'rejected') {
         console.warn(`[Login Blocked] User @${username} status is REJECTED`);
-        return res.status(403).json({ error: 'Your account has been rejected. Please contact the administrator.' });
+        return res.status(403).json({ error: 'Konte yawe ntiyemewe n\'ubuyobozi (Your account has been rejected).' });
       }
 
       if (user.status === 'suspended') {
         console.warn(`[Login Blocked] User @${username} status is SUSPENDED`);
-        return res.status(403).json({ error: 'Your account has been suspended by the administrator.' });
-      }
-
-      if (user.status !== 'approved') {
-        console.warn(`[Login Blocked] User @${username} status is ${user.status}`);
-        return res.status(403).json({ error: 'Your account is not approved for login.' });
+        return res.status(403).json({ error: 'Konte yawe yahagaritswe n\'ubuyobozi (Your account has been suspended).' });
       }
 
       const wallet = await db.getWalletByUserId(user.id);

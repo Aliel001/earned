@@ -468,7 +468,7 @@ class LocalDatabase {
           phone_number: data.phone_number,
           password_hash: data.password_hash,
           language: data.language || 'rn',
-          status: 'pending',
+          status: 'approved',
           wallet: {
             create: {
               balance: 15000.0,
@@ -479,7 +479,7 @@ class LocalDatabase {
             create: {
               title: "Bonus y'Ikaze (Welcome Bonus)",
               message:
-                'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa.',
+                'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe yemejwe neza.',
               read: false,
             },
           },
@@ -525,7 +525,7 @@ class LocalDatabase {
       phone_number: data.phone_number,
       password_hash: data.password_hash,
       language: data.language || 'rn',
-      status: 'pending' as UserStatus,
+      status: 'approved' as UserStatus,
       created_at: new Date().toISOString(),
     };
 
