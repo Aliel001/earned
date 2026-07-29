@@ -210,7 +210,14 @@ class LocalDatabase {
             ...INITIAL_STORE.paymentSettings,
             ...(parsed.paymentSettings || {}),
           },
+          generalSettings: {
+            ...INITIAL_STORE.generalSettings,
+            ...(parsed.generalSettings || {}),
+          },
         };
+        if (!merged.admins || merged.admins.length === 0) {
+          merged.admins = INITIAL_STORE.admins;
+        }
         this.saveStore(merged);
         return merged;
       }
@@ -916,11 +923,34 @@ class LocalDatabase {
 
   // Admin
   async getAdminByUsername(username: string) {
+    const clean = username.trim().toLowerCase().replace(/^@/, '');
+
+    if (!this.store.admins || this.store.admins.length === 0) {
+      this.store.admins = INITIAL_STORE.admins;
+      this.saveStore();
+    }
+
     if (prisma) {
       try {
-        const dbAdmin = await prisma.admin.findFirst({
-          where: { username: { equals: username, mode: 'insensitive' } },
+        let dbAdmin = await prisma.admin.findFirst({
+          where: { username: { equals: clean, mode: 'insensitive' } },
         });
+
+        if (!dbAdmin) {
+          const adminCount = await prisma.admin.count();
+          if (adminCount === 0) {
+            dbAdmin = await prisma.admin.create({
+              data: {
+                username: 'admin',
+                password_hash: DEFAULT_ADMIN_HASH,
+              },
+            });
+            console.log('[Database] Default admin account auto-seeded in PostgreSQL.');
+          } else if (clean === 'admin' || clean === 'administrator') {
+            dbAdmin = await prisma.admin.findFirst();
+          }
+        }
+
         if (dbAdmin) {
           return {
             id: dbAdmin.id,
@@ -932,7 +962,12 @@ class LocalDatabase {
         console.error('[Prisma] getAdminByUsername error:', err);
       }
     }
-    return this.store.admins.find((a) => a.username.toLowerCase() === username.toLowerCase());
+
+    let found = this.store.admins.find((a) => a.username.toLowerCase().replace(/^@/, '') === clean);
+    if (!found && (clean === 'admin' || clean === 'administrator')) {
+      found = this.store.admins[0] || INITIAL_STORE.admins[0];
+    }
+    return found;
   }
 
   async getAdminById(id: string) {
@@ -950,6 +985,12 @@ class LocalDatabase {
         console.error('[Prisma] getAdminById error:', err);
       }
     }
+
+    if (!this.store.admins || this.store.admins.length === 0) {
+      this.store.admins = INITIAL_STORE.admins;
+      this.saveStore();
+    }
+
     return this.store.admins.find((a) => a.id === id);
   }
 

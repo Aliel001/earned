@@ -15,13 +15,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
   const [mode, setMode] = useState<'login' | 'register' | 'admin'>(initialMode);
 
   // Form states
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(initialMode === 'admin' ? 'admin' : '');
   const [email, setEmail] = useState('');
   const [countryCode, setCountryCode] = useState('+257');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedLang, setSelectedLang] = useState<Language>(language);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      if (initialMode === 'admin') {
+        setUsername('admin');
+      }
+    }
+  }, [isOpen, initialMode]);
 
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
