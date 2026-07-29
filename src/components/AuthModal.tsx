@@ -6,13 +6,13 @@ import { X, Lock, Phone, User, Globe, Gift, ShieldAlert, Sparkles, CheckCircle2,
 
 interface AuthModalProps {
   isOpen: boolean;
-  initialMode?: 'login' | 'register';
+  initialMode?: 'login' | 'register' | 'admin';
   onClose: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'login', onClose }) => {
   const { login, register, adminLogin, language, setLanguage } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+  const [mode, setMode] = useState<'login' | 'register' | 'admin'>(initialMode);
 
   // Form states
   const [username, setUsername] = useState('');
@@ -33,6 +33,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
+
+    if (mode === 'admin') {
+      if (!username.trim() || !password) {
+        setError('Nyamuneka andika izina n\'inyandiko y\'ibanga ya Admin.');
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        await adminLogin(username.trim(), password);
+        onClose();
+      } catch (err: any) {
+        setError(err.message || 'Inyandiko y\'ibanga ya Admin si yo.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     if (!username.trim() || !password) {
       setError(t('error', language) + ': Uzuze imyanya yose ikenewe.');
@@ -91,19 +108,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
     }
   };
 
-  const handleAdminQuickLogin = async () => {
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      await adminLogin('admin', 'admin123');
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'Admin login failed');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-2xl animate-fade-in overflow-y-auto">
       <div className="bg-slate-900/90 backdrop-blur-3xl border border-white/10 text-slate-100 rounded-3xl w-full max-w-md p-6 shadow-2xl relative my-8">
@@ -118,12 +122,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
         {/* Modal Header */}
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/20 font-black mb-3">
-            🦒
+            {mode === 'admin' ? '🛡️' : '🦒'}
           </div>
           <h2 className="text-2xl font-extrabold text-white tracking-tight">
-            {mode === 'register' ? t('register', language) : t('login', language)}
+            {mode === 'admin'
+              ? '🔑 Injira nka Admin'
+              : mode === 'register'
+              ? t('register', language)
+              : t('login', language)}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">TwigaMart Burundi - Earn BIF by Liking Images</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {mode === 'admin'
+              ? 'Shyiramo inyandiko y\'ibanga ya Admin kugira ngo winjire.'
+              : 'TwigaMart Burundi - Earn BIF by Liking Images'}
+          </p>
         </div>
 
         {/* Bonus Banner on Register */}
@@ -304,6 +316,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
           >
             {isSubmitting ? (
               <span className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+            ) : mode === 'admin' ? (
+              <span>Injira nka Admin (Admin Login)</span>
             ) : mode === 'register' ? (
               <span>{t('register', language)} (+15,000 BIF)</span>
             ) : (
@@ -314,29 +328,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
 
         {/* Toggle Mode */}
         <div className="mt-5 pt-4 border-t border-white/10 text-center space-y-3">
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === 'login' ? 'register' : 'login');
-              setError(null);
-              setSuccessMessage(null);
-            }}
-            className="text-xs text-emerald-400 hover:underline font-semibold"
-          >
-            {mode === 'login' ? t('no_account_yet', language) : t('already_have_account', language)}
-          </button>
-
-          {/* Quick Admin Test Login */}
-          <div>
+          {mode === 'admin' ? (
             <button
               type="button"
-              onClick={handleAdminQuickLogin}
-              disabled={isSubmitting}
-              className="text-[11px] text-slate-300 hover:text-white bg-slate-800/80 px-3 py-1.5 rounded-xl border border-white/10 transition backdrop-blur-md"
+              onClick={() => {
+                setMode('login');
+                setUsername('');
+                setPassword('');
+                setError(null);
+                setSuccessMessage(null);
+              }}
+              className="text-xs text-emerald-400 hover:underline font-semibold"
             >
-              🔑 Quick Admin Login (Testing)
+              ← Subira ku kwinjira kwasanzwe (User Login)
             </button>
-          </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === 'login' ? 'register' : 'login');
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="text-xs text-emerald-400 hover:underline font-semibold block mx-auto"
+              >
+                {mode === 'login' ? t('no_account_yet', language) : t('already_have_account', language)}
+              </button>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('admin');
+                    if (!username) setUsername('admin');
+                    setPassword('');
+                    setError(null);
+                    setSuccessMessage(null);
+                  }}
+                  disabled={isSubmitting}
+                  className="text-[11px] text-emerald-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 px-3.5 py-1.5 rounded-xl border border-emerald-500/30 transition backdrop-blur-md font-bold"
+                >
+                  🔑 Injira nka Admin (Admin Password Login)
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

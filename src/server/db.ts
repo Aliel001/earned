@@ -203,7 +203,14 @@ class LocalDatabase {
         if (!parsed.images || parsed.images.length < 100) {
           parsed.images = PRODUCT_LIBRARY;
         }
-        const merged = { ...INITIAL_STORE, ...parsed };
+        const merged = {
+          ...INITIAL_STORE,
+          ...parsed,
+          paymentSettings: {
+            ...INITIAL_STORE.paymentSettings,
+            ...(parsed.paymentSettings || {}),
+          },
+        };
         this.saveStore(merged);
         return merged;
       }

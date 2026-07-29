@@ -18,18 +18,25 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
   const [paymentInstructions, setPaymentInstructions] = useState(
     initialSettings?.payment_instructions || ''
   );
+  const [isEdited, setIsEdited] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialSettings) {
+    if (initialSettings && !isEdited) {
       setAccountNumber(initialSettings.account_number || '');
       setWhatsappNumber(initialSettings.whatsapp_number || '');
       setUssdCode(initialSettings.ussd_code || '');
       setPaymentInstructions(initialSettings.payment_instructions || '');
     }
-  }, [initialSettings]);
+  }, [
+    initialSettings?.account_number,
+    initialSettings?.whatsapp_number,
+    initialSettings?.ussd_code,
+    initialSettings?.payment_instructions,
+    isEdited,
+  ]);
 
   const handleClearDefaults = async () => {
     setLoading(true);
@@ -40,6 +47,7 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
     setWhatsappNumber('');
     setUssdCode('');
     setPaymentInstructions('');
+    setIsEdited(false);
 
     try {
       await adminApi.updatePaymentSettings({
@@ -72,6 +80,7 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
         payment_instructions: paymentInstructions.trim(),
       });
       setSuccess(true);
+      setIsEdited(false);
       onRefresh();
       setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
@@ -128,7 +137,10 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
             <input
               type="text"
               value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
+              onChange={(e) => {
+                setAccountNumber(e.target.value);
+                setIsEdited(true);
+              }}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-mono text-sm focus:outline-none"
               placeholder="Shyiramo numero ya Lumicash/Ecocash (e.g. +257 69 12 34 56)"
             />
@@ -143,7 +155,10 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
             <input
               type="text"
               value={whatsappNumber}
-              onChange={(e) => setWhatsappNumber(e.target.value)}
+              onChange={(e) => {
+                setWhatsappNumber(e.target.value);
+                setIsEdited(true);
+              }}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-mono text-sm focus:outline-none"
               placeholder="Shyiramo numero ya WhatsApp (e.g. +257 69 12 34 56)"
             />
@@ -158,7 +173,10 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
             <input
               type="text"
               value={ussdCode}
-              onChange={(e) => setUssdCode(e.target.value)}
+              onChange={(e) => {
+                setUssdCode(e.target.value);
+                setIsEdited(true);
+              }}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl py-3 px-4 text-slate-900 dark:text-white font-mono text-sm focus:outline-none"
               placeholder="e.g. *163# cyangwa *182#"
             />
@@ -171,7 +189,10 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
             </label>
             <textarea
               value={paymentInstructions}
-              onChange={(e) => setPaymentInstructions(e.target.value)}
+              onChange={(e) => {
+                setPaymentInstructions(e.target.value);
+                setIsEdited(true);
+              }}
               rows={4}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 focus:border-teal-500 rounded-2xl p-4 text-slate-900 dark:text-white font-medium focus:outline-none"
               placeholder="Andika amabwiriza asobanuye neza uko abakoresha bishyura cyangwa babikuza..."

@@ -30,6 +30,10 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
   const [adminMessage, setAdminMessage] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  // Delete Confirm Modal
+  const [deletingWithdraw, setDeletingWithdraw] = useState<WithdrawRequest | null>(null);
+  const [deleteWithdrawLoading, setDeleteWithdrawLoading] = useState(false);
+
   const filteredWithdraws = withdraws.filter((w) => {
     const matchesSearch =
       (w.username && w.username.toLowerCase().includes(search.toLowerCase())) ||
@@ -55,13 +59,17 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
     }
   };
 
-  const handleDeleteWithdraw = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this withdrawal record?')) return;
+  const confirmDeleteWithdraw = async () => {
+    if (!deletingWithdraw) return;
+    setDeleteWithdrawLoading(true);
     try {
-      await adminApi.deleteWithdraw(id);
+      await adminApi.deleteWithdraw(deletingWithdraw.id);
       onRefresh();
+      setDeletingWithdraw(null);
     } catch (err: any) {
       alert(err.message || 'Failed to delete withdrawal record');
+    } finally {
+      setDeleteWithdrawLoading(false);
     }
   };
 
@@ -173,7 +181,7 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
                           Process
                         </button>
                         <button
-                          onClick={() => handleDeleteWithdraw(w.id)}
+                          onClick={() => setDeletingWithdraw(w)}
                           className="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-xl transition"
                           title="Delete Record"
                         >
@@ -248,6 +256,49 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
               >
                 <XCircle className="w-4 h-4" />
                 <span>Reject & Refund</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Withdraw Confirmation Modal */}
+      {deletingWithdraw && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-rose-500/30 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative text-center">
+            <button
+              onClick={() => setDeletingWithdraw(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-black text-white">Siba Ubusabe (Delete Withdrawal Record)?</h3>
+              <p className="text-xs text-slate-400 mt-1 font-medium">
+                Siba ubusabe bwa {deletingWithdraw.amount.toLocaleString()} BIF bw'umukoresha @{deletingWithdraw.username || 'user'}?
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingWithdraw(null)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs"
+              >
+                Hagarika (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteWithdraw}
+                disabled={deleteWithdrawLoading}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl text-xs shadow-lg shadow-rose-600/20 disabled:opacity-50"
+              >
+                {deleteWithdrawLoading ? 'Gusiba...' : 'Emeza Gusiba'}
               </button>
             </div>
           </div>

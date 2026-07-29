@@ -36,35 +36,49 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response: Response;
-  try {
-    response = await fetch(endpoint, {
-      ...options,
-      headers,
-    });
-  } catch (err) {
-    console.warn(`Fetch to ${endpoint} failed, retrying once...`, err);
+  let lastError: any = null;
+  const maxRetries = 3;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      await new Promise((res) => setTimeout(res, 500));
-      response = await fetch(endpoint, {
+      const response = await fetch(endpoint, {
         ...options,
         headers,
       });
-    } catch (retryErr) {
-      console.error(`Fetch to ${endpoint} failed after retry:`, retryErr);
-      throw new Error('Network connection error or server unreachable');
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        let msg = data.error || 'Request failed. Please try again.';
+        msg = msg.replace(/^(Error|TypeError|400|500):\s*/i, '').trim();
+        throw new Error(msg);
+      }
+
+      return data as T;
+    } catch (err: any) {
+      lastError = err;
+      // If it's a domain/business error from server response (e.g. invalid password, 401, 403, 400), don't retry
+      const isNetworkError =
+        err instanceof TypeError ||
+        !err.message ||
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('NetworkError') ||
+        err.message.includes('Network connection error') ||
+        err.message.includes('server unreachable');
+
+      if (!isNetworkError) {
+        throw err;
+      }
+
+      if (attempt < maxRetries) {
+        const delay = 800 * (attempt + 1);
+        await new Promise((res) => setTimeout(res, delay));
+      }
     }
   }
 
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    let msg = data.error || 'Request failed. Please try again.';
-    msg = msg.replace(/^(Error|TypeError|400|500):\s*/i, '').trim();
-    throw new Error(msg);
-  }
-
-  return data as T;
+  console.error(`Fetch to ${endpoint} failed after ${maxRetries} retries:`, lastError);
+  throw new Error('Network connection error or server unreachable');
 }
 
 export const authApi = {

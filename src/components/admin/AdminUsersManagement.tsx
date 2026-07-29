@@ -48,6 +48,10 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
   const [balanceNote, setBalanceNote] = useState<string>('');
   const [balanceLoading, setBalanceLoading] = useState(false);
 
+  // Delete Confirm Modal
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
       u.username.toLowerCase().includes(search.toLowerCase()) ||
@@ -69,16 +73,18 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
     }
   };
 
-  const handleDeleteUser = async (id: string, username: string) => {
-    if (!window.confirm(`Are you sure you want to delete user @${username}? This action cannot be undone.`)) {
-      return;
-    }
+  const confirmDeleteUser = async () => {
+    if (!deletingUser) return;
+    setDeleteLoading(true);
     try {
-      await adminApi.deleteUser(id);
+      await adminApi.deleteUser(deletingUser.id);
       onRefresh();
-      if (selectedUser?.id === id) setSelectedUser(null);
+      if (selectedUser?.id === deletingUser.id) setSelectedUser(null);
+      setDeletingUser(null);
     } catch (err: any) {
       alert(err.message || 'Failed to delete user');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -298,7 +304,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
 
                         {/* Delete */}
                         <button
-                          onClick={() => handleDeleteUser(u.id, u.username)}
+                          onClick={() => setDeletingUser(u)}
                           className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl transition"
                           title="Delete User"
                         >
@@ -529,6 +535,49 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
                 {balanceLoading ? 'Updating Balance...' : 'Update Balance'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {deletingUser && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-rose-500/30 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative text-center">
+            <button
+              onClick={() => setDeletingUser(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-black text-white">Siba Umukoresha (Delete User)?</h3>
+              <p className="text-xs text-slate-400 mt-1 font-medium">
+                Siba @{deletingUser.username}? Ibi ntibishobora gusubizwa inyuma.
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingUser(null)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs"
+              >
+                Hagarika (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteUser}
+                disabled={deleteLoading}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl text-xs shadow-lg shadow-rose-600/20 disabled:opacity-50"
+              >
+                {deleteLoading ? 'Gusiba...' : 'Emeza Gusiba'}
+              </button>
+            </div>
           </div>
         </div>
       )}

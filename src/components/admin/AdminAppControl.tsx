@@ -41,6 +41,8 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
   const [imageActive, setImageActive] = useState(true);
   const [imageCategory, setImageCategory] = useState<'Cars' | 'Fashion' | 'Shoes' | 'Electronics' | 'Other'>('Cars');
   const [imageLoading, setImageLoading] = useState(false);
+  const [deletingImage, setDeletingImage] = useState<ImageItem | null>(null);
+  const [deleteImageLoading, setDeleteImageLoading] = useState(false);
 
   // --- SECTION B: GENERAL SETTINGS STATES ---
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
@@ -144,13 +146,17 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
     }
   };
 
-  const handleDeleteImage = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this image?')) return;
+  const confirmDeleteImage = async () => {
+    if (!deletingImage) return;
+    setDeleteImageLoading(true);
     try {
-      await adminApi.deleteImage(id);
+      await adminApi.deleteImage(deletingImage.id);
       onRefresh();
+      setDeletingImage(null);
     } catch (err: any) {
       alert(err.message || 'Failed to delete image');
+    } finally {
+      setDeleteImageLoading(false);
     }
   };
 
@@ -312,7 +318,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
                       <span>Edit</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteImage(img.id)}
+                      onClick={() => setDeletingImage(img)}
                       className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-500/20 transition"
                       title="Delete Image"
                     >
@@ -614,6 +620,49 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
                 {imageLoading ? 'Saving...' : 'Save Image'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Image Confirmation Modal */}
+      {deletingImage && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-rose-500/30 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative text-center">
+            <button
+              onClick={() => setDeletingImage(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-black text-white">Siba Ifoto (Delete Image)?</h3>
+              <p className="text-xs text-slate-400 mt-1 font-medium">
+                Siba ifoto "{deletingImage.title}"? Ibi ntibishobora gusubizwa inyuma.
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingImage(null)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs"
+              >
+                Hagarika (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteImage}
+                disabled={deleteImageLoading}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl text-xs shadow-lg shadow-rose-600/20 disabled:opacity-50"
+              >
+                {deleteImageLoading ? 'Gusiba...' : 'Emeza Gusiba'}
+              </button>
+            </div>
           </div>
         </div>
       )}

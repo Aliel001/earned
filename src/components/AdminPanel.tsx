@@ -7,12 +7,14 @@ import { AdminUsersManagement } from './admin/AdminUsersManagement';
 import { AdminWithdrawalsManagement } from './admin/AdminWithdrawalsManagement';
 import { AdminPaymentSettings } from './admin/AdminPaymentSettings';
 import { AdminAppControl } from './admin/AdminAppControl';
+import { AdminSecurity } from './admin/AdminSecurity';
 import {
   LayoutDashboard,
   Users,
   ArrowUpRight,
   CreditCard,
   Sliders,
+  ShieldCheck,
   LogOut,
   Menu,
   X,
@@ -22,26 +24,15 @@ import {
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, darkMode, setDarkMode } = useAuth();
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'dashboard' | 'users' | 'withdrawals' | 'payment-settings' | 'app-control'
+    'dashboard' | 'users' | 'withdrawals' | 'payment-settings' | 'app-control' | 'security'
   >('dashboard');
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    return document.documentElement.classList.contains('dark');
-  });
 
   const toggleDarkMode = () => {
-    if (darkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setDarkMode(true);
-    }
+    setDarkMode(!darkMode);
   };
 
   // Data states
@@ -86,7 +77,7 @@ export const AdminPanel: React.FC = () => {
   }, []);
 
   interface NavItem {
-    id: 'dashboard' | 'users' | 'withdrawals' | 'payment-settings' | 'app-control';
+    id: 'dashboard' | 'users' | 'withdrawals' | 'payment-settings' | 'app-control' | 'security';
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     badge?: number;
@@ -98,6 +89,7 @@ export const AdminPanel: React.FC = () => {
     { id: 'withdrawals', label: '💸 Withdrawals', icon: ArrowUpRight, badge: withdraws.filter((w) => w.status === 'pending').length },
     { id: 'payment-settings', label: '⚙ Payment Settings', icon: CreditCard },
     { id: 'app-control', label: '📱 App Control', icon: Sliders },
+    { id: 'security', label: '🔒 Admin Security', icon: ShieldCheck },
   ];
 
   return (
@@ -275,6 +267,10 @@ export const AdminPanel: React.FC = () => {
 
         {activeAdminTab === 'app-control' && (
           <AdminAppControl images={images} onRefresh={loadAllAdminData} />
+        )}
+
+        {activeAdminTab === 'security' && (
+          <AdminSecurity onRefresh={loadAllAdminData} />
         )}
       </main>
     </div>

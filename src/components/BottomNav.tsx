@@ -15,12 +15,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
     { id: 'home', label: t('home', language), icon: Home },
     { id: 'images', label: t('images', language), icon: ImageIcon },
     { id: 'wallet', label: t('wallet', language), icon: Wallet },
-    { id: 'withdraw', label: 'Withdraw', icon: ArrowUpRight },
-    { id: 'profile', label: 'Profile', icon: UserIcon },
+    { id: 'withdraw', label: t('withdraw', language), icon: ArrowUpRight },
+    { id: 'profile', label: t('profile', language), icon: UserIcon },
   ];
 
   if (role === 'admin') {
-    navItems.push({ id: 'admin', label: 'Admin', icon: Shield });
+    navItems.push({ id: 'admin', label: t('admin', language), icon: Shield });
   }
 
   return (
