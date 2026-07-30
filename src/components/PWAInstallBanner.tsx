@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { t } from '../locales/translations';
+import { useAuth } from '../context/AuthContext.js';
+import { t } from '../locales/translations.js';
 import { Download, X, Sparkles } from 'lucide-react';
 
 export const PWAInstallBanner: React.FC = () => {

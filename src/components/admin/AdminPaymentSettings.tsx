@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { PaymentSettings } from '../../types';
-import { adminApi } from '../../services/api';
+import { PaymentSettings } from '../../types.js';
+import { adminApi } from '../../services/api.js';
 import { Settings, Save, CheckCircle2, AlertCircle, Phone, CreditCard, MessageSquare, Code, Trash2, RefreshCw, Eye } from 'lucide-react';
 
 interface AdminPaymentSettingsProps {

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { SUPPORTED_LANGUAGES, t } from '../locales/translations';
-import { Language } from '../types';
-import { authApi, userApi } from '../services/api';
+import { useAuth } from '../context/AuthContext.js';
+import { SUPPORTED_LANGUAGES, t } from '../locales/translations.js';
+import { Language } from '../types.js';
+import { authApi, userApi } from '../services/api.js';
 import {
   User as UserIcon,
   Phone,

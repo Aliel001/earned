@@ -9,7 +9,7 @@ import {
   Wallet,
   WithdrawRequest,
   WithdrawStatus,
-} from '../types';
+} from '../types.js';
 
 const TOKEN_KEY = 'twigamart_jwt_token';
 

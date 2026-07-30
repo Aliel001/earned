@@ -1,7 +1,7 @@
 import React from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { UserLayout } from './components/UserLayout';
-import { AdminPanel } from './components/AdminPanel';
+import { AuthProvider, useAuth } from './context/AuthContext.js';
+import { UserLayout } from './components/UserLayout.js';
+import { AdminPanel } from './components/AdminPanel.js';
 
 const MainAppContent: React.FC = () => {
   const { role, isLoading } = useAuth();

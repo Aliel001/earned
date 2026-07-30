@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { t } from '../locales/translations';
-import { PaymentSettings, WithdrawRequest } from '../types';
+import { useAuth } from '../context/AuthContext.js';
+import { t } from '../locales/translations.js';
+import { PaymentSettings, WithdrawRequest } from '../types.js';
 import { Wallet, ArrowUpRight, Copy, Check, Clock, CheckCircle2, XCircle, Phone, MessageSquare, AlertCircle, Info } from 'lucide-react';
-import { getPayNowUssdDetails } from '../utils/paymentUtils';
+import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
 
 interface WalletViewProps {
   balance: number;

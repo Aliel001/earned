@@ -1,4 +1,4 @@
-import { Language } from '../types';
+import { Language } from '../types.js';
 
 export const SUPPORTED_LANGUAGES: { code: Language; name: string; nativeName: string; flag: string }[] = [
   { code: 'rn', name: 'Kirundi', nativeName: 'Ikirundi', flag: '🇧🇮' },

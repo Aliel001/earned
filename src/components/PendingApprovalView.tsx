@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { t } from '../locales/translations';
-import { paymentApi } from '../services/api';
-import { PaymentSettings } from '../types';
+import { useAuth } from '../context/AuthContext.js';
+import { t } from '../locales/translations.js';
+import { paymentApi } from '../services/api.js';
+import { PaymentSettings } from '../types.js';
 import { Clock, PhoneCall, MessageSquare, RefreshCw, ShieldAlert, Gift, CheckCircle2 } from 'lucide-react';
-import { getPayNowUssdDetails } from '../utils/paymentUtils';
+import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
 
 export const PendingApprovalView: React.FC = () => {
   const { user, language, refreshUser, logout } = useAuth();
