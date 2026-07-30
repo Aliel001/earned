@@ -35,10 +35,34 @@ async function seedDefaultAdmin() {
         await prisma.admin.create({
           data: {
             username: 'admin',
-            password_hash: bcrypt.hashSync('admin123', 10),
+            password_hash: DEFAULT_ADMIN_HASH,
           },
         });
         console.log('[Database] Default admin account seeded in PostgreSQL.');
+      }
+
+      const userCount = await prisma.user.count();
+      if (userCount === 0) {
+        console.log('[Database] Seeding default demo users in PostgreSQL...');
+        for (const u of INITIAL_STORE.users) {
+          await prisma.user.create({
+            data: {
+              id: u.id,
+              username: u.username,
+              phone_country_code: u.phone_country_code,
+              phone_number: u.phone_number,
+              password_hash: u.password_hash,
+              language: u.language,
+              status: u.status,
+              wallet: {
+                create: {
+                  balance: 15000.0,
+                  currency: 'BIF',
+                },
+              },
+            },
+          }).catch((err) => console.error('[Database] Error seeding user:', err));
+        }
       }
     } catch (err) {
       console.error('[Database] Error seeding default admin:', err);
@@ -59,14 +83,27 @@ interface StoreData {
   notifications: NotificationItem[];
 }
 
-const STORE_PATH = process.env.VERCEL
+let STORE_PATH = process.env.VERCEL
   ? path.join('/tmp', 'twigamart_store.json')
   : path.join(process.cwd(), 'data', 'twigamart_store.json');
 
 function ensureDataDirExists() {
-  const dir = path.dirname(STORE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    const dir = path.dirname(STORE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('[Database] Could not create directory for store, switching STORE_PATH to /tmp:', err);
+    try {
+      STORE_PATH = path.join('/tmp', 'twigamart_store.json');
+      const dir = path.dirname(STORE_PATH);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    } catch (e) {
+      console.error('[Database] Critical: Failed to create fallback /tmp store directory:', e);
+    }
   }
 }
 
@@ -327,29 +364,24 @@ class LocalDatabase {
   }
 
   async findUserByUsername(username: string) {
-    const clean = username.trim().toLowerCase().replace(/^@/, '');
+    const rawClean = username.trim();
+    const clean = rawClean.toLowerCase().replace(/^@/, '');
     const digitsOnly = username.replace(/\D/g, '');
+    const cleanDigitsWithoutZero = digitsOnly.replace(/^0/, '');
 
     if (prisma) {
       try {
         let dbUser = await prisma.user.findFirst({
           where: {
-            username: {
-              equals: clean,
-              mode: 'insensitive',
-            },
+            OR: [
+              { username: { equals: clean, mode: 'insensitive' } },
+              { username: { equals: `@${clean}`, mode: 'insensitive' } },
+              { username: { equals: rawClean, mode: 'insensitive' } },
+              ...(cleanDigitsWithoutZero.length >= 6 ? [{ phone_number: { contains: cleanDigitsWithoutZero } }] : []),
+              ...(digitsOnly.length >= 6 ? [{ phone_number: { contains: digitsOnly } }] : []),
+            ],
           },
         });
-
-        if (!dbUser && digitsOnly.length >= 6) {
-          dbUser = await prisma.user.findFirst({
-            where: {
-              phone_number: {
-                contains: digitsOnly,
-              },
-            },
-          });
-        }
 
         if (dbUser) {
           return {
@@ -369,8 +401,9 @@ class LocalDatabase {
     }
 
     return this.store.users.find((u) => {
+      const uClean = u.username.trim().toLowerCase().replace(/^@/, '');
       // Direct username match
-      if (u.username.toLowerCase() === clean) return true;
+      if (uClean === clean) return true;
 
       // Phone number match if user typed phone number into login username field
       if (digitsOnly.length >= 6) {
@@ -379,7 +412,9 @@ class LocalDatabase {
         if (
           fullPhoneDigits === digitsOnly ||
           phoneOnlyDigits === digitsOnly ||
-          (digitsOnly.length >= 8 && (digitsOnly.endsWith(phoneOnlyDigits) || phoneOnlyDigits.endsWith(digitsOnly)))
+          fullPhoneDigits.endsWith(cleanDigitsWithoutZero) ||
+          phoneOnlyDigits.endsWith(cleanDigitsWithoutZero) ||
+          (cleanDigitsWithoutZero.length >= 6 && (cleanDigitsWithoutZero.endsWith(phoneOnlyDigits) || phoneOnlyDigits.endsWith(cleanDigitsWithoutZero)))
         ) {
           return true;
         }
@@ -1065,9 +1100,15 @@ class LocalDatabase {
       }
     }
 
-    return this.store.images.map((img) => {
-      const likes_count = this.store.likes.filter((l) => l.image_id === img.id).length;
-      const user_liked = userId ? this.store.likes.some((l) => l.image_id === img.id && l.user_id === userId) : false;
+    const imagesList =
+      this.store && Array.isArray(this.store.images) && this.store.images.length > 0
+        ? this.store.images
+        : PRODUCT_LIBRARY;
+    const likesList = this.store && Array.isArray(this.store.likes) ? this.store.likes : [];
+
+    return imagesList.map((img) => {
+      const likes_count = likesList.filter((l) => l.image_id === img.id).length;
+      const user_liked = userId ? likesList.some((l) => l.image_id === img.id && l.user_id === userId) : false;
       return { ...img, likes_count, user_liked };
     });
   }
@@ -1540,7 +1581,7 @@ class LocalDatabase {
         console.error('[Prisma] getPaymentSettings error:', err);
       }
     }
-    return this.store.paymentSettings;
+    return (this.store && this.store.paymentSettings) || INITIAL_STORE.paymentSettings;
   }
 
   async updatePaymentSettings(data: Partial<PaymentSettings>) {

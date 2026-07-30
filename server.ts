@@ -447,9 +447,22 @@ async function startServer() {
   app.get('/api/general-settings', async (req: Request, res: Response) => {
     try {
       const settings = await db.getGeneralSettings();
-      res.json(settings);
+      res.json(settings || {
+        registration_bonus: 15000,
+        like_reward: 1000,
+        min_withdraw_amount: 5000,
+        enabled_languages: ['rn', 'rw', 'en', 'fr'],
+        maintenance_mode: false,
+      });
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      console.error('[API Error] /api/general-settings:', err);
+      res.json({
+        registration_bonus: 15000,
+        like_reward: 1000,
+        min_withdraw_amount: 5000,
+        enabled_languages: ['rn', 'rw', 'en', 'fr'],
+        maintenance_mode: false,
+      });
     }
   });
 
@@ -457,9 +470,10 @@ async function startServer() {
   app.get('/api/images', optionalAuthToken, async (req: AuthRequest, res: Response) => {
     try {
       const images = await db.getAllImages(req.user?.id);
-      res.json(images);
+      res.json(images || []);
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      console.error('[API Error] /api/images:', err);
+      res.json([]);
     }
   });
 
@@ -540,9 +554,20 @@ async function startServer() {
   app.get('/api/payment-settings', async (req: Request, res: Response) => {
     try {
       const settings = await db.getPaymentSettings();
-      res.json(settings);
+      res.json(settings || {
+        account_number: '+257 69 00 11 22',
+        whatsapp_number: '+257 69 00 11 22',
+        ussd_code: '*163#',
+        payment_instructions: 'Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.',
+      });
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      console.error('[API Error] /api/payment-settings:', err);
+      res.json({
+        account_number: '+257 69 00 11 22',
+        whatsapp_number: '+257 69 00 11 22',
+        ussd_code: '*163#',
+        payment_instructions: 'Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.',
+      });
     }
   });
 
