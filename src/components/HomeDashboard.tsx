@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext.js';
-import { t } from '../locales/translations.js';
-import { ImageItem, PaymentSettings } from '../types.js';
+import { useAuth } from '../context/AuthContext';
+import { t } from '../locales/translations';
+import { ImageItem, PaymentSettings } from '../types';
 import { Wallet, Image as ImageIcon, Heart, ArrowUpRight, CheckCircle2, ShieldCheck, Sparkles, MessageSquare, PhoneCall, Zap, PhoneForwarded } from 'lucide-react';
-import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
+import { getPayNowUssdDetails } from '../utils/paymentUtils';
 
 interface HomeDashboardProps {
   balance: number;

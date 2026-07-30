@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { db } from './src/server/db.js';
-import { UserStatus } from './src/types.js';
+import { db } from './src/server/db';
+import { UserStatus } from './src/types';
 
 const PORT = Number(process.env.PORT) || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'twigamart_jwt_secret_key_2026_super_secure';

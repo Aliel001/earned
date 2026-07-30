@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { User, UserStatus } from '../../types.js';
-import { adminApi } from '../../services/api.js';
+import { User, UserStatus } from '../../types';
+import { adminApi } from '../../services/api';
 import {
   Users,
   Search,

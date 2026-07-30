@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { GeneralSettings, ImageItem } from '../../types.js';
-import { adminApi } from '../../services/api.js';
+import { GeneralSettings, ImageItem } from '../../types';
+import { adminApi } from '../../services/api';
 import {
   Sliders,
   Image as ImageIcon,

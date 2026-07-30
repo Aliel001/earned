@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
-import { PRODUCT_LIBRARY } from '../data/productLibrary.js';
+import { PRODUCT_LIBRARY } from '../data/productLibrary';
 import {
   AdminStats,
   GeneralSettings,
@@ -15,7 +15,9 @@ import {
   Wallet,
   WithdrawRequest,
   WithdrawStatus,
-} from '../types.js';
+} from '../types';
+
+const DEFAULT_ADMIN_HASH = bcrypt.hashSync('admin123', 10);
 
 let prisma: PrismaClient | null = null;
 if (process.env.DATABASE_URL) {
@@ -26,50 +28,6 @@ if (process.env.DATABASE_URL) {
     console.error('[Database] PrismaClient initialization error:', err);
   }
 }
-
-async function seedDefaultAdmin() {
-  if (prisma) {
-    try {
-      const adminCount = await prisma.admin.count();
-      if (adminCount === 0) {
-        await prisma.admin.create({
-          data: {
-            username: 'admin',
-            password_hash: DEFAULT_ADMIN_HASH,
-          },
-        });
-        console.log('[Database] Default admin account seeded in PostgreSQL.');
-      }
-
-      const userCount = await prisma.user.count();
-      if (userCount === 0) {
-        console.log('[Database] Seeding default demo users in PostgreSQL...');
-        for (const u of INITIAL_STORE.users) {
-          await prisma.user.create({
-            data: {
-              id: u.id,
-              username: u.username,
-              phone_country_code: u.phone_country_code,
-              phone_number: u.phone_number,
-              password_hash: u.password_hash,
-              language: u.language,
-              status: u.status,
-              wallet: {
-                create: {
-                  balance: 15000.0,
-                  currency: 'BIF',
-                },
-              },
-            },
-          }).catch((err) => console.error('[Database] Error seeding user:', err));
-        }
-      }
-    } catch (err) {
-      console.error('[Database] Error seeding default admin:', err);
-    }
-  }
-}
-seedDefaultAdmin();
 
 interface StoreData {
   users: (User & { password_hash: string })[];
@@ -106,8 +64,6 @@ function ensureDataDirExists() {
     }
   }
 }
-
-const DEFAULT_ADMIN_HASH = bcrypt.hashSync('admin123', 10);
 
 const INITIAL_STORE: StoreData = {
   users: [
@@ -223,6 +179,51 @@ const INITIAL_STORE: StoreData = {
     },
   ],
 };
+
+async function seedDefaultAdmin() {
+  if (prisma) {
+    try {
+      const adminCount = await prisma.admin.count();
+      if (adminCount === 0) {
+        await prisma.admin.create({
+          data: {
+            username: 'admin',
+            password_hash: DEFAULT_ADMIN_HASH,
+          },
+        });
+        console.log('[Database] Default admin account seeded in PostgreSQL.');
+      }
+
+      const userCount = await prisma.user.count();
+      if (userCount === 0) {
+        console.log('[Database] Seeding default demo users in PostgreSQL...');
+        for (const u of INITIAL_STORE.users) {
+          await prisma.user.create({
+            data: {
+              id: u.id,
+              username: u.username,
+              phone_country_code: u.phone_country_code,
+              phone_number: u.phone_number,
+              password_hash: u.password_hash,
+              language: u.language,
+              status: u.status,
+              wallet: {
+                create: {
+                  balance: 15000.0,
+                  currency: 'BIF',
+                },
+              },
+            },
+          }).catch((err) => console.error('[Database] Error seeding user:', err));
+        }
+      }
+    } catch (err) {
+      console.error('[Database] Error seeding default admin:', err);
+    }
+  }
+}
+
+seedDefaultAdmin().catch((err) => console.error('[Database] Error seeding admin:', err));
 
 class LocalDatabase {
   private store: StoreData;

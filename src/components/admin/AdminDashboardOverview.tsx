@@ -1,5 +1,5 @@
 import React from 'react';
-import { AdminStats } from '../../types.js';
+import { AdminStats } from '../../types';
 import {
   Users,
   Clock,

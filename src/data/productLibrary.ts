@@ -1,4 +1,4 @@
-import { ImageItem } from '../types.js';
+import { ImageItem } from '../types';
 
 export const PRODUCT_LIBRARY: ImageItem[] = [
   // ==========================================

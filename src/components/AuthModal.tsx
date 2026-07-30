@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext.js';
-import { COUNTRY_CODES, SUPPORTED_LANGUAGES, t } from '../locales/translations.js';
-import { Language } from '../types.js';
+import { useAuth } from '../context/AuthContext';
+import { COUNTRY_CODES, SUPPORTED_LANGUAGES, t } from '../locales/translations';
+import { Language } from '../types';
 import { X, Lock, Phone, User, Globe, Gift, ShieldAlert, Sparkles, CheckCircle2, Mail } from 'lucide-react';
 
 interface AuthModalProps {

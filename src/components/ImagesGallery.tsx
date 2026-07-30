@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { useAuth } from '../context/AuthContext.js';
-import { t } from '../locales/translations.js';
-import { ImageItem } from '../types.js';
+import { useAuth } from '../context/AuthContext';
+import { t } from '../locales/translations';
+import { ImageItem } from '../types';
 import { Heart, Image as ImageIcon, Search, Sparkles, CheckCircle2, Car, Shirt, Footprints, Smartphone, Package, Layers } from 'lucide-react';
 
 interface ImagesGalleryProps {

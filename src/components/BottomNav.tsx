@@ -1,6 +1,6 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext.js';
-import { t } from '../locales/translations.js';
+import { useAuth } from '../context/AuthContext';
+import { t } from '../locales/translations';
 import { Home, Image as ImageIcon, Wallet, ArrowUpRight, User as UserIcon, Shield } from 'lucide-react';
 
 interface BottomNavProps {

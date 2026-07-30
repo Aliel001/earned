@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { WithdrawRequest, WithdrawStatus } from '../../types.js';
-import { adminApi } from '../../services/api.js';
+import { WithdrawRequest, WithdrawStatus } from '../../types';
+import { adminApi } from '../../services/api';
 import {
   ArrowUpRight,
   CheckCircle2,
