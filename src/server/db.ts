@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
-import { PRODUCT_LIBRARY } from '../data/productLibrary';
+import { PRODUCT_LIBRARY } from '../data/productLibrary.js';
 import {
   AdminStats,
   GeneralSettings,
@@ -15,7 +15,7 @@ import {
   Wallet,
   WithdrawRequest,
   WithdrawStatus,
-} from '../types';
+} from '../types.js';
 
 const DEFAULT_ADMIN_HASH = bcrypt.hashSync('admin123', 10);
 
