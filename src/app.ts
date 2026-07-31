@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
+import compression from 'compression';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { db } from './server/db.js';
@@ -58,8 +59,16 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
 }
 
 const app = express();
+app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Enable Connection Keep-Alive & Performance headers for 100+ concurrent users
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Keep-Alive', 'timeout=120, max=1000');
+  next();
+});
 
 // Dedicated Image Upload Endpoint
 app.post('/api/upload', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -193,10 +202,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     if (admin) {
       const isMatch =
         (await bcrypt.compare(rawPassword, admin.password_hash)) ||
-        (await bcrypt.compare(cleanPassword, admin.password_hash)) ||
-        cleanUsername === 'admin' ||
-        cleanUsername === 'administrator' ||
-        (cleanPassword === 'admin123' || cleanPassword === 'admin');
+        (await bcrypt.compare(cleanPassword, admin.password_hash));
 
       if (isMatch) {
         const token = jwt.sign(
@@ -293,10 +299,7 @@ app.post('/api/auth/admin-login', async (req: Request, res: Response) => {
 
     const isMatch =
       (await bcrypt.compare(rawPassword, admin.password_hash)) ||
-      (await bcrypt.compare(cleanPassword, admin.password_hash)) ||
-      cleanUsername === 'admin' ||
-      cleanUsername === 'administrator' ||
-      (cleanPassword === 'admin123' || cleanPassword === 'admin');
+      (await bcrypt.compare(cleanPassword, admin.password_hash));
 
     if (!isMatch) {
       console.warn(`[Admin Login Failed] Password incorrect for admin '${cleanUsername}'`);
@@ -341,7 +344,10 @@ app.post('/api/admin/change-password', authenticateToken, requireAdmin, async (r
       return res.status(404).json({ error: 'Admin account not found' });
     }
 
-    const isMatch = (await bcrypt.compare(currentPassword, admin.password_hash)) || currentPassword === 'admin123' || currentPassword === 'admin' || admin.username === 'admin';
+    const isMatch =
+      (await bcrypt.compare(currentPassword, admin.password_hash)) ||
+      (await bcrypt.compare(currentPassword.trim(), admin.password_hash));
+
     if (!isMatch) {
       return res.status(400).json({ error: 'Inyandiko y\'ibanga ya none si yo (Current password incorrect)' });
     }
@@ -376,7 +382,10 @@ app.post('/api/auth/change-password', authenticateToken, async (req: AuthRequest
       const admin = (await db.getAdminById(req.user.id)) || (await db.getAdminByUsername(req.user.username));
       if (!admin) return res.status(404).json({ error: 'Admin not found' });
 
-      const isMatch = await bcrypt.compare(currentPassword, admin.password_hash);
+      const isMatch =
+        (await bcrypt.compare(currentPassword, admin.password_hash)) ||
+        (await bcrypt.compare(currentPassword.trim(), admin.password_hash));
+
       if (!isMatch) {
         return res.status(400).json({ error: 'Inyandiko y\'ibanga ya none si yo (Current password incorrect)' });
       }
@@ -392,9 +401,12 @@ app.post('/api/auth/change-password', authenticateToken, async (req: AuthRequest
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    const isMatch =
+      (await bcrypt.compare(currentPassword, user.password_hash)) ||
+      (await bcrypt.compare(currentPassword.trim(), user.password_hash));
+
     if (!isMatch) {
-      return res.status(400).json({ error: 'Ijambo ryo hagati ntiroba ryo (Current password incorrect)' });
+      return res.status(400).json({ error: 'Inyandiko y\'ibanga ya none si yo (Current password incorrect)' });
     }
 
     const newHash = await bcrypt.hash(newPassword, 10);

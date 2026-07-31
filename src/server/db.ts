@@ -19,11 +19,28 @@ import {
 
 const DEFAULT_ADMIN_HASH = bcrypt.hashSync('admin123', 10);
 
+export async function withPrismaTimeout<T>(promise: Promise<T>, timeoutMs = 2500): Promise<T> {
+  let timer: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Prisma database operation timed out')), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
 let prisma: PrismaClient | null = null;
 if (process.env.DATABASE_URL) {
   try {
-    prisma = new PrismaClient();
-    console.log('[Database] PrismaClient initialized for PostgreSQL connection.');
+    const client = new PrismaClient();
+    client
+      .$connect()
+      .then(() => {
+        prisma = client;
+        console.log('[Database] PrismaClient connected successfully.');
+      })
+      .catch((err) => {
+        console.warn('[Database] Prisma connection test failed, using local store:', err.message || err);
+        prisma = null;
+      });
   } catch (err) {
     console.error('[Database] PrismaClient initialization error:', err);
   }
@@ -227,20 +244,65 @@ seedDefaultAdmin().catch((err) => console.error('[Database] Error seeding admin:
 
 class LocalDatabase {
   private store: StoreData;
+  private lastCheckTime = 0;
+  private lastMtime = 0;
+  private saveTimeout: any = null;
 
   constructor() {
     this.store = this.loadStore();
   }
 
   private refreshStore(): StoreData {
-    this.store = this.loadStore();
-    return this.store;
+    const now = Date.now();
+    if (now - this.lastCheckTime < 2000 && this.store) {
+      return this.store;
+    }
+    this.lastCheckTime = now;
+    try {
+      ensureDataDirExists();
+      if (fs.existsSync(STORE_PATH)) {
+        const stat = fs.statSync(STORE_PATH);
+        if (stat.mtimeMs === this.lastMtime && this.store) {
+          return this.store;
+        }
+        this.lastMtime = stat.mtimeMs;
+        const raw = fs.readFileSync(STORE_PATH, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (!parsed.images || parsed.images.length < 100) {
+          parsed.images = PRODUCT_LIBRARY;
+        }
+        this.store = {
+          ...INITIAL_STORE,
+          ...parsed,
+          users: Array.isArray(parsed.users) ? parsed.users : INITIAL_STORE.users,
+          admins: Array.isArray(parsed.admins) && parsed.admins.length > 0 ? parsed.admins : INITIAL_STORE.admins,
+          wallets: Array.isArray(parsed.wallets) ? parsed.wallets : INITIAL_STORE.wallets,
+          withdraws: Array.isArray(parsed.withdraws) ? parsed.withdraws : INITIAL_STORE.withdraws,
+          likes: Array.isArray(parsed.likes) ? parsed.likes : INITIAL_STORE.likes,
+          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_STORE.notifications,
+          paymentSettings: {
+            ...INITIAL_STORE.paymentSettings,
+            ...(parsed.paymentSettings || {}),
+          },
+          generalSettings: {
+            ...INITIAL_STORE.generalSettings,
+            ...(parsed.generalSettings || {}),
+          },
+        };
+      }
+    } catch (err) {
+      console.error('Failed to load store, using cached in-memory store:', err);
+    }
+    return this.store || INITIAL_STORE;
   }
 
   private loadStore(): StoreData {
     try {
       ensureDataDirExists();
       if (fs.existsSync(STORE_PATH)) {
+        const stat = fs.statSync(STORE_PATH);
+        this.lastMtime = stat.mtimeMs;
+        this.lastCheckTime = Date.now();
         const raw = fs.readFileSync(STORE_PATH, 'utf-8');
         const parsed = JSON.parse(raw);
         if (!parsed.images || parsed.images.length < 100) {
@@ -274,11 +336,33 @@ class LocalDatabase {
   }
 
   private saveStore(data?: StoreData) {
+    if (data) {
+      this.store = data;
+    }
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+    this.saveTimeout = setTimeout(() => {
+      this.flushSaveToDisk();
+    }, 100);
+  }
+
+  private async flushSaveToDisk() {
     try {
       ensureDataDirExists();
-      fs.writeFileSync(STORE_PATH, JSON.stringify(data || this.store, null, 2), 'utf-8');
+      const content = JSON.stringify(this.store, null, 2);
+      const tmpPath = `${STORE_PATH}.tmp`;
+      await fs.promises.writeFile(tmpPath, content, 'utf-8');
+      await fs.promises.rename(tmpPath, STORE_PATH);
+      const stat = await fs.promises.stat(STORE_PATH);
+      this.lastMtime = stat.mtimeMs;
+      this.lastCheckTime = Date.now();
     } catch (err) {
-      console.error('Failed to save store:', err);
+      try {
+        fs.writeFileSync(STORE_PATH, JSON.stringify(this.store, null, 2), 'utf-8');
+      } catch (e) {
+        console.error('Failed to save store:', e);
+      }
     }
   }
 
@@ -612,9 +696,21 @@ class LocalDatabase {
 
   async updateUserPassword(id: string, password_hash: string) {
     this.refreshStore();
+    if (prisma) {
+      try {
+        await prisma.user.update({
+          where: { id },
+          data: { password_hash },
+        });
+      } catch (err) {
+        console.error('[Prisma] updateUserPassword error:', err);
+      }
+    }
+
     const user = this.store.users.find((u) => u.id === id);
     if (user) {
       user.password_hash = password_hash;
+      user.updated_at = new Date().toISOString();
       this.saveStore();
       return true;
     }
@@ -1056,54 +1152,75 @@ class LocalDatabase {
   }
 
   async updateAdminPassword(adminId: string, newPasswordHash: string, newUsername?: string) {
+    this.refreshStore();
     if (prisma) {
       try {
-        await prisma.admin.update({
-          where: { id: adminId },
-          data: {
-            password_hash: newPasswordHash,
-            ...(newUsername ? { username: newUsername } : {}),
-          },
-        });
+        const updateData: any = { password_hash: newPasswordHash };
+        if (newUsername) updateData.username = newUsername;
+
+        const dbAdmin = await prisma.admin.findUnique({ where: { id: adminId } });
+        if (dbAdmin) {
+          await prisma.admin.update({
+            where: { id: adminId },
+            data: updateData,
+          });
+        } else {
+          await prisma.admin.updateMany({
+            data: updateData,
+          });
+        }
       } catch (err) {
         console.error('[Prisma] updateAdminPassword error:', err);
       }
     }
 
-    const admin = this.store.admins.find((a) => a.id === adminId) || this.store.admins[0];
+    if (!this.store.admins || this.store.admins.length === 0) {
+      this.store.admins = INITIAL_STORE.admins;
+    }
+
+    let admin = this.store.admins.find((a) => a.id === adminId) || this.store.admins[0];
     if (admin) {
       admin.password_hash = newPasswordHash;
       if (newUsername) admin.username = newUsername;
-      this.saveStore();
-      return true;
     }
-    return false;
+
+    for (const a of this.store.admins) {
+      a.password_hash = newPasswordHash;
+      if (newUsername) a.username = newUsername;
+    }
+
+    this.saveStore();
+    return true;
   }
 
   // Images & Likes
   async getAllImages(userId?: string) {
     if (prisma) {
       try {
-        const count = await prisma.image.count();
+        const count = await withPrismaTimeout(prisma.image.count(), 1500);
         if (count === 0 && PRODUCT_LIBRARY && PRODUCT_LIBRARY.length > 0) {
-          console.log('[Prisma] Seeding PRODUCT_LIBRARY into Neon PostgreSQL Image table...');
-          for (const item of PRODUCT_LIBRARY) {
-            await prisma.image.create({
-              data: {
+          console.log('[Prisma] Seeding PRODUCT_LIBRARY into Neon PostgreSQL Image table asynchronously...');
+          prisma.image
+            .createMany({
+              data: PRODUCT_LIBRARY.map((item) => ({
                 id: item.id,
                 title: item.title,
                 image_url: item.image_url,
                 reward: item.reward || 1000,
                 active: item.active ?? true,
-              },
-            }).catch((err) => console.error('[Prisma] Seed image error:', err));
-          }
+              })),
+              skipDuplicates: true,
+            })
+            .catch((err) => console.error('[Prisma] Seed image error:', err));
         }
 
-        const dbImages = await prisma.image.findMany({
-          include: { likes: true },
-          orderBy: { created_at: 'asc' },
-        });
+        const dbImages = await withPrismaTimeout(
+          prisma.image.findMany({
+            include: { likes: true },
+            orderBy: { created_at: 'asc' },
+          }),
+          2500
+        );
 
         if (dbImages && dbImages.length > 0) {
           return dbImages.map((img) => {
@@ -1122,7 +1239,7 @@ class LocalDatabase {
           });
         }
       } catch (err) {
-        console.error('[Prisma] getAllImages error:', err);
+        console.error('[Prisma] getAllImages error, falling back to local store:', err);
       }
     }
 
@@ -1585,26 +1702,31 @@ class LocalDatabase {
   async getPaymentSettings(): Promise<PaymentSettings> {
     if (prisma) {
       try {
-        let ps = await prisma.paymentSettings.findUnique({ where: { id: 'default' } });
+        let ps = await withPrismaTimeout(prisma.paymentSettings.findUnique({ where: { id: 'default' } }), 1500);
         if (!ps) {
-          ps = await prisma.paymentSettings.create({
-            data: {
-              id: 'default',
-              account_number: '+257 69 00 11 22',
-              whatsapp_number: '+257 69 00 11 22',
-              ussd_code: '*163#',
-              payment_instructions: 'Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.',
-            },
-          });
+          ps = await withPrismaTimeout(
+            prisma.paymentSettings.create({
+              data: {
+                id: 'default',
+                account_number: '+257 69 00 11 22',
+                whatsapp_number: '+257 69 00 11 22',
+                ussd_code: '*163#',
+                payment_instructions: 'Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.',
+              },
+            }),
+            1500
+          );
         }
-        return {
-          account_number: ps.account_number,
-          whatsapp_number: ps.whatsapp_number,
-          ussd_code: ps.ussd_code,
-          payment_instructions: ps.payment_instructions,
-        };
+        if (ps) {
+          return {
+            account_number: ps.account_number,
+            whatsapp_number: ps.whatsapp_number,
+            ussd_code: ps.ussd_code,
+            payment_instructions: ps.payment_instructions,
+          };
+        }
       } catch (err) {
-        console.error('[Prisma] getPaymentSettings error:', err);
+        console.error('[Prisma] getPaymentSettings error, falling back to local store:', err);
       }
     }
     return (this.store && this.store.paymentSettings) || INITIAL_STORE.paymentSettings;
