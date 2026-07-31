@@ -1,6 +1,6 @@
 {
   "name": "TwigaMart",
-  "description": "Mobile-first PWA reward and wallet platform for Burundi and East Africa featuring image rewards, multi-language support (Kirundi, Kinyarwanda, English, French), and admin management.",
+  "description": "Mobile-first PWA reward and wallet platform featuring image rewards, multi-language support (Kirundi, Kinyarwanda, English, French), and admin management.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

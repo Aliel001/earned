@@ -13,7 +13,7 @@ const MainAppContent: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-emerald-500/20 animate-bounce">
             🦒
           </div>
-          <p className="text-xs text-emerald-400 font-bold tracking-wider uppercase">TwigaMart Burundi</p>
+          <p className="text-xs text-emerald-400 font-bold tracking-wider uppercase">TwigaMart</p>
           <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
         </div>
       </div>

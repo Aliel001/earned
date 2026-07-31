@@ -1,7 +1,7 @@
 {
-  "name": "TwigaMart Burundi - Earn & Wallet PWA",
+  "name": "TwigaMart - Earn & Wallet PWA",
   "short_name": "TwigaMart",
-  "description": "Mobile-first reward and wallet platform for Burundi and East Africa",
+  "description": "Mobile-first reward and wallet platform",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

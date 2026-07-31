@@ -93,7 +93,7 @@ app.post('/api/upload', authenticateToken, async (req: AuthRequest, res: Respons
 
 // Health Check
 app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', app: 'TwigaMart Burundi PWA', time: new Date().toISOString() });
+  res.json({ status: 'ok', app: 'TwigaMart PWA', time: new Date().toISOString() });
 });
 
 // --- AUTH ROUTES ---

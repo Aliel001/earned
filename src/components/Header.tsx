@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, walletBalance, onNav
                 BI
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Burundi Rewards & Wallet</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Rewards & Wallet</p>
           </div>
         </div>
 

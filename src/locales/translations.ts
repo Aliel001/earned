@@ -102,7 +102,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Profile
     profile_title: 'Imyirondoro y\'Umukoresha',
     language_settings: 'Uburimi',
-    app_version: 'TwigaMart PWA v1.0 (Burundi)',
+    app_version: 'TwigaMart PWA v1.0',
     pwa_install_btn: 'Shyira TwigaMart ku Telefoni',
 
     // Admin Panel

@@ -143,7 +143,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
           <p className="text-xs text-slate-400 mt-1">
             {mode === 'admin'
               ? 'Shyiramo inyandiko y\'ibanga ya Admin kugira ngo winjire.'
-              : 'TwigaMart Burundi - Earn BIF by Liking Images'}
+              : 'TwigaMart - Earn BIF by Liking Images'}
           </p>
         </div>
 
