@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { t } from '../locales/translations';
-import { ImageItem, PaymentSettings } from '../types';
+import { useAuth } from '../context/AuthContext.js';
+import { t } from '../locales/translations.js';
+import { ImageItem, PaymentSettings } from '../types.js';
 import { Wallet, Image as ImageIcon, Heart, ArrowUpRight, CheckCircle2, ShieldCheck, Sparkles, MessageSquare, PhoneCall, Zap, PhoneForwarded } from 'lucide-react';
-import { getPayNowUssdDetails } from '../utils/paymentUtils';
+import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
 
 interface HomeDashboardProps {
   balance: number;
@@ -228,7 +228,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <a
-              href={`https://wa.me/${paymentSettings.whatsapp_number.replace(/\D/g, '')}`}
+              href={`https://wa.me/${(paymentSettings?.whatsapp_number || '').replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 p-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 backdrop-blur-md transition"

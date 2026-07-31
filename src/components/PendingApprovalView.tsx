@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { t } from '../locales/translations';
-import { paymentApi } from '../services/api';
-import { PaymentSettings } from '../types';
+import { useAuth } from '../context/AuthContext.js';
+import { t } from '../locales/translations.js';
+import { paymentApi } from '../services/api.js';
+import { PaymentSettings } from '../types.js';
 import { Clock, PhoneCall, MessageSquare, RefreshCw, ShieldAlert, Gift, CheckCircle2 } from 'lucide-react';
-import { getPayNowUssdDetails } from '../utils/paymentUtils';
+import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
 
 export const PendingApprovalView: React.FC = () => {
   const { user, language, refreshUser, logout } = useAuth();
@@ -107,8 +107,8 @@ export const PendingApprovalView: React.FC = () => {
 
               {/* WhatsApp Link */}
               <a
-                href={`https://wa.me/${paymentSettings.whatsapp_number.replace(/\D/g, '')}?text=Muraho%20Admin%2C%20nabyaza%20konte%20yange%20kuri%20TwigaMart%20(${encodeURIComponent(
-                  user.username
+                href={`https://wa.me/${(paymentSettings?.whatsapp_number || '').replace(/\D/g, '')}?text=Muraho%20Admin%2C%20nabyaza%20konte%20yange%20kuri%20TwigaMart%20(${encodeURIComponent(
+                  user?.username || ''
                 )})`}
                 target="_blank"
                 rel="noopener noreferrer"

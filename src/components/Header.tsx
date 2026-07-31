@@ -1,7 +1,7 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { t } from '../locales/translations';
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { useAuth } from '../context/AuthContext.js';
+import { t } from '../locales/translations.js';
+import { LanguageSwitcher } from './LanguageSwitcher.js';
 import { Moon, Sun, LogOut, ShieldCheck, Wallet } from 'lucide-react';
 
 interface HeaderProps {

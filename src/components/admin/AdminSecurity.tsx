@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { adminApi } from '../../services/api';
+import { adminApi } from '../../services/api.js';
 import { ShieldCheck, Lock, User, KeyRound, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface AdminSecurityProps {

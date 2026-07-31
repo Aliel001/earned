@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { AdminStats, ImageItem, PaymentSettings, User, WithdrawRequest } from '../types';
-import { adminApi } from '../services/api';
-import { AdminDashboardOverview } from './admin/AdminDashboardOverview';
-import { AdminUsersManagement } from './admin/AdminUsersManagement';
-import { AdminWithdrawalsManagement } from './admin/AdminWithdrawalsManagement';
-import { AdminPaymentSettings } from './admin/AdminPaymentSettings';
-import { AdminAppControl } from './admin/AdminAppControl';
-import { AdminSecurity } from './admin/AdminSecurity';
+import { useAuth } from '../context/AuthContext.js';
+import { AdminStats, ImageItem, PaymentSettings, User, WithdrawRequest } from '../types.js';
+import { adminApi } from '../services/api.js';
+import { AdminDashboardOverview } from './admin/AdminDashboardOverview.js';
+import { AdminUsersManagement } from './admin/AdminUsersManagement.js';
+import { AdminWithdrawalsManagement } from './admin/AdminWithdrawalsManagement.js';
+import { AdminPaymentSettings } from './admin/AdminPaymentSettings.js';
+import { AdminAppControl } from './admin/AdminAppControl.js';
+import { AdminSecurity } from './admin/AdminSecurity.js';
 import {
   LayoutDashboard,
   Users,
@@ -234,7 +234,7 @@ export const AdminPanel: React.FC = () => {
             <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
               ADMINISTRATIVE CONTROL PANEL
             </span>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white capitalize">{activeAdminTab.replace('-', ' ')}</h2>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white capitalize">{(activeAdminTab || '').replace('-', ' ')}</h2>
           </div>
 
           <button

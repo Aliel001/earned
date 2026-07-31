@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Header } from './Header';
-import { BottomNav } from './BottomNav';
-import { AuthModal } from './AuthModal';
-import { PendingApprovalView } from './PendingApprovalView';
-import { HomeDashboard } from './HomeDashboard';
-import { ImagesGallery } from './ImagesGallery';
-import { WalletView } from './WalletView';
-import { WithdrawView } from './WithdrawView';
-import { ProfileView } from './ProfileView';
-import { PWAInstallBanner } from './PWAInstallBanner';
-import { imagesApi, notificationsApi, paymentApi, walletApi, withdrawApi } from '../services/api';
-import { ImageItem, NotificationItem, PaymentSettings, Wallet, WithdrawRequest } from '../types';
-import { t } from '../locales/translations';
+import { useAuth } from '../context/AuthContext.js';
+import { Header } from './Header.js';
+import { BottomNav } from './BottomNav.js';
+import { AuthModal } from './AuthModal.js';
+import { PendingApprovalView } from './PendingApprovalView.js';
+import { HomeDashboard } from './HomeDashboard.js';
+import { ImagesGallery } from './ImagesGallery.js';
+import { WalletView } from './WalletView.js';
+import { WithdrawView } from './WithdrawView.js';
+import { ProfileView } from './ProfileView.js';
+import { PWAInstallBanner } from './PWAInstallBanner.js';
+import { imagesApi, notificationsApi, paymentApi, walletApi, withdrawApi } from '../services/api.js';
+import { ImageItem, NotificationItem, PaymentSettings, Wallet, WithdrawRequest } from '../types.js';
+import { t } from '../locales/translations.js';
 import { Gift, ArrowRight, Heart, Wallet as WalletIcon } from 'lucide-react';
 
 export const UserLayout: React.FC = () => {

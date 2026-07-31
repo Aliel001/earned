@@ -9,7 +9,7 @@ import {
   Wallet,
   WithdrawRequest,
   WithdrawStatus,
-} from '../types';
+} from '../types.js';
 
 const TOKEN_KEY = 'twigamart_jwt_token';
 
@@ -49,8 +49,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        let msg = data.error || 'Request failed. Please try again.';
-        msg = msg.replace(/^(Error|TypeError|400|500):\s*/i, '').trim();
+        let msg = typeof data.error === 'string' ? data.error : 'Request failed. Please try again.';
+        msg = String(msg).replace(/^(Error|TypeError|400|500):\s*/i, '').trim();
         throw new Error(msg);
       }
 

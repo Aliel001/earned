@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { t } from '../locales/translations';
-import { PaymentSettings, WithdrawRequest } from '../types';
+import { useAuth } from '../context/AuthContext.js';
+import { t } from '../locales/translations.js';
+import { PaymentSettings, WithdrawRequest } from '../types.js';
 import { Wallet, ArrowUpRight, Copy, Check, Clock, CheckCircle2, XCircle, Phone, MessageSquare, AlertCircle, Info } from 'lucide-react';
-import { getPayNowUssdDetails } from '../utils/paymentUtils';
+import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
 
 interface WalletViewProps {
   balance: number;
@@ -212,9 +212,9 @@ export const WalletView: React.FC<WalletViewProps> = ({
                 {paymentSettings.payment_instructions}
               </p>
 
-              {paymentSettings.whatsapp_number && (
+              {paymentSettings?.whatsapp_number && (
                 <a
-                  href={`https://wa.me/${paymentSettings.whatsapp_number.replace(/\D/g, '')}?text=Muraho%20Admin%2C%20nshaka%20amashusho%20y%27ubwishyu%20cyangwa%20kuyaga%20muri%20TwigaMart%20(${encodeURIComponent(user?.username || '')})`}
+                  href={`https://wa.me/${(paymentSettings.whatsapp_number || '').replace(/\D/g, '')}?text=Muraho%20Admin%2C%20nshaka%20amashusho%20y%27ubwishyu%20cyangwa%20kuyaga%20muri%20TwigaMart%20(${encodeURIComponent(user?.username || '')})`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 px-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-xs active:scale-95 mt-2"
