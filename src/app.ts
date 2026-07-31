@@ -58,7 +58,29 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
 }
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Dedicated Image Upload Endpoint
+app.post('/api/upload', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { image, image_url, file, profile_picture } = req.body;
+    const uploadData = image || image_url || file || profile_picture;
+
+    if (!uploadData) {
+      return res.status(400).json({ error: 'Nyamuneka hitamo ifoto (Please select an image)' });
+    }
+
+    res.json({
+      success: true,
+      url: uploadData,
+      image_url: uploadData,
+      message: 'Ifoto yazamuwe neza! (Image uploaded successfully)',
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Health Check
 app.get('/api/health', (req: Request, res: Response) => {

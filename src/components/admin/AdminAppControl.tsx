@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GeneralSettings, ImageItem } from '../../types.js';
 import { adminApi } from '../../services/api.js';
+import { compressImage } from '../../utils/imageUtils.js';
 import {
   Sliders,
   Image as ImageIcon,
@@ -22,6 +23,7 @@ import {
   Lock,
   Key,
   UserCheck,
+  Loader2,
 } from 'lucide-react';
 
 interface AdminAppControlProps {
@@ -100,20 +102,21 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
     setShowImageModal(true);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 8 * 1024 * 1024) {
-      alert('File size too large (Max 8MB)');
-      return;
+    setUploadingImage(true);
+    try {
+      const compressedDataUrl = await compressImage(file, 1024, 1024, 0.85);
+      setImageUrl(compressedDataUrl);
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload image file');
+    } finally {
+      setUploadingImage(false);
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSaveImage = async (e: React.FormEvent) => {

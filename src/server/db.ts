@@ -232,6 +232,11 @@ class LocalDatabase {
     this.store = this.loadStore();
   }
 
+  private refreshStore(): StoreData {
+    this.store = this.loadStore();
+    return this.store;
+  }
+
   private loadStore(): StoreData {
     try {
       ensureDataDirExists();
@@ -241,9 +246,15 @@ class LocalDatabase {
         if (!parsed.images || parsed.images.length < 100) {
           parsed.images = PRODUCT_LIBRARY;
         }
-        const merged = {
+        const merged: StoreData = {
           ...INITIAL_STORE,
           ...parsed,
+          users: Array.isArray(parsed.users) ? parsed.users : INITIAL_STORE.users,
+          admins: Array.isArray(parsed.admins) && parsed.admins.length > 0 ? parsed.admins : INITIAL_STORE.admins,
+          wallets: Array.isArray(parsed.wallets) ? parsed.wallets : INITIAL_STORE.wallets,
+          withdraws: Array.isArray(parsed.withdraws) ? parsed.withdraws : INITIAL_STORE.withdraws,
+          likes: Array.isArray(parsed.likes) ? parsed.likes : INITIAL_STORE.likes,
+          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_STORE.notifications,
           paymentSettings: {
             ...INITIAL_STORE.paymentSettings,
             ...(parsed.paymentSettings || {}),
@@ -253,10 +264,6 @@ class LocalDatabase {
             ...(parsed.generalSettings || {}),
           },
         };
-        if (!merged.admins || merged.admins.length === 0) {
-          merged.admins = INITIAL_STORE.admins;
-        }
-        this.saveStore(merged);
         return merged;
       }
     } catch (err) {
@@ -334,6 +341,7 @@ class LocalDatabase {
 
   // Users
   async findUserExactByUsername(username: string) {
+    this.refreshStore();
     const clean = username.trim().toLowerCase().replace(/^@/, '');
     if (prisma) {
       try {
@@ -365,6 +373,7 @@ class LocalDatabase {
   }
 
   async findUserByUsername(username: string) {
+    this.refreshStore();
     const rawClean = username.trim();
     const clean = rawClean.toLowerCase().replace(/^@/, '');
     const digitsOnly = username.replace(/\D/g, '');
@@ -426,6 +435,7 @@ class LocalDatabase {
   }
 
   async findUserByPhone(phoneCountryCode: string, phoneNumber: string) {
+    this.refreshStore();
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     const cleanCode = phoneCountryCode.replace(/\D/g, '');
 
@@ -465,6 +475,7 @@ class LocalDatabase {
   }
 
   async findUserById(id: string) {
+    this.refreshStore();
     if (prisma) {
       try {
         const dbUser = await prisma.user.findUnique({
@@ -496,61 +507,66 @@ class LocalDatabase {
     password_hash: string;
     language: 'rn' | 'rw' | 'en' | 'fr';
   }) {
+    this.refreshStore();
     if (prisma) {
-      const createdUser = await prisma.user.create({
-        data: {
-          username: data.username,
-          phone_country_code: data.phone_country_code,
-          phone_number: data.phone_number,
-          password_hash: data.password_hash,
-          language: data.language || 'rn',
-          status: 'approved',
-          wallet: {
-            create: {
-              balance: 15000.0,
-              currency: 'BIF',
+      try {
+        const createdUser = await prisma.user.create({
+          data: {
+            username: data.username,
+            phone_country_code: data.phone_country_code,
+            phone_number: data.phone_number,
+            password_hash: data.password_hash,
+            language: data.language || 'rn',
+            status: 'approved',
+            wallet: {
+              create: {
+                balance: 15000.0,
+                currency: 'BIF',
+              },
+            },
+            notifications: {
+              create: {
+                title: "Bonus y'Ikaze (Welcome Bonus)",
+                message:
+                  'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe yemejwe neza.',
+                read: false,
+              },
             },
           },
-          notifications: {
-            create: {
-              title: "Bonus y'Ikaze (Welcome Bonus)",
-              message:
-                'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe yemejwe neza.',
-              read: false,
-            },
+          include: {
+            wallet: true,
           },
-        },
-        include: {
-          wallet: true,
-        },
-      });
-
-      const formattedUser = {
-        id: createdUser.id,
-        username: createdUser.username,
-        phone_country_code: createdUser.phone_country_code,
-        phone_number: createdUser.phone_number,
-        password_hash: createdUser.password_hash,
-        language: createdUser.language as any,
-        status: createdUser.status as UserStatus,
-        created_at: createdUser.created_at.toISOString(),
-      };
-
-      // Sync into store
-      this.store.users.unshift(formattedUser);
-      if (createdUser.wallet) {
-        this.store.wallets.unshift({
-          id: createdUser.wallet.id,
-          user_id: createdUser.wallet.user_id,
-          balance: createdUser.wallet.balance,
-          currency: createdUser.wallet.currency,
-          updated_at: createdUser.wallet.updated_at.toISOString(),
         });
-      }
-      this.saveStore();
 
-      const { password_hash, ...userWithoutPassword } = formattedUser;
-      return { ...userWithoutPassword, wallet: createdUser.wallet };
+        const formattedUser = {
+          id: createdUser.id,
+          username: createdUser.username,
+          phone_country_code: createdUser.phone_country_code,
+          phone_number: createdUser.phone_number,
+          password_hash: createdUser.password_hash,
+          language: createdUser.language as any,
+          status: createdUser.status as UserStatus,
+          created_at: createdUser.created_at.toISOString(),
+        };
+
+        // Sync into store
+        this.store.users.unshift(formattedUser);
+        if (createdUser.wallet) {
+          this.store.wallets.unshift({
+            id: createdUser.wallet.id,
+            user_id: createdUser.wallet.user_id,
+            balance: createdUser.wallet.balance,
+            currency: createdUser.wallet.currency,
+            updated_at: createdUser.wallet.updated_at.toISOString(),
+          });
+        }
+        this.saveStore();
+
+        const { password_hash, ...userWithoutPassword } = formattedUser;
+        return { ...userWithoutPassword, wallet: createdUser.wallet };
+      } catch (prismaErr) {
+        console.error('[Prisma] createUser error, falling back to local store:', prismaErr);
+      }
     }
 
     const id = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -582,7 +598,7 @@ class LocalDatabase {
       id: `notif_${Date.now()}`,
       user_id: id,
       title: 'Bonus y\'Ikaze (Welcome Bonus)',
-      message: 'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa.',
+      message: 'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe.',
       read: false,
       created_at: new Date().toISOString(),
     };
@@ -595,6 +611,7 @@ class LocalDatabase {
   }
 
   async updateUserPassword(id: string, password_hash: string) {
+    this.refreshStore();
     const user = this.store.users.find((u) => u.id === id);
     if (user) {
       user.password_hash = password_hash;
@@ -708,14 +725,16 @@ class LocalDatabase {
   }
 
   async getAllUsers() {
+    this.refreshStore();
+    let dbUsersList: any[] = [];
     if (prisma) {
       try {
         const dbUsers = await prisma.user.findMany({
           include: { wallet: true },
           orderBy: { created_at: 'desc' },
         });
-        if (dbUsers) {
-          return dbUsers.map((u) => {
+        if (dbUsers && dbUsers.length > 0) {
+          dbUsersList = dbUsers.map((u) => {
             const { password_hash, ...rest } = u;
             return {
               ...rest,
@@ -740,11 +759,17 @@ class LocalDatabase {
       }
     }
 
-    return this.store.users.map((u) => {
+    const memUsers = this.store.users.map((u) => {
       const { password_hash, ...rest } = u;
       const wallet = this.store.wallets.find((w) => w.user_id === u.id);
       return { ...rest, wallet };
     });
+
+    const userMap = new Map<string, any>();
+    for (const u of memUsers) userMap.set(u.id, u);
+    for (const u of dbUsersList) userMap.set(u.id, u);
+
+    return Array.from(userMap.values());
   }
 
   async deleteUser(userId: string) {
@@ -1735,6 +1760,7 @@ class LocalDatabase {
 
   // Admin stats
   async getAdminStats(): Promise<AdminStats> {
+    this.refreshStore();
     if (prisma) {
       try {
         const total_users = await prisma.user.count();

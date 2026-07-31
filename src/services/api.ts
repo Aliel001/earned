@@ -111,6 +111,11 @@ export const userApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  uploadImage: (image: string) =>
+    request<{ success: boolean; url: string; image_url: string; message: string }>('/api/upload', {
+      method: 'POST',
+      body: JSON.stringify({ image }),
+    }),
 };
 
 export const generalSettingsApi = {
@@ -120,6 +125,11 @@ export const generalSettingsApi = {
 export const imagesApi = {
   getImages: () => request<ImageItem[]>('/api/images'),
   likeImage: (id: string) => request<{ success: boolean; reward: number; new_balance: number }>(`/api/images/${id}/like`, { method: 'POST' }),
+  uploadImage: (image: string) =>
+    request<{ success: boolean; url: string; image_url: string; message: string }>('/api/upload', {
+      method: 'POST',
+      body: JSON.stringify({ image }),
+    }),
 };
 
 export const walletApi = {

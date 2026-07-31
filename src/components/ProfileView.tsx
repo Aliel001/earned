@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { SUPPORTED_LANGUAGES, t } from '../locales/translations.js';
 import { Language } from '../types.js';
 import { authApi, userApi } from '../services/api.js';
+import { compressImage } from '../utils/imageUtils.js';
 import {
   User as UserIcon,
   Phone,
@@ -19,6 +20,7 @@ import {
   Check,
   Shield,
   Upload,
+  Loader2,
 } from 'lucide-react';
 
 export const ProfileView: React.FC = () => {
@@ -67,20 +69,24 @@ export const ProfileView: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setProfileError('File size too large (Max 5MB)');
-      return;
-    }
+    setProfileError(null);
+    setUploadingImage(true);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfilePicUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressedDataUrl = await compressImage(file, 1024, 1024, 0.85);
+      setProfilePicUrl(compressedDataUrl);
+      setProfileSuccess('Ifoto yahinduwe neza! Kanda "Bika Izangishe" kugirango uvugurure profile.');
+    } catch (err: any) {
+      setProfileError(err.message || 'Harabaye ikosa mu kuzamura ifoto');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -226,9 +232,13 @@ export const ProfileView: React.FC = () => {
                   placeholder="https://res.cloudinary.com/demo/image/upload/..."
                 />
                 <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white font-bold p-2.5 rounded-xl border border-white/10 flex items-center space-x-1 shrink-0">
-                  <Upload className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[10px]">Upload</span>
-                  <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                  {uploadingImage ? (
+                    <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4 text-emerald-400" />
+                  )}
+                  <span className="text-[10px]">{uploadingImage ? 'Uploading...' : 'Upload'}</span>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploadingImage} className="hidden" />
                 </label>
               </div>
               {profilePicUrl && (
