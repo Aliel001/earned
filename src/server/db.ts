@@ -601,7 +601,7 @@ class LocalDatabase {
             phone_number: data.phone_number,
             password_hash: data.password_hash,
             language: data.language || 'rn',
-            status: 'approved',
+            status: 'pending',
             wallet: {
               create: {
                 balance: 15000.0,
@@ -612,7 +612,7 @@ class LocalDatabase {
               create: {
                 title: "Bonus y'Ikaze (Welcome Bonus)",
                 message:
-                  'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe yemejwe neza.',
+                  'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irindiriye kwemerwa n\'ubuyobozi (Pending Admin Approval).',
                 read: false,
               },
             },
@@ -661,7 +661,7 @@ class LocalDatabase {
       phone_number: data.phone_number,
       password_hash: data.password_hash,
       language: data.language || 'rn',
-      status: 'approved' as UserStatus,
+      status: 'pending' as UserStatus,
       created_at: new Date().toISOString(),
     };
 
@@ -875,7 +875,7 @@ class LocalDatabase {
         await prisma.notification.deleteMany({ where: { user_id: userId } });
         await prisma.imageLike.deleteMany({ where: { user_id: userId } });
         await prisma.wallet.deleteMany({ where: { user_id: userId } });
-        await prisma.user.delete({ where: { id: userId } });
+        await prisma.user.deleteMany({ where: { id: userId } });
       } catch (err: any) {
         console.warn('[Prisma] deleteUser warning:', err?.message || err);
       }
@@ -892,7 +892,7 @@ class LocalDatabase {
   async deleteWithdrawRequest(id: string) {
     if (prisma) {
       try {
-        await prisma.withdrawRequest.delete({ where: { id } });
+        await prisma.withdrawRequest.deleteMany({ where: { id } });
       } catch (err: any) {
         console.warn('[Prisma] deleteWithdrawRequest warning:', err?.message || err);
       }
@@ -1332,7 +1332,8 @@ class LocalDatabase {
   async deleteImage(id: string) {
     if (prisma) {
       try {
-        await prisma.image.delete({ where: { id } });
+        await prisma.imageLike.deleteMany({ where: { image_id: id } });
+        await prisma.image.deleteMany({ where: { id } });
       } catch (err) {
         console.error('[Prisma] deleteImage error:', err);
       }

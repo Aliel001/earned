@@ -1,16 +1,6 @@
 {
   "users": [
     {
-      "id": "a046bbbf-3a24-4266-be3a-435c76da206a",
-      "username": "fk_test_1785177719066",
-      "phone_country_code": "+257",
-      "phone_number": "79553323",
-      "password_hash": "$2b$10$TKcha6m8eIaoff0tVPMU3eEgF2Z4oaUiwK2Is32nfoR4gQjOlpGT2",
-      "language": "rn",
-      "status": "pending",
-      "created_at": "2026-07-27T18:41:59.704Z"
-    },
-    {
       "id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
       "username": "resource_test_1785163767341",
       "phone_country_code": "+257",
@@ -152,13 +142,6 @@
     }
   ],
   "wallets": [
-    {
-      "id": "a4c68d01-cbaa-4a92-81b9-67e43ce45e3e",
-      "user_id": "a046bbbf-3a24-4266-be3a-435c76da206a",
-      "balance": 15000,
-      "currency": "BIF",
-      "updated_at": "2026-07-27T18:41:59.704Z"
-    },
     {
       "id": "4d2cd780-cd59-471c-b896-4182048aac15",
       "user_id": "f1aaa898-e838-4aa7-80d4-d715964abc11",
