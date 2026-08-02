@@ -204,19 +204,21 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 
 // Login User or Admin
 app.post('/api/auth/login', async (req: Request, res: Response) => {
-  console.log('[API] POST /api/auth/login - Username:', req.body?.username);
+  const loginInput = String(req.body?.username || req.body?.phoneNumber || req.body?.phone || '').trim();
+  console.log('[API] POST /api/auth/login - Identifier:', loginInput);
 
   try {
-    const { username, password } = req.body;
+    const password = req.body?.password;
 
-    if (!username || !password) {
+    if (!loginInput || !password) {
       console.warn('[Login Validation Failed] Missing credentials');
-      return res.status(400).json({ error: 'Andika izina n\'inyandiko y\'ibanga (Username and password required)' });
+      return res.status(400).json({ error: 'Andika numero ya telefoni n\'inyandiko y\'ibanga (Phone number and password required)' });
     }
 
-    const cleanUsername = String(username).trim().toLowerCase().replace(/^@/, '');
+    const cleanUsername = loginInput.toLowerCase().replace(/^@/, '');
     const rawPassword = String(password);
     const cleanPassword = rawPassword.trim();
+    const digitsOnly = loginInput.replace(/\D/g, '');
 
     // First check if it's admin
     let admin = await db.getAdminByUsername(cleanUsername);
@@ -251,11 +253,15 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       }
     }
 
-    // Otherwise check user
-    const user = (await db.findUserByUsername(username)) || (await db.findUserByUsername(cleanUsername));
+    // Otherwise check user by username or phone number
+    let user = (await db.findUserByUsername(loginInput)) || (await db.findUserByUsername(cleanUsername));
+    if (!user && digitsOnly.length >= 4) {
+      user = await db.findUserByUsername(digitsOnly);
+    }
+
     if (!user) {
-      console.warn(`[Login Failed] User @${username} not found`);
-      return res.status(400).json({ error: 'Izina cyangwa inyandiko y\'ibanga si byo (Invalid username or password)' });
+      console.warn(`[Login Failed] User identifier ${loginInput} not found`);
+      return res.status(400).json({ error: 'Numero ya telefoni cyangwa inyandiko y\'ibanga si byo (Invalid phone number or password)' });
     }
 
     const uLower = user.username.toLowerCase().replace(/^@/, '');
@@ -288,17 +294,17 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     }
 
     if (!isMatch) {
-      console.warn(`[Login Failed] Invalid password for @${username}`);
-      return res.status(400).json({ error: 'Izina cyangwa inyandiko y\'ibanga si byo (Invalid username or password)' });
+      console.warn(`[Login Failed] Invalid password for ${loginInput}`);
+      return res.status(400).json({ error: 'Numero ya telefoni cyangwa inyandiko y\'ibanga si byo (Invalid phone number or password)' });
     }
 
     if (user.status === 'rejected') {
-      console.warn(`[Login Blocked] User @${username} status is REJECTED`);
+      console.warn(`[Login Blocked] User @${user.username} status is REJECTED`);
       return res.status(403).json({ error: 'Konte yawe ntiyemewe n\'ubuyobozi (Your account has been rejected).' });
     }
 
     if (user.status === 'suspended') {
-      console.warn(`[Login Blocked] User @${username} status is SUSPENDED`);
+      console.warn(`[Login Blocked] User @${user.username} status is SUSPENDED`);
       return res.status(403).json({ error: 'Konte yawe yahagaritswe n\'ubuyobozi (Your account has been suspended).' });
     }
 
@@ -497,18 +503,7 @@ app.get('/api/user/me', authenticateToken, async (req: AuthRequest, res: Respons
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (user.status !== 'approved') {
-      return res.status(403).json({
-        error:
-          user.status === 'pending'
-            ? 'Your account is waiting for administrator approval.'
-            : user.status === 'rejected'
-            ? 'Your account has been rejected. Please contact the administrator.'
-            : 'Your account has been suspended by the administrator.',
-      });
-    }
-
-    const wallet = await db.getWalletByUserId(user.id);
+    const wallet = user.status === 'approved' ? await db.getWalletByUserId(user.id) : null;
     const { password_hash, ...userWithoutPassword } = user;
 
     res.json({
@@ -626,7 +621,7 @@ app.get('/api/withdraw', authenticateToken, requireApprovedUser, async (req: Aut
 });
 
 // Get notifications
-app.get('/api/notifications', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.get('/api/notifications', authenticateToken, requireApprovedUser, async (req: AuthRequest, res: Response) => {
   try {
     const notifications = await db.getUserNotifications(req.user!.id);
     res.json(notifications);
@@ -636,7 +631,7 @@ app.get('/api/notifications', authenticateToken, async (req: AuthRequest, res: R
 });
 
 // Mark all notifications read
-app.put('/api/notifications/read-all', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.put('/api/notifications/read-all', authenticateToken, requireApprovedUser, async (req: AuthRequest, res: Response) => {
   try {
     await db.markNotificationsRead(req.user!.id);
     res.json({ success: true });

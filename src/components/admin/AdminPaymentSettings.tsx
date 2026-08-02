@@ -50,12 +50,18 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
     setIsEdited(false);
 
     try {
-      await adminApi.updatePaymentSettings({
+      const res = await adminApi.updatePaymentSettings({
         account_number: '',
         whatsapp_number: '',
         ussd_code: '',
         payment_instructions: '',
       });
+      if (res) {
+        setAccountNumber(res.account_number || '');
+        setWhatsappNumber(res.whatsapp_number || '');
+        setUssdCode(res.ussd_code || '');
+        setPaymentInstructions(res.payment_instructions || '');
+      }
       setSuccess(true);
       onRefresh();
       setTimeout(() => setSuccess(false), 4000);
@@ -73,12 +79,18 @@ export const AdminPaymentSettings: React.FC<AdminPaymentSettingsProps> = ({
     setError(null);
 
     try {
-      await adminApi.updatePaymentSettings({
+      const res = await adminApi.updatePaymentSettings({
         account_number: accountNumber.trim(),
         whatsapp_number: whatsappNumber.trim(),
         ussd_code: ussdCode.trim(),
         payment_instructions: paymentInstructions.trim(),
       });
+      if (res) {
+        setAccountNumber(res.account_number || '');
+        setWhatsappNumber(res.whatsapp_number || '');
+        setUssdCode(res.ussd_code || '');
+        setPaymentInstructions(res.payment_instructions || '');
+      }
       setSuccess(true);
       setIsEdited(false);
       onRefresh();

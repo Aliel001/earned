@@ -48,17 +48,17 @@ export const AdminPanel: React.FC = () => {
     try {
       const [sData, uData, wData, pData, iData] = await Promise.all([
         adminApi.getStats().catch(() => null),
-        adminApi.getUsers().catch(() => []),
-        adminApi.getWithdraws().catch(() => []),
+        adminApi.getUsers().catch(() => null),
+        adminApi.getWithdraws().catch(() => null),
         adminApi.getSettings().catch(() => null),
-        adminApi.getImages().catch(() => []),
+        adminApi.getImages().catch(() => null),
       ]);
 
       if (sData) setStats(sData);
-      setUsers(Array.isArray(uData) ? uData : []);
-      setWithdraws(Array.isArray(wData) ? wData : []);
+      if (Array.isArray(uData)) setUsers(uData);
+      if (Array.isArray(wData)) setWithdraws(wData);
       if (pData) setPaymentSettings(pData);
-      setImages(Array.isArray(iData) ? iData : []);
+      if (Array.isArray(iData)) setImages(iData);
     } catch {
       // ignore
     } finally {

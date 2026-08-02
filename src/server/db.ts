@@ -341,28 +341,21 @@ class LocalDatabase {
     }
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
     }
-    this.saveTimeout = setTimeout(() => {
-      this.flushSaveToDisk();
-    }, 100);
+    this.flushSaveToDiskSync();
   }
 
-  private async flushSaveToDisk() {
+  private flushSaveToDiskSync() {
     try {
       ensureDataDirExists();
       const content = JSON.stringify(this.store, null, 2);
-      const tmpPath = `${STORE_PATH}.tmp`;
-      await fs.promises.writeFile(tmpPath, content, 'utf-8');
-      await fs.promises.rename(tmpPath, STORE_PATH);
-      const stat = await fs.promises.stat(STORE_PATH);
+      fs.writeFileSync(STORE_PATH, content, 'utf-8');
+      const stat = fs.statSync(STORE_PATH);
       this.lastMtime = stat.mtimeMs;
       this.lastCheckTime = Date.now();
     } catch (err) {
-      try {
-        fs.writeFileSync(STORE_PATH, JSON.stringify(this.store, null, 2), 'utf-8');
-      } catch (e) {
-        console.error('Failed to save store:', e);
-      }
+      console.error('Failed to save store synchronously:', err);
     }
   }
 
@@ -869,22 +862,43 @@ class LocalDatabase {
   }
 
   async deleteUser(userId: string) {
+    const memUser = this.store.users.find((u) => u.id === userId || u.username === userId || u.username === `@${userId}` || `@${u.username}` === userId);
+    const targetId = memUser ? memUser.id : userId;
+    const targetUsername = memUser ? memUser.username : userId;
+
     if (prisma) {
       try {
-        await prisma.withdrawRequest.deleteMany({ where: { user_id: userId } });
-        await prisma.notification.deleteMany({ where: { user_id: userId } });
-        await prisma.imageLike.deleteMany({ where: { user_id: userId } });
-        await prisma.wallet.deleteMany({ where: { user_id: userId } });
-        await prisma.user.deleteMany({ where: { id: userId } });
+        const dbUsers = await prisma.user.findMany({
+          where: {
+            OR: [
+              { id: targetId },
+              { id: userId },
+              { username: targetUsername },
+              { username: userId },
+              { username: `@${userId}` },
+            ],
+          },
+        });
+        const dbUserIds = dbUsers.map((u) => u.id);
+        const allIds = Array.from(new Set([targetId, userId, ...dbUserIds]));
+
+        await prisma.withdrawRequest.deleteMany({ where: { user_id: { in: allIds } } });
+        await prisma.notification.deleteMany({ where: { user_id: { in: allIds } } });
+        await prisma.imageLike.deleteMany({ where: { user_id: { in: allIds } } });
+        await prisma.wallet.deleteMany({ where: { user_id: { in: allIds } } });
+        await prisma.user.deleteMany({ where: { id: { in: allIds } } });
       } catch (err: any) {
         console.warn('[Prisma] deleteUser warning:', err?.message || err);
       }
     }
-    this.store.users = this.store.users.filter((u) => u.id !== userId);
-    this.store.wallets = this.store.wallets.filter((w) => w.user_id !== userId);
-    this.store.withdraws = this.store.withdraws.filter((w) => w.user_id !== userId);
-    this.store.likes = this.store.likes.filter((l) => l.user_id !== userId);
-    this.store.notifications = this.store.notifications.filter((n) => n.user_id !== userId);
+
+    this.store.users = this.store.users.filter(
+      (u) => u.id !== targetId && u.id !== userId && u.username !== targetUsername && u.username !== userId
+    );
+    this.store.wallets = this.store.wallets.filter((w) => w.user_id !== targetId && w.user_id !== userId);
+    this.store.withdraws = this.store.withdraws.filter((w) => w.user_id !== targetId && w.user_id !== userId);
+    this.store.likes = this.store.likes.filter((l) => l.user_id !== targetId && l.user_id !== userId);
+    this.store.notifications = this.store.notifications.filter((n) => n.user_id !== targetId && n.user_id !== userId);
     this.saveStore();
     return true;
   }

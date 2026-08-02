@@ -60,6 +60,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
       return;
     }
 
+    if (mode === 'login') {
+      const loginPhone = phoneNumber.trim() || username.trim();
+      if (!loginPhone || !password) {
+        setError('Nyamuneka andika numero ya telefoni n\'inyandiko y\'ibanga.');
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        await login(loginPhone, password);
+        onClose();
+      } catch (err: any) {
+        setError(err.message || 'Numero ya telefoni cyangwa inyandiko y\'ibanga si byo.');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     if (!username.trim() || !password) {
       setError(t('error', language) + ': Uzuze imyanya yose ikenewe.');
       return;
@@ -93,9 +111,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
           language: selectedLang,
         });
 
-        // Auto log in so the new user lands directly on the Pending Approval view with message & notification
+        // Auto log in using phone number so the new user lands directly on the Pending Approval view
         try {
-          await login(username.trim(), password);
+          await login(phoneNumber.trim() || username.trim(), password);
           onClose();
         } catch {
           setSuccessMessage(
@@ -106,9 +124,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
           setConfirmPassword('');
           setMode('login');
         }
-      } else {
-        await login(username.trim(), password);
-        onClose();
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication.');
@@ -210,42 +225,59 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
             </div>
           </div>
 
-          {/* Email Address Input (Registration & Login) */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-              <span>Email (Imeyili)</span>
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="example@gmail.com"
-                className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
+          {/* Mode specific fields */}
+          {mode === 'admin' && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">{t('username', language)}</label>
+              <div className="relative">
+                <User className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="admin"
+                  className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Username */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">{t('username', language)}</label>
-            <div className="relative">
-              <User className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. keza_bujumbura"
-                className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-          </div>
-
-          {/* Registration specific fields */}
           {mode === 'register' && (
             <>
+              {/* Username */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">{t('username', language)}</label>
+                <div className="relative">
+                  <User className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="e.g. keza_bujumbura"
+                    className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Email Address Input (Registration optional) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span>Email (Imeyili - Agatabaza)</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="example@gmail.com"
+                    className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
               {/* Phone Country Code & Number */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -279,6 +311,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
                 </div>
               </div>
             </>
+          )}
+
+          {mode === 'login' && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                {t('phone_number', language)}
+              </label>
+              <div className="relative">
+                <Phone className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="tel"
+                  required
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="e.g. 0798991122 cyangwa +257..."
+                  className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
           )}
 
           {/* Password */}
