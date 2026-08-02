@@ -31,10 +31,10 @@ let prisma: PrismaClient | null = null;
 if (process.env.DATABASE_URL) {
   try {
     const client = new PrismaClient();
+    prisma = client;
     client
       .$connect()
       .then(() => {
-        prisma = client;
         console.log('[Database] PrismaClient connected successfully.');
       })
       .catch((err) => {

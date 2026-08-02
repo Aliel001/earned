@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     refreshUser();
-    // Real-time polling every 3 seconds to auto-update user status when admin approves
+    // Real-time polling every 2 seconds to auto-update user status when admin approves
     const interval = setInterval(() => {
       const token = getAuthToken();
       if (token) {
@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // silent fail
         });
       }
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);

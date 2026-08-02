@@ -68,10 +68,10 @@ export const AdminPanel: React.FC = () => {
 
   useEffect(() => {
     loadAllAdminData();
-    // Real-time polling every 3 seconds for admin dashboard
+    // Real-time polling every 2 seconds for admin dashboard
     const interval = setInterval(() => {
       loadAllAdminData(true);
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);

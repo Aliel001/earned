@@ -79,10 +79,10 @@ export const UserLayout: React.FC = () => {
   useEffect(() => {
     loadData();
 
-    // Real-time background sync every 3 seconds
+    // Real-time background sync every 2 seconds
     const interval = setInterval(() => {
       loadData();
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [user]);

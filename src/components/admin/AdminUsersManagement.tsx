@@ -134,7 +134,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
             <span>Users Management</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-            Control user accounts, statuses, and wallet balance adjustments.
+            Control user accounts, statuses, and wallet balance adjustments. All users remain in this list unless deleted.
           </p>
         </div>
       </div>
@@ -153,19 +153,25 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {['all', 'pending', 'approved', 'rejected', 'suspended'].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-2 rounded-xl text-xs font-extrabold uppercase transition ${
-                statusFilter === st
-                  ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/40'
-                  : 'bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/5 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {st}
-            </button>
-          ))}
+          {['all', 'pending', 'approved', 'rejected', 'suspended'].map((st) => {
+            const count = st === 'all' ? users.length : users.filter((u) => u.status === st).length;
+            return (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`px-3 py-2 rounded-xl text-xs font-extrabold uppercase transition flex items-center space-x-1.5 whitespace-nowrap ${
+                  statusFilter === st
+                    ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/40'
+                    : 'bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/5 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>{st}</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] font-black">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

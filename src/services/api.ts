@@ -29,6 +29,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const token = getAuthToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     ...(options.headers as Record<string, string>),
   };
 
@@ -36,12 +39,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Prevent Vercel edge/browser response caching for GET requests
+  let url = endpoint;
+  if (!options.method || options.method.toUpperCase() === 'GET') {
+    const separator = url.includes('?') ? '&' : '?';
+    url = `${url}${separator}_t=${Date.now()}`;
+  }
+
   let lastError: any = null;
   const maxRetries = 3;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(url, {
         ...options,
         headers,
       });
