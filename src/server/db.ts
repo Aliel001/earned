@@ -83,28 +83,7 @@ function ensureDataDirExists() {
 }
 
 const INITIAL_STORE: StoreData = {
-  users: [
-    {
-      id: 'usr_demo_1',
-      username: 'keza_bujumbura',
-      phone_country_code: '+257',
-      phone_number: '69112233',
-      password_hash: bcrypt.hashSync('password123', 10),
-      language: 'rn',
-      status: 'approved',
-      created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-    },
-    {
-      id: 'usr_demo_2',
-      username: 'eric_gitega',
-      phone_country_code: '+257',
-      phone_number: '79887766',
-      password_hash: bcrypt.hashSync('password123', 10),
-      language: 'rn',
-      status: 'approved',
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-    },
-  ],
+  users: [],
   admins: [
     {
       id: 'admin_1',
@@ -112,50 +91,10 @@ const INITIAL_STORE: StoreData = {
       password_hash: DEFAULT_ADMIN_HASH,
     },
   ],
-  wallets: [
-    {
-      id: 'w_demo_1',
-      user_id: 'usr_demo_1',
-      balance: 18000.0,
-      currency: 'BIF',
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: 'w_demo_2',
-      user_id: 'usr_demo_2',
-      balance: 15000.0,
-      currency: 'BIF',
-      updated_at: new Date().toISOString(),
-    },
-  ],
+  wallets: [],
   images: PRODUCT_LIBRARY,
-  likes: [
-    {
-      id: 'like_1',
-      user_id: 'usr_demo_1',
-      image_id: 'img_car_1',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 'like_2',
-      user_id: 'usr_demo_1',
-      image_id: 'img_fsh_1',
-      created_at: new Date().toISOString(),
-    },
-  ],
-  withdraws: [
-    {
-      id: 'wdr_1',
-      user_id: 'usr_demo_1',
-      username: 'keza_bujumbura',
-      phone_number: '+257 69112233',
-      amount: 5000,
-      payment_account: '+257 69112233',
-      status: 'approved',
-      admin_message: 'Yoherejwe kuri Lumicash #25769112233 TXN #88291.',
-      created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-  ],
+  likes: [],
+  withdraws: [],
   paymentSettings: {
     account_number: '+257 69 00 11 22',
     whatsapp_number: '+257 69 00 11 22',
@@ -169,32 +108,7 @@ const INITIAL_STORE: StoreData = {
     enabled_languages: ['rn', 'rw', 'en', 'fr'],
     maintenance_mode: false,
   },
-  notifications: [
-    {
-      id: 'notif_1',
-      user_id: 'usr_demo_1',
-      title: 'Bonus y\'Ikaze (Welcome Bonus)',
-      message: 'Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 BIF yongewe mu gapuri kawe.',
-      read: true,
-      created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-    },
-    {
-      id: 'notif_2',
-      user_id: 'usr_demo_1',
-      title: 'Ubusabe bwo kwaka amafaranga bwemewe',
-      message: 'Ubusabe bwawe bwa 5,000 BIF bwemewe. Admin response: Yoherejwe kuri Lumicash #25769112233 TXN #88291.',
-      read: false,
-      created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-    {
-      id: 'notif_3',
-      user_id: 'usr_demo_2',
-      title: 'Bonus y\'Ikaze (Welcome Bonus)',
-      message: 'Urakoze kwirangisha! Bonus ya 15,000 BIF yongewe mu gapuri kawe. Konte yawe irarindiriye kwemerwa n\'ubuyobozi.',
-      read: false,
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-    },
-  ],
+  notifications: [],
 };
 
 async function seedDefaultAdmin() {
@@ -211,29 +125,17 @@ async function seedDefaultAdmin() {
         console.log('[Database] Default admin account seeded in PostgreSQL.');
       }
 
-      const userCount = await prisma.user.count();
-      if (userCount === 0) {
-        console.log('[Database] Seeding default demo users in PostgreSQL...');
-        for (const u of INITIAL_STORE.users) {
-          await prisma.user.create({
-            data: {
-              id: u.id,
-              username: u.username,
-              phone_country_code: u.phone_country_code,
-              phone_number: u.phone_number,
-              password_hash: u.password_hash,
-              language: u.language,
-              status: u.status,
-              wallet: {
-                create: {
-                  balance: 15000.0,
-                  currency: 'BIF',
-                },
-              },
-            },
-          }).catch((err) => console.error('[Database] Error seeding user:', err));
-        }
-      }
+      // Purge demo users if present in PostgreSQL
+      await prisma.user.deleteMany({
+        where: {
+          OR: [
+            { id: 'usr_demo_1' },
+            { id: 'usr_demo_2' },
+            { username: 'keza_bujumbura' },
+            { username: 'eric_gitega' },
+          ],
+        },
+      }).catch(() => {});
     } catch (err) {
       console.error('[Database] Error seeding default admin:', err);
     }
@@ -249,7 +151,34 @@ class LocalDatabase {
   private saveTimeout: any = null;
 
   constructor() {
-    this.store = this.loadStore();
+    this.store = this.sanitizeDemoUsers(this.loadStore());
+    this.saveStore();
+  }
+
+  private sanitizeDemoUsers(store: StoreData): StoreData {
+    const isDemoUser = (u: any) =>
+      u.id === 'usr_demo_1' ||
+      u.id === 'usr_demo_2' ||
+      u.username === 'keza_bujumbura' ||
+      u.username === 'eric_gitega';
+
+    const demoUserIds = new Set(
+      (store.users || [])
+        .filter(isDemoUser)
+        .map((u: any) => u.id)
+        .concat(['usr_demo_1', 'usr_demo_2'])
+    );
+
+    return {
+      ...store,
+      users: (store.users || []).filter((u: any) => !isDemoUser(u)),
+      wallets: (store.wallets || []).filter((w: any) => !demoUserIds.has(w.user_id)),
+      withdraws: (store.withdraws || []).filter(
+        (w: any) => !demoUserIds.has(w.user_id) && w.username !== 'keza_bujumbura' && w.username !== 'eric_gitega'
+      ),
+      likes: (store.likes || []).filter((l: any) => !demoUserIds.has(l.user_id)),
+      notifications: (store.notifications || []).filter((n: any) => !demoUserIds.has(n.user_id)),
+    };
   }
 
   private refreshStore(): StoreData {
@@ -271,7 +200,7 @@ class LocalDatabase {
         if (!parsed.images || parsed.images.length < 100) {
           parsed.images = PRODUCT_LIBRARY;
         }
-        this.store = {
+        this.store = this.sanitizeDemoUsers({
           ...INITIAL_STORE,
           ...parsed,
           users: Array.isArray(parsed.users) ? parsed.users : INITIAL_STORE.users,
@@ -288,7 +217,7 @@ class LocalDatabase {
             ...INITIAL_STORE.generalSettings,
             ...(parsed.generalSettings || {}),
           },
-        };
+        });
       }
     } catch (err) {
       console.error('Failed to load store, using cached in-memory store:', err);
@@ -326,7 +255,7 @@ class LocalDatabase {
             ...(parsed.generalSettings || {}),
           },
         };
-        return merged;
+        return this.sanitizeDemoUsers(merged);
       }
     } catch (err) {
       console.error('Failed to load store, using defaults:', err);
