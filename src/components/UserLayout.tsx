@@ -14,9 +14,11 @@ import { imagesApi, notificationsApi, paymentApi, walletApi, withdrawApi } from 
 import { ImageItem, NotificationItem, PaymentSettings, Wallet, WithdrawRequest } from '../types.js';
 import { t } from '../locales/translations.js';
 import { Gift, ArrowRight, Heart, Wallet as WalletIcon } from 'lucide-react';
+import { getUserCurrency } from '../utils/currency.js';
 
 export const UserLayout: React.FC = () => {
   const { user, language } = useAuth();
+  const userCurrency = getUserCurrency(user);
 
   const [activeTab, setActiveTab] = useState<string>(() => {
     const path = window.location.pathname;
@@ -202,7 +204,7 @@ export const UserLayout: React.FC = () => {
                         <div className="space-y-1">
                           <h2 className="text-xl font-extrabold text-white">TwigaMart Wallet</h2>
                           <p className="text-xs text-slate-400 leading-relaxed">
-                            Injiramo cyangwa iyandikishe kugira ngo ubone wallet yawe, agashimwe ka 15,000 BIF n'uburyo bwo kubikuza.
+                            Injiramo cyangwa iyandikishe kugira ngo ubone wallet yawe, agashimwe ka 15,000 {userCurrency} n'uburyo bwo kubikuza.
                           </p>
                         </div>
 
@@ -211,7 +213,7 @@ export const UserLayout: React.FC = () => {
                             onClick={() => handleOpenAuth('register')}
                             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl text-xs shadow-lg shadow-emerald-500/20 transition"
                           >
-                            Izangishe Ubwo Nyene (+15K BIF)
+                            Izangishe Ubwo Nyene (+15K {userCurrency})
                           </button>
                           <button
                             onClick={() => handleOpenAuth('login')}

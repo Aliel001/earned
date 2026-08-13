@@ -144,7 +144,7 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
                     </td>
 
                     <td className="py-3.5 px-4 font-black text-rose-400">
-                      {w.amount.toLocaleString()} BIF
+                      {w.amount.toLocaleString()}
                     </td>
 
                     <td className="py-3.5 px-4 font-mono text-slate-200">
@@ -220,7 +220,7 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Amount:</span>
-                <span className="font-black text-rose-400">{selectedWithdraw.amount.toLocaleString()} BIF</span>
+                <span className="font-black text-rose-400">{selectedWithdraw.amount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Payment Account:</span>
@@ -280,7 +280,7 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
             <div>
               <h3 className="text-sm font-black text-white">Siba Ubusabe (Delete Withdrawal Record)?</h3>
               <p className="text-xs text-slate-400 mt-1 font-medium">
-                Siba ubusabe bwa {deletingWithdraw.amount.toLocaleString()} BIF bw'umukoresha @{deletingWithdraw.username || 'user'}?
+                Siba ubusabe bwa {deletingWithdraw.amount.toLocaleString()} bw'umukoresha @{deletingWithdraw.username || 'user'}?
               </p>
             </div>
 

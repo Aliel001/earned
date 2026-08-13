@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { t } from '../locales/translations.js';
 import { ImageItem } from '../types.js';
 import { Heart, Image as ImageIcon, Search, Sparkles, CheckCircle2, Car, Shirt, Footprints, Smartphone, Package, Layers } from 'lucide-react';
+import { getUserCurrency } from '../utils/currency.js';
 
 interface ImagesGalleryProps {
   images: ImageItem[];
@@ -22,7 +23,8 @@ const CATEGORIES: { id: CategoryType; label: string; icon: React.ElementType }[]
 ];
 
 export const ImagesGallery: React.FC<ImagesGalleryProps> = ({ images, onLikeImage }) => {
-  const { language } = useAuth();
+  const { user, language } = useAuth();
+  const userCurrency = getUserCurrency(user);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('All');
   const [likingId, setLikingId] = useState<string | null>(null);
@@ -119,7 +121,7 @@ export const ImagesGallery: React.FC<ImagesGalleryProps> = ({ images, onLikeImag
 
                 <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md border border-emerald-500/50 text-emerald-300 font-black text-xs px-2.5 py-1 rounded-full shadow-xl flex items-center space-x-1">
                   <Sparkles className="w-3 h-3 text-emerald-400" />
-                  <span>+{image.reward.toLocaleString()} BIF</span>
+                  <span>+{image.reward.toLocaleString()} {userCurrency}</span>
                 </div>
 
                 {image.user_liked && (

@@ -5,6 +5,7 @@ import { paymentApi } from '../services/api.js';
 import { PaymentSettings } from '../types.js';
 import { Clock, PhoneCall, MessageSquare, RefreshCw, ShieldAlert, Gift, CheckCircle2 } from 'lucide-react';
 import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
+import { getUserCurrency } from '../utils/currency.js';
 
 export const PendingApprovalView: React.FC = () => {
   const { user, language, refreshUser, logout } = useAuth();
@@ -23,6 +24,7 @@ export const PendingApprovalView: React.FC = () => {
 
   if (!user) return null;
 
+  const userCurrency = getUserCurrency(user);
   const isPending = user.status === 'pending';
   const isRejected = user.status === 'rejected';
   const isSuspended = user.status === 'suspended';
@@ -38,7 +40,7 @@ export const PendingApprovalView: React.FC = () => {
             {isSuspended && <ShieldAlert className="w-10 h-10 text-orange-500" />}
           </div>
           <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 font-black text-xs px-2.5 py-0.5 rounded-full border-2 border-white dark:border-slate-950 shadow-lg">
-            15K BIF
+            15K {userCurrency}
           </span>
         </div>
 
@@ -60,10 +62,10 @@ export const PendingApprovalView: React.FC = () => {
         <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 dark:from-emerald-500/20 dark:via-teal-500/15 dark:to-emerald-500/20 border border-emerald-500/30 dark:border-emerald-500/40 rounded-2xl p-4 text-left space-y-1 backdrop-blur-md">
           <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-300 font-bold text-sm">
             <Gift className="w-4 h-4" />
-            <span>Bonus y\'Ikaze (Welcome Bonus): 15,000 BIF</span>
+            <span>Bonus y'Ikaze (Welcome Bonus): 15,000 {userCurrency}</span>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            Amafaranga 15,000 BIF y\'agashimwe gataramo yabitswe mu gapuri kawe. Uzotangura kuyakoresha cyangwa kuyasaba heza kwemerwa.
+            Amafaranga 15,000 {userCurrency} y'agashimwe gataramo yabitswe mu gapuri kawe. Uzotangura kuyakoresha cyangwa kuyasaba heza kwemerwa.
           </p>
         </div>
 

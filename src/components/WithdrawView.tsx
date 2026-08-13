@@ -11,6 +11,7 @@ import {
   Clock,
   MessageSquare,
 } from 'lucide-react';
+import { getUserCurrency } from '../utils/currency.js';
 
 interface WithdrawViewProps {
   balance: number;
@@ -26,6 +27,7 @@ export const WithdrawView: React.FC<WithdrawViewProps> = ({
   onSubmitWithdraw,
 }) => {
   const { user, language } = useAuth();
+  const userCurrency = getUserCurrency(user);
   const [amount, setAmount] = useState<string>('5000');
   const [paymentAccount, setPaymentAccount] = useState<string>(
     user ? `${user.phone_country_code} ${user.phone_number}` : ''
@@ -76,13 +78,13 @@ export const WithdrawView: React.FC<WithdrawViewProps> = ({
             <ArrowUpRight className="w-3.5 h-3.5" />
             <span>{t('withdraw_title', language)}</span>
           </div>
-          <span className="text-xs font-extrabold text-emerald-200">BIF</span>
+          <span className="text-xs font-extrabold text-emerald-200">{userCurrency}</span>
         </div>
 
         <div>
           <p className="text-xs font-medium text-slate-300">{t('available_wallet_balance', language)}</p>
           <h1 className="text-3xl font-black text-white tracking-tight">
-            {balance.toLocaleString()} <span className="text-emerald-400 text-lg">BIF</span>
+            {balance.toLocaleString()} <span className="text-emerald-400 text-lg">{userCurrency}</span>
           </h1>
         </div>
       </div>
@@ -125,7 +127,7 @@ export const WithdrawView: React.FC<WithdrawViewProps> = ({
                 required
               />
               <span className="absolute right-4 top-3 text-xs font-black text-emerald-600 dark:text-emerald-400">
-                BIF
+                {userCurrency}
               </span>
             </div>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{t('min_withdraw_note', language)}</p>
@@ -220,7 +222,7 @@ export const WithdrawView: React.FC<WithdrawViewProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-slate-900 dark:text-white text-sm">
-                    {req.amount.toLocaleString()} BIF
+                    {req.amount.toLocaleString()} {userCurrency}
                   </span>
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${

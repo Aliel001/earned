@@ -8,12 +8,12 @@ export const SUPPORTED_LANGUAGES: { code: Language; name: string; nativeName: st
 ];
 
 export const COUNTRY_CODES = [
-  { code: '+257', country: 'Burundi', flag: '🇧🇮' },
-  { code: '+250', country: 'Rwanda', flag: '🇷🇼' },
-  { code: '+256', country: 'Uganda', flag: '🇺🇬' },
-  { code: '+254', country: 'Kenya', flag: '🇰🇪' },
-  { code: '+255', country: 'Tanzania', flag: '🇹🇿' },
-  { code: '+243', country: 'DR Congo', flag: '🇨🇩' },
+  { code: '+257', country: 'Burundi', currency: '', flag: '🇧🇮' },
+  { code: '+250', country: 'Rwanda', currency: 'RWF', flag: '🇷🇼' },
+  { code: '+256', country: 'Uganda', currency: 'UGX', flag: '🇺🇬' },
+  { code: '+254', country: 'Kenya', currency: 'KES', flag: '🇰🇪' },
+  { code: '+255', country: 'Tanzania', currency: 'TZS', flag: '🇹🇿' },
+  { code: '+243', country: 'DR Congo', currency: 'CDF', flag: '🇨🇩' },
 ];
 
 export const translations: Record<Language, Record<string, string>> = {
@@ -35,7 +35,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Injira nka Admin',
     admin_login_desc: 'Shyiramo inyandiko y\'ibanga ya Admin',
     back_to_user_login: 'Subira ku kwinjira kwasanzwe',
-    welcome_bonus_badge: 'Bonus y\'Ikaze: 15,000 BIF',
+    welcome_bonus_badge: 'Bonus y\'Ikaze: 15,000',
     username: 'Izina ryo kwinjiraho',
     phone_number: 'Numero za telefoni',
     password: 'Inyandiko y\'ibanga',
@@ -45,7 +45,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Ufise konte? Injira',
     no_account_yet: 'Nta konte ufise? Izangishe',
     registration_pending_title: 'Konte Yawe Irarindiriye Kwemerwa',
-    registration_pending_desc: 'Murakoze kwirangisha kuri TwigaMart! Bonus y\'ikaze ya 15,000 BIF yabitswe mu gapuri kawe. Ubuyobozi buriko burasuzuma konte yawe. Uzoyikoresha uheza kwemerwa.',
+    registration_pending_desc: 'Murakoze kwirangisha kuri TwigaMart! Bonus y\'ikaze ya 15,000 yabitswe mu gapuri kawe. Ubuyobozi buriko burasuzuma konte yawe. Uzoyikoresha uheza kwemerwa.',
     account_rejected: 'Konte Yawe Yanzwe',
     account_suspended: 'Konte Yawe Irahagaritswe',
     notice_pending_approval: 'ITANGAZO: Konte Irindiriye Kwemerwa',
@@ -78,10 +78,10 @@ export const translations: Record<Language, Record<string, string>> = {
     withdraw_title: 'Saba Amafaranga',
     available_wallet_balance: 'Amafaranga ari mu gapuri',
     request_withdrawal_title: 'SABA KUBIKUZA',
-    withdraw_amount: 'Ingano y\'Amafaranga (BIF)',
+    withdraw_amount: 'Ingano y\'Amafaranga',
     payment_account_number: 'Numero ya Lumicash / Ecocash',
-    min_withdraw_note: 'Ingano ntarengwa yo kwaka ni 5,000 BIF.',
-    min_withdraw_err: 'Ingano ya muke yo kwaka ni 5,000 BIF',
+    min_withdraw_note: 'Ingano ntarengwa yo kwaka ni 5,000.',
+    min_withdraw_err: 'Ingano ya muke yo kwaka ni 5,000',
     insufficient_balance_err: 'Nta mafaranga ahagije ari mu gapuri kawe',
     account_required_err: 'Andika numero ya Lumicash / Ecocash yaboherereza',
     withdraw_success_msg: 'Ubusabe bwazamuwe neza! Ubuyobozi buriko burabusuzuma.',
@@ -126,7 +126,7 @@ export const translations: Record<Language, Record<string, string>> = {
     add_image: 'Ongeraho Ifoto',
     image_title: 'Umutwe w\'Ifoto',
     image_url: 'Ikarita w\'Ifoto (URL)',
-    reward_amount: 'Agashimwe (BIF)',
+    reward_amount: 'Agashimwe',
     save_settings: 'Bika Igenamiterere',
     reject_reason_prompt: 'Andika ubumenyeshi kuri uyu muryango/ubusabe:',
 
@@ -153,7 +153,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Injira nka Admin',
     admin_login_desc: 'Shyiramo ijambo ry\'ibanga rya Admin',
     back_to_user_login: 'Subira ku kwinjira kwasanzwe',
-    welcome_bonus_badge: 'Bonus y\'Ikaze: 15,000 BIF',
+    welcome_bonus_badge: 'Bonus y\'Ikaze: 15,000',
     username: 'Izina ryo kwinjiraho',
     phone_number: 'Numero za terefoni',
     password: 'Ijambo ry\'ibanga',
@@ -163,7 +163,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Ufite konte? Injira',
     no_account_yet: 'Nta konte ufite? Iyandikishe',
     registration_pending_title: 'Konte Yawe Irategereje Kwemerwa',
-    registration_pending_desc: 'Murakoze kwiyandikisha kuri TwigaMart! Bonus y\'ikaze ya 15,000 BIF yabitswe mu gasanduku kawe. Ubuyobozi buri gusuzuma konte yawe. Uzayikoresha uheza kwemerwa.',
+    registration_pending_desc: 'Murakoze kwiyandikisha kuri TwigaMart! Bonus y\'ikaze ya 15,000 yabitswe mu gasanduku kawe. Ubuyobozi buri gusuzuma konte yawe. Uzayikoresha uheza kwemerwa.',
     account_rejected: 'Konte Yawe Yanzwe',
     account_suspended: 'Konte Yawe Irahagaritswe',
     notice_pending_approval: 'ITANGAZO: Konte Irategereje Kwemerwa',
@@ -196,10 +196,10 @@ export const translations: Record<Language, Record<string, string>> = {
     withdraw_title: 'Saba Kubikuza',
     available_wallet_balance: 'Amafaranga ahari yo kubikuza',
     request_withdrawal_title: 'SABA KUBIKUZA',
-    withdraw_amount: 'Ingano y\'Amafaranga (BIF)',
+    withdraw_amount: 'Ingano y\'Amafaranga',
     payment_account_number: 'Numero ya Lumicash / Ecocash',
-    min_withdraw_note: 'Ingano yo kubikuza ni nibura 5,000 BIF.',
-    min_withdraw_err: 'Ingano yo kubikuza ni nibura 5,000 BIF',
+    min_withdraw_note: 'Ingano yo kubikuza ni nibura 5,000.',
+    min_withdraw_err: 'Ingano yo kubikuza ni nibura 5,000',
     insufficient_balance_err: 'Nta mafaranga ahagije ari mu gasanduku kawe',
     account_required_err: 'Andika numero ya Lumicash / Ecocash bazohererezaho',
     withdraw_success_msg: 'Ubusabe bwo kubikuza boherejwe neza! Ubuyobozi buri kubusuzuma.',
@@ -244,7 +244,7 @@ export const translations: Record<Language, Record<string, string>> = {
     add_image: 'Ongeraho Ifoto',
     image_title: 'Umutwe w\'Ifoto',
     image_url: 'Ikarita w\'Ifoto (URL)',
-    reward_amount: 'Agashimwe (BIF)',
+    reward_amount: 'Agashimwe',
     save_settings: 'Bika Igenamiterere',
     reject_reason_prompt: 'Andika ubumenyeshi kuri uyu muryango/ubusabe:',
 
@@ -271,7 +271,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Admin Login',
     admin_login_desc: 'Enter Admin password to log in',
     back_to_user_login: 'Back to User Login',
-    welcome_bonus_badge: 'Welcome Bonus: 15,000 BIF',
+    welcome_bonus_badge: 'Welcome Bonus: 15,000',
     username: 'Username',
     phone_number: 'Phone Number',
     password: 'Password',
@@ -281,7 +281,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Already have an account? Log In',
     no_account_yet: "Don't have an account? Register",
     registration_pending_title: 'Account Pending Approval',
-    registration_pending_desc: 'Thank you for registering on TwigaMart! Your 15,000 BIF welcome bonus is credited. An administrator is reviewing your account.',
+    registration_pending_desc: 'Thank you for registering on TwigaMart! Your 15,000 welcome bonus is credited. An administrator is reviewing your account.',
     account_rejected: 'Account Rejected',
     account_suspended: 'Account Suspended',
     notice_pending_approval: 'NOTICE: Account Pending Approval',
@@ -314,10 +314,10 @@ export const translations: Record<Language, Record<string, string>> = {
     withdraw_title: 'Request Withdrawal',
     available_wallet_balance: 'Available Wallet Balance',
     request_withdrawal_title: 'REQUEST WITHDRAWAL',
-    withdraw_amount: 'Amount (BIF)',
+    withdraw_amount: 'Amount',
     payment_account_number: 'Lumicash / Ecocash Number',
-    min_withdraw_note: 'Minimum withdrawal amount is 5,000 BIF.',
-    min_withdraw_err: 'Minimum withdrawal amount is 5,000 BIF',
+    min_withdraw_note: 'Minimum withdrawal amount is 5,000.',
+    min_withdraw_err: 'Minimum withdrawal amount is 5,000',
     insufficient_balance_err: 'Insufficient wallet balance',
     account_required_err: 'Payment account number is required',
     withdraw_success_msg: 'Withdrawal request submitted successfully! Admin is reviewing it.',
@@ -362,7 +362,7 @@ export const translations: Record<Language, Record<string, string>> = {
     add_image: 'Add New Image',
     image_title: 'Image Title',
     image_url: 'Image URL',
-    reward_amount: 'Reward Amount (BIF)',
+    reward_amount: 'Reward Amount',
     save_settings: 'Save Settings',
     reject_reason_prompt: 'Provide a note/message for the user:',
 
@@ -389,7 +389,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Connexion Admin',
     admin_login_desc: 'Entrez le mot de passe Admin pour vous connecter',
     back_to_user_login: 'Retour à la connexion utilisateur',
-    welcome_bonus_badge: 'Bonus de bienvenue: 15,000 BIF',
+    welcome_bonus_badge: 'Bonus de bienvenue: 15,000',
     username: "Nom d'utilisateur",
     phone_number: 'Numéro de téléphone',
     password: 'Mot de passe',
@@ -399,7 +399,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Déjà un compte ? Se connecter',
     no_account_yet: "Pas encore de compte ? S'inscrire",
     registration_pending_title: 'Compte en attente d\'approbation',
-    registration_pending_desc: 'Merci de vous être inscrit sur TwigaMart ! Votre bonus de 15,000 BIF a été crédité. Un administrateur examine votre compte.',
+    registration_pending_desc: 'Merci de vous être inscrit sur TwigaMart ! Votre bonus de 15,000 a été crédité. Un administrateur examine votre compte.',
     account_rejected: 'Compte rejeté',
     account_suspended: 'Compte suspendu',
     notice_pending_approval: 'AVIS: Compte en attente d\'approbation',
@@ -432,10 +432,10 @@ export const translations: Record<Language, Record<string, string>> = {
     withdraw_title: 'Demande de retrait',
     available_wallet_balance: 'Solde disponible',
     request_withdrawal_title: 'DEMANDER UN RETRAIT',
-    withdraw_amount: 'Montant (BIF)',
+    withdraw_amount: 'Montant',
     payment_account_number: 'Numéro Lumicash / Ecocash',
-    min_withdraw_note: 'Le montant minimum de retrait est de 5 000 BIF.',
-    min_withdraw_err: 'Le montant minimum de retrait est de 5 000 BIF',
+    min_withdraw_note: 'Le montant minimum de retrait est de 5 000.',
+    min_withdraw_err: 'Le montant minimum de retrait est de 5 000',
     insufficient_balance_err: 'Solde insuffisant dans votre portefeuille',
     account_required_err: 'Le numéro de compte de paiement est requis',
     withdraw_success_msg: 'Demande de retrait soumise avec succès ! L\'admin l\'examine.',
@@ -480,7 +480,7 @@ export const translations: Record<Language, Record<string, string>> = {
     add_image: 'Ajouter une image',
     image_title: 'Titre de l\'image',
     image_url: 'URL de l\'image',
-    reward_amount: 'Récompense (BIF)',
+    reward_amount: 'Récompense',
     save_settings: 'Enregistrer',
     reject_reason_prompt: 'Message pour l\'utilisateur:',
 
@@ -491,7 +491,11 @@ export const translations: Record<Language, Record<string, string>> = {
   },
 };
 
-export function t(key: string, lang: Language = 'rn'): string {
+export function t(key: string, lang: Language = 'rn', currency?: string): string {
   const dict = translations[lang] || translations['rn'];
-  return dict[key] || translations['en'][key] || key;
+  let text = dict[key] || translations['en'][key] || key;
+  if (currency) {
+    text = text.replace(/RWF/g, currency);
+  }
+  return text;
 }

@@ -54,7 +54,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
     },
     {
       title: 'Total Withdrawals',
-      value: `${stats.total_payouts.toLocaleString()} BIF`,
+      value: `${stats.total_payouts.toLocaleString()}`,
       subtext: `${stats.pending_withdraws} pending request(s)`,
       icon: ArrowUpRight,
       color: 'from-rose-500 to-pink-600',
@@ -70,7 +70,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
     },
     {
       title: 'Total Wallet Balance',
-      value: `${(stats.total_wallet_balance || 0).toLocaleString()} BIF`,
+      value: `${(stats.total_wallet_balance || 0).toLocaleString()}`,
       subtext: 'Combined user wallet liabilities',
       icon: Wallet,
       color: 'from-emerald-600 to-cyan-600',
@@ -78,7 +78,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
     },
     {
       title: 'Registration Bonus',
-      value: `${(stats.registration_bonus || 15000).toLocaleString()} BIF`,
+      value: `${(stats.registration_bonus || 15000).toLocaleString()}`,
       subtext: 'Welcome bonus per new user',
       icon: Gift,
       color: 'from-teal-500 to-emerald-600',

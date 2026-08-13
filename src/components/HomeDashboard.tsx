@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { t } from '../locales/translations.js';
 import { ImageItem, PaymentSettings } from '../types.js';
-import { Wallet, Image as ImageIcon, Heart, ArrowUpRight, CheckCircle2, ShieldCheck, Sparkles, MessageSquare, PhoneCall, Zap, PhoneForwarded } from 'lucide-react';
+import { Wallet, Image as ImageIcon, Heart, ArrowUpRight, CheckCircle2, ShieldCheck, Sparkles, MessageSquare, Zap, PhoneCall } from 'lucide-react';
 import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
+import { getUserCurrency } from '../utils/currency.js';
 
 interface HomeDashboardProps {
   balance: number;
@@ -22,6 +23,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 }) => {
   const { user, language } = useAuth();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const userCurrency = getUserCurrency(user);
 
   const safeImages = Array.isArray(images) ? images : [];
   const totalLikes = safeImages.filter((img) => img && img.user_liked).length;
@@ -29,7 +31,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
   const handleLikeWithToast = async (imageId: string) => {
     onLikeImage(imageId);
-    setToastMessage('+1,000 BIF yiyongereye mu gapuri kawe! 🎉');
+    setToastMessage(`+1,000 ${userCurrency} yiyongereye mu gapuri kawe! 🎉`);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
@@ -73,11 +75,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               {t('current_balance', language)}
             </p>
             <p className="text-3xl font-black text-white tracking-tight">
-              {balance.toLocaleString()} <span className="text-lg font-extrabold text-emerald-200">BIF</span>
+              {balance.toLocaleString()} <span className="text-lg font-extrabold text-emerald-200">{userCurrency}</span>
             </p>
             <p className="text-[10px] text-emerald-200 mt-1 font-semibold flex items-center space-x-1">
               <Zap className="w-3 h-3 text-amber-300 fill-amber-300" />
-              <span>Buri like 1 = +1,000 BIF mu gapuri</span>
+              <span>Buri like 1 = +1,000 {userCurrency} mu gapuri</span>
             </p>
           </div>
 
@@ -89,50 +91,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <ArrowUpRight className="w-4 h-4" />
           </button>
         </div>
-      </div>
-
-      {/* PAY NOW / Phone Call Button Banner for Users */}
-      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 rounded-3xl p-5 text-slate-950 shadow-2xl relative overflow-hidden space-y-3 border border-amber-300/40">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 bg-slate-950/90 text-amber-400 font-black text-[11px] px-3 py-1 rounded-full border border-amber-400/40 uppercase">
-            <PhoneCall className="w-3.5 h-3.5 animate-pulse" />
-            <span>PAY NOW / ISHYURA SANGO</span>
-          </div>
-          <span className="text-xs font-black bg-slate-950 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-400/40">
-            {ussdInfo.isRwanda ? '🇷🇼 RWANDA USSD' : '🇧🇮 BURUNDI USSD'}
-          </span>
-        </div>
-
-        <div>
-          <h2 className="text-lg font-black text-slate-950 tracking-tight leading-tight">
-            Kora Kwikora no Kwishyura mu Kanda Hano!
-          </h2>
-          <p className="text-xs font-bold text-slate-900/90 mt-1">
-            Kanda Kuri "PAY NOW" Uhita Ufungura Telefone Kuri USSD Code Za Mobile Money / Lumicash.
-          </p>
-        </div>
-
-        {/* Display Phone Numbers & USSD Code */}
-        <div className="bg-slate-950/80 backdrop-blur-md border border-white/10 rounded-2xl p-3 text-white flex items-center justify-between text-xs">
-          <div>
-            <p className="text-[10px] text-slate-400 uppercase font-bold">
-              USSD Code ({ussdInfo.isRwanda ? 'MTN / Airtel RW' : 'Lumicash / Ecocash BI'})
-            </p>
-            <p className="font-black text-amber-300 tracking-wider text-sm">{ussdInfo.ussdDisplay}</p>
-          </div>
-          <div className="text-[10px] bg-amber-400/20 text-amber-300 px-2.5 py-1 rounded-lg border border-amber-400/30 font-bold">
-            {ussdInfo.cleanAdminNumber}
-          </div>
-        </div>
-
-        {/* Big Action Pay Now USSD Direct Phone Call Button */}
-        <a
-          href={ussdInfo.telDialUrl}
-          className="w-full bg-slate-950 hover:bg-slate-900 text-amber-400 font-black py-3.5 px-4 rounded-2xl shadow-xl border border-amber-400/50 flex items-center justify-center space-x-2.5 text-sm transition active:scale-95"
-        >
-          <PhoneForwarded className="w-5 h-5 text-amber-400 animate-bounce" />
-          <span>PAY NOW ({ussdInfo.ussdDisplay})</span>
-        </a>
       </div>
 
       {/* Quick Metrics Grid */}
@@ -188,7 +146,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute top-2.5 right-2.5 bg-slate-950/80 backdrop-blur-md border border-emerald-500/40 text-emerald-400 font-black text-xs px-2.5 py-1 rounded-full shadow">
-                  +{image.reward.toLocaleString()} BIF
+                  +{image.reward.toLocaleString()} {userCurrency}
                 </div>
               </div>
 

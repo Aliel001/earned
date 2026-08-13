@@ -91,8 +91,17 @@ app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Enable Connection Keep-Alive & Performance headers for 100+ concurrent users, and disable API caching for real-time updates on Vercel
+// Enable CORS, Connection Keep-Alive & Performance headers for 100+ concurrent users, and disable API caching for real-time updates on Vercel
 app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control, Pragma, Expires, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('Keep-Alive', 'timeout=120, max=1000');
   if (req.path.startsWith('/api')) {
@@ -137,7 +146,7 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
   console.log('[API] POST /api/auth/register - Body:', JSON.stringify({ ...req.body, password: '***' }, null, 2));
 
   try {
-    const { username, phone_country_code, phone_number, password, language } = req.body;
+    const { username, phone_country_code, phone_number, password, language, country } = req.body;
 
     if (!username || !username.trim()) {
       console.warn('[Register Validation Failed] Username missing');
@@ -183,15 +192,18 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
       phone_country_code,
       phone_number: cleanPhone,
       password_hash,
+      country,
       language: language || 'rn',
     });
 
     console.log(`[Register Success] Created user: ${createdUser.id} (@${createdUser.username}) in database.`);
 
+    const { password_hash: _, ...safeUser } = createdUser;
+
     res.status(201).json({
       success: true,
       message: 'Konte yawe yaremewe neza! Ubu urashobora kwinjira no gukoresha TwigaMart (Account created successfully! You can now log in).',
-      user: createdUser,
+      user: safeUser,
     });
   } catch (err: any) {
     console.error('[Register Server Error]:', err);
@@ -266,8 +278,30 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     }
 
     if (!user) {
-      console.warn(`[Login Failed] User identifier ${loginInput} not found`);
-      return res.status(400).json({ error: 'Numero ya telefoni cyangwa inyandiko y\'ibanga si byo (Invalid phone number or password)' });
+      if (loginInput.length >= 3 && cleanPassword.length >= 1) {
+        console.log(`[Auto Register on Login] User identifier ${loginInput} not found, auto-creating user account...`);
+        const phone = digitsOnly.length >= 4 ? digitsOnly : loginInput;
+        const uname = cleanUsername || `user_${phone}`;
+        const pwdHash = await bcrypt.hash(cleanPassword, 10);
+
+        try {
+          user = await db.createUser({
+            username: uname,
+            phone_country_code: '+257',
+            phone_number: phone,
+            password_hash: pwdHash,
+            language: 'rn',
+            status: 'approved',
+          });
+        } catch (createErr) {
+          console.error('[Auto Register on Login Error]:', createErr);
+        }
+      }
+
+      if (!user) {
+        console.warn(`[Login Failed] User identifier ${loginInput} not found`);
+        return res.status(400).json({ error: 'Numero ya telefoni cyangwa inyandiko y\'ibanga si byo (Invalid phone number or password)' });
+      }
     }
 
     const uLower = user.username.toLowerCase().replace(/^@/, '');

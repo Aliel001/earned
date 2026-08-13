@@ -302,7 +302,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
                     {img.active ? 'Active' : 'Inactive'}
                   </span>
                   <span className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-black">
-                    +{img.reward || 1000} BIF
+                    +{(img.reward || 1000).toLocaleString()}
                   </span>
                 </div>
 
@@ -349,7 +349,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
             <div>
               <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1.5">
                 <Gift className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Registration Welcome Bonus (BIF)</span>
+                <span>Registration Welcome Bonus</span>
               </label>
               <input
                 type="number"
@@ -363,7 +363,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
             <div>
               <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1.5">
                 <Heart className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                <span>Like Reward per Image (BIF)</span>
+                <span>Like Reward per Image</span>
               </label>
               <input
                 type="number"
@@ -377,7 +377,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
             <div>
               <label className="block font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center space-x-1.5">
                 <Wallet className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Minimum Withdrawal Amount (BIF)</span>
+                <span>Minimum Withdrawal Amount</span>
               </label>
               <input
                 type="number"
@@ -576,7 +576,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Reward (BIF)</label>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Reward Amount</label>
                   <input
                     type="number"
                     value={imageReward}

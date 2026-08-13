@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { t } from '../locales/translations.js';
 import { LanguageSwitcher } from './LanguageSwitcher.js';
 import { Moon, Sun, LogOut, ShieldCheck, Wallet } from 'lucide-react';
+import { getUserCurrency, getCountryFlag } from '../utils/currency.js';
 
 interface HeaderProps {
   onOpenAuth: (mode: 'login' | 'register') => void;
@@ -12,6 +13,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onOpenAuth, walletBalance, onNavigateHome }) => {
   const { user, role, language, darkMode, setDarkMode, logout } = useAuth();
+  const userCurrency = getUserCurrency(user);
+  const countryFlag = getCountryFlag(user?.country, user?.phone_country_code);
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/80 backdrop-blur-2xl border-b border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-sm dark:shadow-2xl transition-colors duration-300">
@@ -27,8 +30,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, walletBalance, onNav
           <div>
             <div className="flex items-center space-x-1.5">
               <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">TwigaMart</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                BI
+              <span className="text-xs font-bold uppercase tracking-wider bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center space-x-1">
+                <span>{countryFlag}</span>
+                <span>{userCurrency}</span>
               </span>
             </div>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Rewards & Wallet</p>
@@ -41,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, walletBalance, onNav
           {user && role === 'user' && walletBalance !== undefined && (
             <div className="hidden sm:flex items-center space-x-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md">
               <Wallet className="w-3.5 h-3.5" />
-              <span>{walletBalance.toLocaleString()} BIF</span>
+              <span>{walletBalance.toLocaleString()} {userCurrency}</span>
             </div>
           )}
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, UserStatus } from '../../types.js';
 import { adminApi } from '../../services/api.js';
+import { getUserCurrency } from '../../utils/currency.js';
 import {
   Users,
   Search,
@@ -237,7 +238,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
                     </td>
 
                     <td className="py-3.5 px-4 font-extrabold text-emerald-600 dark:text-emerald-400">
-                      {(u.wallet?.balance || 0).toLocaleString()} BIF
+                      {(u.wallet?.balance || 0).toLocaleString()} {u.wallet?.currency || getUserCurrency(u)}
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
@@ -368,7 +369,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
               <div className="flex justify-between">
                 <span className="text-slate-400">Wallet Balance:</span>
                 <span className="font-extrabold text-emerald-400">
-                  {(selectedUser.wallet?.balance || 0).toLocaleString()} BIF
+                  {(selectedUser.wallet?.balance || 0).toLocaleString()} {selectedUser.wallet?.currency || getUserCurrency(selectedUser)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -486,7 +487,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
             </h3>
 
             <p className="text-xs text-slate-400">
-              Current Balance: <strong className="text-emerald-400">{(balanceUser.wallet?.balance || 0).toLocaleString()} BIF</strong>
+              Current Balance: <strong className="text-emerald-400">{(balanceUser.wallet?.balance || 0).toLocaleString()} {balanceUser.wallet?.currency || getUserCurrency(balanceUser)}</strong>
             </p>
 
             <form onSubmit={handleSaveBalance} className="space-y-3 text-xs">
@@ -511,7 +512,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Amount (BIF)</label>
+                <label className="block font-bold text-slate-300 mb-1">Amount</label>
                 <input
                   type="number"
                   min="1"

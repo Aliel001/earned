@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { COUNTRY_CODES, SUPPORTED_LANGUAGES, t } from '../locales/translations.js';
 import { Language } from '../types.js';
 import { X, Lock, Phone, User, Globe, Gift, ShieldAlert, Sparkles, CheckCircle2, Mail } from 'lucide-react';
+import { getCurrencyForCountry } from '../utils/currency.js';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -132,6 +133,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
     }
   };
 
+  const regCurrency = getCurrencyForCountry(undefined, countryCode);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-2xl animate-fade-in overflow-y-auto">
       <div className="bg-slate-900/90 backdrop-blur-3xl border border-white/10 text-slate-100 rounded-3xl w-full max-w-md p-6 shadow-2xl relative my-8">
@@ -158,7 +161,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
           <p className="text-xs text-slate-400 mt-1">
             {mode === 'admin'
               ? 'Shyiramo inyandiko y\'ibanga ya Admin kugira ngo winjire.'
-              : 'TwigaMart - Earn BIF by Liking Images'}
+              : 'TwigaMart - Earn Money by Liking Images'}
           </p>
         </div>
 
@@ -168,11 +171,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
             <Gift className="w-8 h-8 text-emerald-400 flex-shrink-0 animate-bounce" />
             <div>
               <p className="text-xs font-bold text-white flex items-center space-x-1">
-                <span>Bonus y\'Ikaze: 15,000 BIF</span>
+                <span>Bonus y'Ikaze: 15,000 {regCurrency}</span>
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </p>
               <p className="text-[11px] text-slate-300 leading-tight mt-0.5">
-                Rungika form ugire 15,000 BIF ya bonus mu gapuri kawe uwo mwanya!
+                Rungika form ugire 15,000 {regCurrency} ya bonus mu gapuri kawe uwo mwanya!
               </p>
             </div>
           </div>
@@ -379,7 +382,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
             ) : mode === 'admin' ? (
               <span>Injira nka Admin (Admin Login)</span>
             ) : mode === 'register' ? (
-              <span>{t('register', language)} (+15,000 BIF)</span>
+              <span>{t('register', language, regCurrency)} (+15,000 {regCurrency})</span>
             ) : (
               <span>{t('login', language)}</span>
             )}

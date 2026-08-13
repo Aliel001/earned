@@ -4,6 +4,7 @@ import { t } from '../locales/translations.js';
 import { PaymentSettings, WithdrawRequest } from '../types.js';
 import { Wallet, ArrowUpRight, Copy, Check, Clock, CheckCircle2, XCircle, Phone, MessageSquare, AlertCircle, Info } from 'lucide-react';
 import { getPayNowUssdDetails } from '../utils/paymentUtils.js';
+import { getUserCurrency } from '../utils/currency.js';
 
 interface WalletViewProps {
   balance: number;
@@ -19,6 +20,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
   onSubmitWithdraw,
 }) => {
   const { language, user } = useAuth();
+  const userCurrency = getUserCurrency(user);
 
   const [amount, setAmount] = useState<string>('5000');
   const [paymentAccount, setPaymentAccount] = useState<string>(
@@ -34,7 +36,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
 
     const numAmount = Number(amount);
     if (!numAmount || numAmount < 5000) {
-      setError(t('min_withdraw_note', language));
+      setError(t('min_withdraw_note', language, userCurrency));
       return;
     }
 
@@ -44,7 +46,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
     }
 
     if (!paymentAccount.trim()) {
-      setError('Andika numero ya Lumicash / Ecocash.');
+      setError('Andika numero za mobile money zaboherereza.');
       return;
     }
 
@@ -76,18 +78,18 @@ export const WalletView: React.FC<WalletViewProps> = ({
               <Wallet className="w-6 h-6 text-white" />
             </div>
             <span className="font-extrabold text-sm uppercase tracking-wider text-emerald-100">
-              {t('wallet_title', language)}
+              {t('wallet_title', language, userCurrency)}
             </span>
           </div>
           <span className="bg-slate-950/80 backdrop-blur-md text-emerald-300 border border-emerald-400/30 text-xs font-black px-3 py-1 rounded-full uppercase">
-            BIF Currency
+            {userCurrency} Currency
           </span>
         </div>
 
         <div className="mt-2 relative z-10">
-          <p className="text-xs font-semibold text-emerald-100/90">{t('current_balance', language)}</p>
+          <p className="text-xs font-semibold text-emerald-100/90">{t('current_balance', language, userCurrency)}</p>
           <p className="text-4xl font-black tracking-tight text-white mt-1">
-            {balance.toLocaleString()} <span className="text-xl font-bold text-emerald-200">BIF</span>
+            {balance.toLocaleString()} <span className="text-xl font-bold text-emerald-200">{userCurrency}</span>
           </p>
         </div>
       </div>
@@ -96,7 +98,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
       <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-3xl border border-slate-200/80 dark:border-white/10 rounded-3xl p-5 space-y-4 shadow-lg dark:shadow-2xl transition-colors duration-300">
         <h2 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
           <ArrowUpRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <span>{t('withdraw_title', language)}</span>
+          <span>{t('withdraw_title', language, userCurrency)}</span>
         </h2>
 
         {error && (
@@ -110,7 +112,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
           {/* Amount */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {t('withdraw_amount', language)}
+              {t('withdraw_amount', language, userCurrency)}
             </label>
             <input
               type="number"
@@ -121,7 +123,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
               onChange={(e) => setAmount(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500"
             />
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{t('min_withdraw_note', language)}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{t('min_withdraw_note', language, userCurrency)}</p>
           </div>
 
           {/* Payment Account */}
@@ -247,7 +249,7 @@ export const WalletView: React.FC<WalletViewProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="font-extrabold text-slate-900 dark:text-white text-sm">
-                      {req.amount.toLocaleString()} BIF
+                      {req.amount.toLocaleString()} {userCurrency}
                     </span>
                     <p className="text-[10px] text-slate-400">{req.payment_account}</p>
                   </div>

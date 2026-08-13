@@ -48,7 +48,7 @@ model Wallet {
   id         String   @id @default(uuid())
   user_id    String   @unique
   balance    Float    @default(15000.0)
-  currency   String   @default("BIF")
+  currency   String   @default("")
   updated_at DateTime @updatedAt
 
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)

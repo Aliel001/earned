@@ -273,13 +273,19 @@ export const ProfileView: React.FC = () => {
               </div>
               <div>
                 <label className="block font-bold text-slate-300 mb-1">Igihugu (Country)</label>
-                <input
-                  type="text"
+                <select
                   value={editCountry}
                   onChange={(e) => setEditCountry(e.target.value)}
                   className="w-full bg-slate-950 border border-white/10 focus:border-emerald-500 rounded-xl p-2.5 text-white font-bold"
                   required
-                />
+                >
+                  <option value="Rwanda">🇷🇼 Rwanda</option>
+                  <option value="Burundi">🇧🇮 Burundi</option>
+                  <option value="Uganda">🇺🇬 Uganda</option>
+                  <option value="Kenya">🇰🇪 Kenya</option>
+                  <option value="Tanzania">🇹🇿 Tanzania</option>
+                  <option value="DR Congo">🇨🇩 DR Congo</option>
+                </select>
               </div>
             </div>
 
