@@ -57,7 +57,9 @@ export const AdminPanel: React.FC = () => {
         a.phone_number !== b.phone_number ||
         a.phone_country_code !== b.phone_country_code ||
         a.wallet?.balance !== b.wallet?.balance ||
-        a.country !== b.country
+        a.wallet?.currency !== b.wallet?.currency ||
+        a.country !== b.country ||
+        a.profile_picture !== b.profile_picture
       ) {
         return false;
       }
@@ -78,7 +80,8 @@ export const AdminPanel: React.FC = () => {
         a.amount !== b.amount ||
         a.payment_account !== b.payment_account ||
         a.admin_message !== b.admin_message ||
-        a.created_at !== b.created_at
+        a.created_at !== b.created_at ||
+        a.username !== b.username
       ) {
         return false;
       }
