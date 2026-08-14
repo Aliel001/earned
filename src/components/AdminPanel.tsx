@@ -43,8 +43,70 @@ export const AdminPanel: React.FC = () => {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const areUsersEqual = (prev: User[], next: User[]): boolean => {
+    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
+    if (prev.length !== next.length) return false;
+    for (let i = 0; i < prev.length; i++) {
+      const a = prev[i];
+      const b = next[i];
+      if (
+        a.id !== b.id ||
+        a.status !== b.status ||
+        a.username !== b.username ||
+        a.phone_number !== b.phone_number ||
+        a.phone_country_code !== b.phone_country_code ||
+        a.wallet?.balance !== b.wallet?.balance ||
+        a.country !== b.country
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const areWithdrawsEqual = (prev: WithdrawRequest[], next: WithdrawRequest[]): boolean => {
+    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
+    if (prev.length !== next.length) return false;
+    for (let i = 0; i < prev.length; i++) {
+      const a = prev[i];
+      const b = next[i];
+      if (
+        a.id !== b.id ||
+        a.status !== b.status ||
+        a.amount !== b.amount ||
+        a.payment_account !== b.payment_account ||
+        a.admin_message !== b.admin_message ||
+        a.created_at !== b.created_at
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const areImagesEqual = (prev: ImageItem[], next: ImageItem[]): boolean => {
+    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
+    if (prev.length !== next.length) return false;
+    for (let i = 0; i < prev.length; i++) {
+      const a = prev[i];
+      const b = next[i];
+      if (
+        a.id !== b.id ||
+        a.user_liked !== b.user_liked ||
+        a.likes_count !== b.likes_count ||
+        a.active !== b.active ||
+        a.reward !== b.reward ||
+        a.title !== b.title ||
+        a.image_url !== b.image_url
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const loadAllAdminData = async (isSilent = false) => {
-    if (!isSilent) setLoading(true);
+    if (!isSilent && !stats) setLoading(true);
     try {
       const [sData, uData, wData, pData, iData] = await Promise.all([
         adminApi.getStats().catch(() => null),
@@ -54,11 +116,31 @@ export const AdminPanel: React.FC = () => {
         adminApi.getImages().catch(() => null),
       ]);
 
-      if (sData) setStats(sData);
-      if (Array.isArray(uData)) setUsers(uData);
-      if (Array.isArray(wData)) setWithdraws(wData);
-      if (pData) setPaymentSettings(pData);
-      if (Array.isArray(iData)) setImages(iData);
+      if (sData) {
+        setStats((prev) => {
+          if (!prev) return sData;
+          if (
+            prev.total_users === sData.total_users &&
+            prev.pending_users === sData.pending_users &&
+            prev.approved_users === sData.approved_users &&
+            prev.total_payouts === sData.total_payouts &&
+            prev.pending_withdraws === sData.pending_withdraws &&
+            prev.total_wallet_balance === sData.total_wallet_balance &&
+            prev.active_images === sData.active_images &&
+            prev.total_images === sData.total_images &&
+            prev.app_status === sData.app_status &&
+            prev.todays_withdrawals === sData.todays_withdrawals
+          ) {
+            return prev;
+          }
+          return sData;
+        });
+      }
+
+      if (Array.isArray(uData)) setUsers((prev) => (areUsersEqual(prev, uData) ? prev : uData));
+      if (Array.isArray(wData)) setWithdraws((prev) => (areWithdrawsEqual(prev, wData) ? prev : wData));
+      if (pData) setPaymentSettings((prev) => (JSON.stringify(prev) === JSON.stringify(pData) ? prev : pData));
+      if (Array.isArray(iData) && iData.length > 0) setImages((prev) => (areImagesEqual(prev, iData) ? prev : iData));
     } catch {
       // ignore
     } finally {

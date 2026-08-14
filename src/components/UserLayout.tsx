@@ -52,27 +52,113 @@ export const UserLayout: React.FC = () => {
     }
   };
 
+  const areImagesEqual = (prev: ImageItem[], next: ImageItem[]): boolean => {
+    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
+    if (prev.length !== next.length) return false;
+    for (let i = 0; i < prev.length; i++) {
+      const a = prev[i];
+      const b = next[i];
+      if (
+        a.id !== b.id ||
+        a.user_liked !== b.user_liked ||
+        a.likes_count !== b.likes_count ||
+        a.active !== b.active ||
+        a.reward !== b.reward ||
+        a.title !== b.title ||
+        a.image_url !== b.image_url
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const areWithdrawsEqual = (prev: WithdrawRequest[], next: WithdrawRequest[]): boolean => {
+    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
+    if (prev.length !== next.length) return false;
+    for (let i = 0; i < prev.length; i++) {
+      const a = prev[i];
+      const b = next[i];
+      if (
+        a.id !== b.id ||
+        a.status !== b.status ||
+        a.amount !== b.amount ||
+        a.payment_account !== b.payment_account ||
+        a.admin_message !== b.admin_message ||
+        a.created_at !== b.created_at
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const loadData = async () => {
     if (!user) {
-      paymentApi.getSettings().then(setPaymentSettings).catch(console.error);
-      imagesApi.getImages().then((res) => setImages(Array.isArray(res) ? res : [])).catch(console.error);
+      paymentApi
+        .getSettings()
+        .then((res) => {
+          if (res) setPaymentSettings((prev) => (JSON.stringify(prev) === JSON.stringify(res) ? prev : res));
+        })
+        .catch(console.error);
+
+      imagesApi
+        .getImages()
+        .then((res) => {
+          if (Array.isArray(res) && res.length > 0) {
+            setImages((prev) => (areImagesEqual(prev, res) ? prev : res));
+          }
+        })
+        .catch(console.error);
       return;
     }
 
     try {
       const [imgRes, wallRes, wdrRes, notifRes, payRes] = await Promise.all([
-        imagesApi.getImages().catch(() => []),
+        imagesApi.getImages().catch(() => null),
         walletApi.getWallet().catch(() => null),
-        withdrawApi.getHistory().catch(() => []),
-        notificationsApi.getNotifications().catch(() => []),
+        withdrawApi.getHistory().catch(() => null),
+        notificationsApi.getNotifications().catch(() => null),
         paymentApi.getSettings().catch(() => null),
       ]);
 
-      setImages(Array.isArray(imgRes) ? imgRes : []);
-      setWallet(wallRes);
-      setWithdrawRequests(Array.isArray(wdrRes) ? wdrRes : []);
-      setNotifications(Array.isArray(notifRes) ? notifRes : []);
-      setPaymentSettings(payRes);
+      if (Array.isArray(imgRes) && imgRes.length > 0) {
+        setImages((prev) => (areImagesEqual(prev, imgRes) ? prev : imgRes));
+      }
+
+      if (wallRes) {
+        setWallet((prev) => {
+          if (!prev) return wallRes;
+          if (
+            prev.id === wallRes.id &&
+            prev.balance === wallRes.balance &&
+            prev.currency === wallRes.currency
+          ) {
+            return prev;
+          }
+          return wallRes;
+        });
+      }
+
+      if (Array.isArray(wdrRes)) {
+        setWithdrawRequests((prev) => (areWithdrawsEqual(prev, wdrRes) ? prev : wdrRes));
+      }
+
+      if (Array.isArray(notifRes)) {
+        setNotifications((prev) => {
+          if (
+            prev.length === notifRes.length &&
+            prev.every((p, i) => p.id === notifRes[i]?.id && p.read === notifRes[i]?.read)
+          ) {
+            return prev;
+          }
+          return notifRes;
+        });
+      }
+
+      if (payRes) {
+        setPaymentSettings((prev) => (JSON.stringify(prev) === JSON.stringify(payRes) ? prev : payRes));
+      }
     } catch (err) {
       console.error('Failed to load user data:', err);
     }

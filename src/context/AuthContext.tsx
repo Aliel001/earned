@@ -96,14 +96,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const interval = setInterval(() => {
       const token = getAuthToken();
       if (token) {
-        userApi.getMe().then((res) => {
-          if (res && res.user) {
-            setUser(res.user);
-            setRole(res.role);
-          }
-        }).catch(() => {
-          // silent fail
-        });
+        userApi
+          .getMe()
+          .then((res) => {
+            if (res && res.user) {
+              setUser((prev) => {
+                if (!prev) return res.user;
+                if (
+                  prev.id === res.user.id &&
+                  prev.status === res.user.status &&
+                  prev.username === res.user.username &&
+                  prev.wallet?.balance === res.user.wallet?.balance &&
+                  prev.phone_number === res.user.phone_number
+                ) {
+                  return prev;
+                }
+                return res.user;
+              });
+              setRole((prev) => (prev === res.role ? prev : res.role));
+            }
+          })
+          .catch(() => {
+            // silent fail
+          });
       }
     }, 2000);
 
