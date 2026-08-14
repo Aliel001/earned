@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { Header } from './Header.js';
 import { BottomNav } from './BottomNav.js';
@@ -38,7 +38,7 @@ export const UserLayout: React.FC = () => {
   const [, setNotifications] = useState<NotificationItem[]>([]);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
 
-  const handleNavigate = (tab: string) => {
+  const handleNavigate = useCallback((tab: string) => {
     setActiveTab(tab);
     let targetPath = '/';
     if (tab === 'images') targetPath = '/images';
@@ -50,7 +50,7 @@ export const UserLayout: React.FC = () => {
     if (window.location.pathname !== targetPath) {
       window.history.pushState({}, '', targetPath);
     }
-  };
+  }, []);
 
   const areImagesEqual = (prev: ImageItem[], next: ImageItem[]): boolean => {
     if (!Array.isArray(prev) || !Array.isArray(next)) return false;
@@ -59,6 +59,7 @@ export const UserLayout: React.FC = () => {
       const a = prev[i];
       const b = next[i];
       if (
+        !a || !b ||
         a.id !== b.id ||
         a.user_liked !== b.user_liked ||
         a.likes_count !== b.likes_count ||
@@ -80,6 +81,7 @@ export const UserLayout: React.FC = () => {
       const a = prev[i];
       const b = next[i];
       if (
+        !a || !b ||
         a.id !== b.id ||
         a.status !== b.status ||
         a.amount !== b.amount ||
@@ -93,7 +95,7 @@ export const UserLayout: React.FC = () => {
     return true;
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) {
       paymentApi
         .getSettings()
@@ -162,25 +164,25 @@ export const UserLayout: React.FC = () => {
     } catch (err) {
       console.error('Failed to load user data:', err);
     }
-  };
+  }, [user?.id, user?.status]);
 
   useEffect(() => {
     loadData();
 
-    // Real-time background sync every 2 seconds
+    // Real-time background sync
     const interval = setInterval(() => {
       loadData();
-    }, 2000);
+    }, 3500);
 
     return () => clearInterval(interval);
-  }, [user]);
+  }, [loadData]);
 
-  const handleOpenAuth = (mode: 'login' | 'register') => {
+  const handleOpenAuth = useCallback((mode: 'login' | 'register') => {
     setAuthMode(mode);
     setAuthModalOpen(true);
-  };
+  }, []);
 
-  const handleLikeImage = async (imageId: string) => {
+  const handleLikeImage = useCallback(async (imageId: string) => {
     if (!user) {
       handleOpenAuth('login');
       return;
@@ -198,9 +200,9 @@ export const UserLayout: React.FC = () => {
       );
       notificationsApi.getNotifications().then(setNotifications).catch(console.error);
     }
-  };
+  }, [user, handleOpenAuth]);
 
-  const handleSubmitWithdraw = async (amount: number, paymentAccount: string) => {
+  const handleSubmitWithdraw = useCallback(async (amount: number, paymentAccount: string) => {
     const res = await withdrawApi.submit(amount, paymentAccount);
     if (res.withdraw) {
       setWithdrawRequests((prev) => [res.withdraw, ...prev]);
@@ -208,7 +210,7 @@ export const UserLayout: React.FC = () => {
       setWallet(updatedWallet);
       notificationsApi.getNotifications().then(setNotifications).catch(console.error);
     }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans pb-20 relative overflow-x-hidden transition-colors duration-300">

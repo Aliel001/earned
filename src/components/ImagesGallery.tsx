@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext.js';
 import { t } from '../locales/translations.js';
@@ -29,23 +29,26 @@ export const ImagesGallery: React.FC<ImagesGalleryProps> = ({ images, onLikeImag
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('All');
   const [likingId, setLikingId] = useState<string | null>(null);
 
-  const safeImages = Array.isArray(images) ? images : [];
-  const activeImages = safeImages.filter((img) => img && img.active);
-  const filteredImages = activeImages.filter((img) => {
-    const matchesSearch = img.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === 'All' ||
-      img.category === selectedCategory ||
-      (selectedCategory === 'Cars' && (img.title.toLowerCase().includes('car') || img.title.toLowerCase().includes('sedan') || img.title.toLowerCase().includes('suv') || img.id.startsWith('img_car_'))) ||
-      (selectedCategory === 'Fashion' && (img.title.toLowerCase().includes('dress') || img.title.toLowerCase().includes('shirt') || img.title.toLowerCase().includes('jacket') || img.id.startsWith('img_fsh_'))) ||
-      (selectedCategory === 'Shoes' && (img.title.toLowerCase().includes('shoes') || img.title.toLowerCase().includes('sneakers') || img.title.toLowerCase().includes('pumps') || img.id.startsWith('img_sho_'))) ||
-      (selectedCategory === 'Electronics' && (img.title.toLowerCase().includes('phone') || img.title.toLowerCase().includes('laptop') || img.title.toLowerCase().includes('headphones') || img.id.startsWith('img_ele_'))) ||
-      (selectedCategory === 'Other' && img.id.startsWith('img_oth_'));
+  const safeImages = useMemo(() => (Array.isArray(images) ? images : []), [images]);
+  const activeImages = useMemo(() => safeImages.filter((img) => img && img.active), [safeImages]);
 
-    return matchesSearch && matchesCategory;
-  });
+  const filteredImages = useMemo(() => {
+    return activeImages.filter((img) => {
+      const matchesSearch = img.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === 'All' ||
+        img.category === selectedCategory ||
+        (selectedCategory === 'Cars' && (img.title.toLowerCase().includes('car') || img.title.toLowerCase().includes('sedan') || img.title.toLowerCase().includes('suv') || img.id.startsWith('img_car_'))) ||
+        (selectedCategory === 'Fashion' && (img.title.toLowerCase().includes('dress') || img.title.toLowerCase().includes('shirt') || img.title.toLowerCase().includes('jacket') || img.id.startsWith('img_fsh_'))) ||
+        (selectedCategory === 'Shoes' && (img.title.toLowerCase().includes('shoes') || img.title.toLowerCase().includes('sneakers') || img.title.toLowerCase().includes('pumps') || img.id.startsWith('img_sho_'))) ||
+        (selectedCategory === 'Electronics' && (img.title.toLowerCase().includes('phone') || img.title.toLowerCase().includes('laptop') || img.title.toLowerCase().includes('headphones') || img.id.startsWith('img_ele_'))) ||
+        (selectedCategory === 'Other' && img.id.startsWith('img_oth_'));
 
-  const getCategoryCount = (cat: CategoryType) => {
+      return matchesSearch && matchesCategory;
+    });
+  }, [activeImages, searchTerm, selectedCategory]);
+
+  const getCategoryCount = useCallback((cat: CategoryType) => {
     if (cat === 'All') return activeImages.length;
     return activeImages.filter(
       (img) =>
@@ -56,7 +59,7 @@ export const ImagesGallery: React.FC<ImagesGalleryProps> = ({ images, onLikeImag
         (cat === 'Electronics' && img.id.startsWith('img_ele_')) ||
         (cat === 'Other' && img.id.startsWith('img_oth_'))
     ).length;
-  };
+  }, [activeImages]);
 
   const handleLike = async (imageId: string) => {
     setLikingId(imageId);

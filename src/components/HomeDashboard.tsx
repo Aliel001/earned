@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { t } from '../locales/translations.js';
 import { ImageItem, PaymentSettings } from '../types.js';
@@ -25,9 +25,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const userCurrency = getUserCurrency(user);
 
-  const safeImages = Array.isArray(images) ? images : [];
-  const totalLikes = safeImages.filter((img) => img && img.user_liked).length;
-  const activeImages = safeImages.filter((img) => img && img.active);
+  const safeImages = useMemo(() => (Array.isArray(images) ? images : []), [images]);
+  const totalLikes = useMemo(() => safeImages.filter((img) => img && img.user_liked).length, [safeImages]);
+  const activeImages = useMemo(() => safeImages.filter((img) => img && img.active), [safeImages]);
 
   const handleLikeWithToast = async (imageId: string) => {
     onLikeImage(imageId);
@@ -35,10 +35,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const ussdInfo = getPayNowUssdDetails(
-    user?.phone_country_code,
-    paymentSettings?.account_number,
-    paymentSettings?.ussd_code
+  const ussdInfo = useMemo(
+    () =>
+      getPayNowUssdDetails(
+        user?.phone_country_code,
+        paymentSettings?.account_number,
+        paymentSettings?.ussd_code
+      ),
+    [user?.phone_country_code, paymentSettings?.account_number, paymentSettings?.ussd_code]
   );
 
   return (

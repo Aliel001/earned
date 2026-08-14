@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { AdminStats, ImageItem, PaymentSettings, User, WithdrawRequest } from '../types.js';
 import { adminApi } from '../services/api.js';
@@ -31,9 +31,9 @@ export const AdminPanel: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = useCallback(() => {
     setDarkMode(!darkMode);
-  };
+  }, [darkMode, setDarkMode]);
 
   // Data states
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -50,6 +50,7 @@ export const AdminPanel: React.FC = () => {
       const a = prev[i];
       const b = next[i];
       if (
+        !a || !b ||
         a.id !== b.id ||
         a.status !== b.status ||
         a.username !== b.username ||
@@ -71,6 +72,7 @@ export const AdminPanel: React.FC = () => {
       const a = prev[i];
       const b = next[i];
       if (
+        !a || !b ||
         a.id !== b.id ||
         a.status !== b.status ||
         a.amount !== b.amount ||
@@ -91,6 +93,7 @@ export const AdminPanel: React.FC = () => {
       const a = prev[i];
       const b = next[i];
       if (
+        !a || !b ||
         a.id !== b.id ||
         a.user_liked !== b.user_liked ||
         a.likes_count !== b.likes_count ||
@@ -105,8 +108,8 @@ export const AdminPanel: React.FC = () => {
     return true;
   };
 
-  const loadAllAdminData = async (isSilent = false) => {
-    if (!isSilent && !stats) setLoading(true);
+  const loadAllAdminData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading((prev) => (stats ? prev : true));
     try {
       const [sData, uData, wData, pData, iData] = await Promise.all([
         adminApi.getStats().catch(() => null),
@@ -146,17 +149,17 @@ export const AdminPanel: React.FC = () => {
     } finally {
       if (!isSilent) setLoading(false);
     }
-  };
+  }, [stats]);
 
   useEffect(() => {
     loadAllAdminData();
-    // Real-time polling every 2 seconds for admin dashboard
+    // Real-time polling for admin dashboard
     const interval = setInterval(() => {
       loadAllAdminData(true);
-    }, 2000);
+    }, 3500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [loadAllAdminData]);
 
   interface NavItem {
     id: 'dashboard' | 'users' | 'withdrawals' | 'payment-settings' | 'app-control' | 'security';
@@ -165,14 +168,22 @@ export const AdminPanel: React.FC = () => {
     badge?: number;
   }
 
-  const navItems: NavItem[] = [
-    { id: 'dashboard', label: '📊 Dashboard', icon: LayoutDashboard },
-    { id: 'users', label: '👥 Users', icon: Users, badge: users.length },
-    { id: 'withdrawals', label: '💸 Withdrawals', icon: ArrowUpRight, badge: withdraws.filter((w) => w.status === 'pending').length },
-    { id: 'payment-settings', label: '⚙ Payment Settings', icon: CreditCard },
-    { id: 'app-control', label: '📱 App Control', icon: Sliders },
-    { id: 'security', label: '🔒 Admin Security', icon: ShieldCheck },
-  ];
+  const pendingWithdrawsCount = useMemo(
+    () => withdraws.filter((w) => w.status === 'pending').length,
+    [withdraws]
+  );
+
+  const navItems = useMemo<NavItem[]>(
+    () => [
+      { id: 'dashboard', label: '📊 Dashboard', icon: LayoutDashboard },
+      { id: 'users', label: '👥 Users', icon: Users, badge: users.length },
+      { id: 'withdrawals', label: '💸 Withdrawals', icon: ArrowUpRight, badge: pendingWithdrawsCount },
+      { id: 'payment-settings', label: '⚙ Payment Settings', icon: CreditCard },
+      { id: 'app-control', label: '📱 App Control', icon: Sliders },
+      { id: 'security', label: '🔒 Admin Security', icon: ShieldCheck },
+    ],
+    [users.length, pendingWithdrawsCount]
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col md:flex-row transition-colors duration-300">

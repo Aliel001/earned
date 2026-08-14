@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { GeneralSettings, ImageItem } from '../../types.js';
 import { adminApi } from '../../services/api.js';
 import { compressImage } from '../../utils/imageUtils.js';
@@ -64,11 +64,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
   const [securityError, setSecurityError] = useState('');
   const [securitySuccess, setSecuritySuccess] = useState('');
 
-  useEffect(() => {
-    loadGeneralSettings();
-  }, []);
-
-  const loadGeneralSettings = async () => {
+  const loadGeneralSettings = useCallback(async () => {
     try {
       const res = await adminApi.getGeneralSettings();
       setGeneralSettings(res);
@@ -79,7 +75,11 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
     } catch {
       // default fallbacks if endpoint fails
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadGeneralSettings();
+  }, [loadGeneralSettings]);
 
   // Image CRUD Handlers
   const handleOpenAddImage = () => {

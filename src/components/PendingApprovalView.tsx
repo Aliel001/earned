@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { t } from '../locales/translations.js';
 import { paymentApi } from '../services/api.js';
@@ -12,22 +12,40 @@ export const PendingApprovalView: React.FC = () => {
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    paymentApi.getSettings().then(setPaymentSettings).catch(console.error);
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await paymentApi.getSettings();
+      if (res) setPaymentSettings(res);
+    } catch (err) {
+      console.error('Failed to load payment settings:', err);
+    }
   }, []);
 
-  const handleCheckStatus = async () => {
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const handleCheckStatus = useCallback(async () => {
     setIsRefreshing(true);
     await refreshUser();
     setTimeout(() => setIsRefreshing(false), 800);
-  };
+  }, [refreshUser]);
+
+  const userCurrency = useMemo(() => getUserCurrency(user), [user]);
+  const isPending = user?.status === 'pending';
+  const isRejected = user?.status === 'rejected';
+  const isSuspended = user?.status === 'suspended';
+
+  const ussdInfo = useMemo(() => {
+    if (!user || !paymentSettings) return null;
+    return getPayNowUssdDetails(
+      user.phone_country_code,
+      paymentSettings.account_number,
+      paymentSettings.ussd_code
+    );
+  }, [user?.phone_country_code, paymentSettings?.account_number, paymentSettings?.ussd_code]);
 
   if (!user) return null;
-
-  const userCurrency = getUserCurrency(user);
-  const isPending = user.status === 'pending';
-  const isRejected = user.status === 'rejected';
-  const isSuspended = user.status === 'suspended';
 
   return (
     <div className="max-w-md mx-auto px-4 py-8 animate-fade-in">
@@ -84,44 +102,36 @@ export const PendingApprovalView: React.FC = () => {
         )}
 
         {/* Contact Admin Actions */}
-        {paymentSettings && (() => {
-          const ussdInfo = getPayNowUssdDetails(
-            user.phone_country_code,
-            paymentSettings.account_number,
-            paymentSettings.ussd_code
-          );
+        {paymentSettings && ussdInfo && (
+          <div className="space-y-2.5 pt-2">
+            {/* Pay Now Direct USSD Dial */}
+            <a
+              href={ussdInfo.telDialUrl}
+              className="w-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-300 text-slate-950 font-black py-3.5 px-4 rounded-xl shadow-xl transition flex items-center justify-between text-xs active:scale-95"
+            >
+              <div className="flex items-center space-x-2">
+                <PhoneCall className="w-4 h-4 text-slate-950 animate-bounce" />
+                <span>PAY NOW ({ussdInfo.ussdDisplay})</span>
+              </div>
+              <span className="bg-slate-950 text-amber-300 font-extrabold text-[11px] px-2 py-0.5 rounded-md border border-amber-300/40">
+                {ussdInfo.isRwanda ? '🇷🇼 MTN/Airtel' : '🇧🇮 Lumicash'}
+              </span>
+            </a>
 
-          return (
-            <div className="space-y-2.5 pt-2">
-              {/* Pay Now Direct USSD Dial */}
-              <a
-                href={ussdInfo.telDialUrl}
-                className="w-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-300 text-slate-950 font-black py-3.5 px-4 rounded-xl shadow-xl transition flex items-center justify-between text-xs active:scale-95"
-              >
-                <div className="flex items-center space-x-2">
-                  <PhoneCall className="w-4 h-4 text-slate-950 animate-bounce" />
-                  <span>PAY NOW ({ussdInfo.ussdDisplay})</span>
-                </div>
-                <span className="bg-slate-950 text-amber-300 font-extrabold text-[11px] px-2 py-0.5 rounded-md border border-amber-300/40">
-                  {ussdInfo.isRwanda ? '🇷🇼 MTN/Airtel' : '🇧🇮 Lumicash'}
-                </span>
-              </a>
-
-              {/* WhatsApp Link */}
-              <a
-                href={`https://wa.me/${(paymentSettings?.whatsapp_number || '').replace(/\D/g, '')}?text=Muraho%20Admin%2C%20nabyaza%20konte%20yange%20kuri%20TwigaMart%20(${encodeURIComponent(
-                  user?.username || ''
-                )})`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center space-x-2.5 text-xs"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>{t('contact_admin', language)} (WhatsApp)</span>
-              </a>
-            </div>
-          );
-        })()}
+            {/* WhatsApp Link */}
+            <a
+              href={`https://wa.me/${(paymentSettings?.whatsapp_number || '').replace(/\D/g, '')}?text=Muraho%20Admin%2C%20nabyaza%20konte%20yange%20kuri%20TwigaMart%20(${encodeURIComponent(
+                user?.username || ''
+              )})`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center space-x-2.5 text-xs"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>{t('contact_admin', language)} (WhatsApp)</span>
+            </a>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="pt-3 border-t border-white/10 flex items-center justify-between">

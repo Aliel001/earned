@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { Language, User } from '../types.js';
 import { authApi, getAuthToken, setAuthToken, userApi } from '../services/api.js';
 
@@ -37,12 +37,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('twigamart_lang', lang);
-  };
+  }, []);
 
-  const setDarkMode = (dark: boolean) => {
+  const setDarkMode = useCallback((dark: boolean) => {
     setDarkModeState(dark);
     localStorage.setItem('twigamart_dark', dark ? 'true' : 'false');
     if (dark) {
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       document.documentElement.classList.remove('dark');
       document.body.classList.remove('dark');
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (darkMode) {
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [darkMode]);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     const token = getAuthToken();
     if (!token) {
       setUser(null);
@@ -88,11 +88,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshUser();
-    // Real-time polling every 2 seconds to auto-update user status when admin approves
+    // Real-time polling to auto-update user status when admin approves
     const interval = setInterval(() => {
       const token = getAuthToken();
       if (token) {
@@ -107,7 +107,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   prev.status === res.user.status &&
                   prev.username === res.user.username &&
                   prev.wallet?.balance === res.user.wallet?.balance &&
-                  prev.phone_number === res.user.phone_number
+                  prev.phone_number === res.user.phone_number &&
+                  prev.profile_picture === res.user.profile_picture &&
+                  prev.country === res.user.country
                 ) {
                   return prev;
                 }
@@ -120,12 +122,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // silent fail
           });
       }
-    }, 2000);
+    }, 3500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshUser]);
 
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     setIsLoading(true);
     try {
       const res = await authApi.login({ username, password });
@@ -138,9 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (data: {
+  const register = useCallback(async (data: {
     username: string;
     phone_country_code: string;
     phone_number: string;
@@ -154,9 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const adminLogin = async (username = 'admin', password = 'admin123') => {
+  const adminLogin = useCallback(async (username = 'admin', password = 'admin123') => {
     setIsLoading(true);
     try {
       const res = await authApi.adminLogin({ username, password });
@@ -166,31 +168,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setAuthToken(null);
     setUser(null);
     setRole(null);
-  };
+  }, []);
+
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      role,
+      language,
+      setLanguage,
+      darkMode,
+      setDarkMode,
+      isLoading,
+      login,
+      register,
+      adminLogin,
+      logout,
+      refreshUser,
+    }),
+    [
+      user,
+      role,
+      language,
+      setLanguage,
+      darkMode,
+      setDarkMode,
+      isLoading,
+      login,
+      register,
+      adminLogin,
+      logout,
+      refreshUser,
+    ]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        role,
-        language,
-        setLanguage,
-        darkMode,
-        setDarkMode,
-        isLoading,
-        login,
-        register,
-        adminLogin,
-        logout,
-        refreshUser,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { WithdrawRequest, WithdrawStatus } from '../../types.js';
 import { adminApi } from '../../services/api.js';
 import {
@@ -34,14 +34,16 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
   const [deletingWithdraw, setDeletingWithdraw] = useState<WithdrawRequest | null>(null);
   const [deleteWithdrawLoading, setDeleteWithdrawLoading] = useState(false);
 
-  const filteredWithdraws = withdraws.filter((w) => {
-    const matchesSearch =
-      (w.username && w.username.toLowerCase().includes(search.toLowerCase())) ||
-      (w.payment_account && w.payment_account.includes(search)) ||
-      w.amount.toString().includes(search);
-    const matchesStatus = statusFilter === 'all' || w.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredWithdraws = useMemo(() => {
+    return withdraws.filter((w) => {
+      const matchesSearch =
+        (w.username && w.username.toLowerCase().includes(search.toLowerCase())) ||
+        (w.payment_account && w.payment_account.includes(search)) ||
+        w.amount.toString().includes(search);
+      const matchesStatus = statusFilter === 'all' || w.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [withdraws, search, statusFilter]);
 
   const handleProcessWithdraw = async (status: WithdrawStatus) => {
     if (!selectedWithdraw) return;

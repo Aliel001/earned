@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { User, UserStatus } from '../../types.js';
 import { adminApi } from '../../services/api.js';
 import { getUserCurrency } from '../../utils/currency.js';
@@ -53,14 +53,16 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.username.toLowerCase().includes(search.toLowerCase()) ||
-      u.phone_number.includes(search) ||
-      (u.country && u.country.toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const matchesSearch =
+        u.username.toLowerCase().includes(search.toLowerCase()) ||
+        u.phone_number.includes(search) ||
+        (u.country && u.country.toLowerCase().includes(search.toLowerCase()));
+      const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [users, search, statusFilter]);
 
   const handleUpdateStatus = async (id: string, status: UserStatus) => {
     try {

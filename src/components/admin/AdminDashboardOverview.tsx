@@ -19,7 +19,7 @@ interface AdminDashboardOverviewProps {
 }
 
 export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ stats, loading }) => {
-  if (loading || !stats) {
+  if (!stats) {
     return (
       <div className="flex items-center justify-center p-12 text-slate-400 font-bold text-xs">
         Loading dashboard metrics...
