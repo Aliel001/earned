@@ -109,7 +109,6 @@ export const AdminPanel: React.FC = () => {
   };
 
   const loadAllAdminData = useCallback(async (isSilent = false) => {
-    if (!isSilent) setLoading((prev) => (stats ? prev : true));
     try {
       const [sData, uData, wData, pData, iData] = await Promise.all([
         adminApi.getStats().catch(() => null),
@@ -132,7 +131,8 @@ export const AdminPanel: React.FC = () => {
             prev.active_images === sData.active_images &&
             prev.total_images === sData.total_images &&
             prev.app_status === sData.app_status &&
-            prev.todays_withdrawals === sData.todays_withdrawals
+            prev.todays_withdrawals === sData.todays_withdrawals &&
+            prev.registration_bonus === sData.registration_bonus
           ) {
             return prev;
           }
@@ -145,18 +145,18 @@ export const AdminPanel: React.FC = () => {
       if (pData) setPaymentSettings((prev) => (JSON.stringify(prev) === JSON.stringify(pData) ? prev : pData));
       if (Array.isArray(iData) && iData.length > 0) setImages((prev) => (areImagesEqual(prev, iData) ? prev : iData));
     } catch {
-      // ignore
+      // ignore network errors silently in background
     } finally {
-      if (!isSilent) setLoading(false);
+      setLoading(false);
     }
-  }, [stats]);
+  }, []);
 
   useEffect(() => {
     loadAllAdminData();
-    // Real-time polling for admin dashboard
+    // Real-time polling for admin dashboard every 4 seconds
     const interval = setInterval(() => {
       loadAllAdminData(true);
-    }, 3500);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [loadAllAdminData]);

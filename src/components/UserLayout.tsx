@@ -95,8 +95,11 @@ export const UserLayout: React.FC = () => {
     return true;
   };
 
+  const userId = user?.id;
+  const userStatus = user?.status;
+
   const loadData = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       paymentApi
         .getSettings()
         .then((res) => {
@@ -164,7 +167,7 @@ export const UserLayout: React.FC = () => {
     } catch (err) {
       console.error('Failed to load user data:', err);
     }
-  }, [user?.id, user?.status]);
+  }, [userId, userStatus]);
 
   useEffect(() => {
     loadData();
