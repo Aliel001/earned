@@ -34,16 +34,19 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
   const [deletingWithdraw, setDeletingWithdraw] = useState<WithdrawRequest | null>(null);
   const [deleteWithdrawLoading, setDeleteWithdrawLoading] = useState(false);
 
+  const safeWithdraws = useMemo(() => (Array.isArray(withdraws) ? withdraws : []), [withdraws]);
+
   const filteredWithdraws = useMemo(() => {
-    return withdraws.filter((w) => {
+    return safeWithdraws.filter((w) => {
+      if (!w) return false;
       const matchesSearch =
         (w.username && w.username.toLowerCase().includes(search.toLowerCase())) ||
         (w.payment_account && w.payment_account.includes(search)) ||
-        w.amount.toString().includes(search);
+        (w.amount !== undefined && w.amount.toString().includes(search));
       const matchesStatus = statusFilter === 'all' || w.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [withdraws, search, statusFilter]);
+  }, [safeWithdraws, search, statusFilter]);
 
   const handleProcessWithdraw = async (status: WithdrawStatus) => {
     if (!selectedWithdraw) return;

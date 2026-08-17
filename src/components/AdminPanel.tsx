@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.js';
-import { AdminStats, ImageItem, PaymentSettings, User, WithdrawRequest } from '../types.js';
+import {
+  useAdminStats,
+  useAdminUsers,
+  useAdminWithdrawals,
+  useAdminPaymentSettings,
+  useAdminImages,
+  useAdminMutations,
+} from '../hooks/useAdminData.js';
 import { adminApi } from '../services/api.js';
 import { AdminDashboardOverview } from './admin/AdminDashboardOverview.js';
 import { AdminUsersManagement } from './admin/AdminUsersManagement.js';
@@ -21,6 +28,9 @@ import {
   RefreshCw,
   Sun,
   Moon,
+  Database,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
@@ -30,149 +40,95 @@ export const AdminPanel: React.FC = () => {
   >('dashboard');
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dbHealth, setDbHealth] = useState<{
+    connected: boolean;
+    host: string;
+    db: string;
+    isNeon: boolean;
+    latencyMs: number;
+  } | null>(null);
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(!darkMode);
   }, [darkMode, setDarkMode]);
 
-  // Data states
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [withdraws, setWithdraws] = useState<WithdrawRequest[]>([]);
-  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
-  const [images, setImages] = useState<ImageItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // React Query with NO background polling to prevent flickering and ensure single-source-of-truth stability
+  const {
+    data: stats = null,
+    isLoading: isStatsLoading,
+    isFetching: isStatsFetching,
+    refetch: refetchStats,
+  } = useAdminStats();
 
-  const areUsersEqual = (prev: User[], next: User[]): boolean => {
-    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
-    if (prev.length !== next.length) return false;
-    const prevMap = new Map(prev.map((u) => [u.id, u]));
-    for (const b of next) {
-      const a = prevMap.get(b.id);
-      if (!a) return false;
-      if (
-        a.status !== b.status ||
-        a.username !== b.username ||
-        a.phone_number !== b.phone_number ||
-        a.phone_country_code !== b.phone_country_code ||
-        a.wallet?.balance !== b.wallet?.balance ||
-        a.wallet?.currency !== b.wallet?.currency ||
-        a.country !== b.country ||
-        a.profile_picture !== b.profile_picture
-      ) {
-        return false;
-      }
-    }
-    return true;
-  };
+  const {
+    data: users = [],
+    isLoading: isUsersLoading,
+    isFetching: isUsersFetching,
+    refetch: refetchUsers,
+  } = useAdminUsers();
 
-  const areWithdrawsEqual = (prev: WithdrawRequest[], next: WithdrawRequest[]): boolean => {
-    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
-    if (prev.length !== next.length) return false;
-    const prevMap = new Map(prev.map((w) => [w.id, w]));
-    for (const b of next) {
-      const a = prevMap.get(b.id);
-      if (!a) return false;
-      if (
-        a.status !== b.status ||
-        a.amount !== b.amount ||
-        a.payment_account !== b.payment_account ||
-        a.admin_message !== b.admin_message ||
-        a.created_at !== b.created_at ||
-        a.username !== b.username
-      ) {
-        return false;
-      }
-    }
-    return true;
-  };
+  const {
+    data: withdraws = [],
+    isLoading: isWithdrawsLoading,
+    isFetching: isWithdrawsFetching,
+    refetch: refetchWithdraws,
+  } = useAdminWithdrawals();
 
-  const areImagesEqual = (prev: ImageItem[], next: ImageItem[]): boolean => {
-    if (!Array.isArray(prev) || !Array.isArray(next)) return false;
-    if (prev.length !== next.length) return false;
-    const prevMap = new Map(prev.map((img) => [img.id, img]));
-    for (const b of next) {
-      const a = prevMap.get(b.id);
-      if (!a) return false;
-      if (
-        a.user_liked !== b.user_liked ||
-        a.likes_count !== b.likes_count ||
-        a.active !== b.active ||
-        a.reward !== b.reward ||
-        a.title !== b.title ||
-        a.image_url !== b.image_url
-      ) {
-        return false;
-      }
-    }
-    return true;
-  };
+  const {
+    data: paymentSettings = null,
+    refetch: refetchPaymentSettings,
+  } = useAdminPaymentSettings();
 
-  const loadAllAdminData = useCallback(async (isSilent = false) => {
-    if (!isSilent) {
-      setLoading(true);
-    }
+  const {
+    data: images = [],
+    refetch: refetchImages,
+  } = useAdminImages();
+
+  const { invalidateAll } = useAdminMutations();
+
+  const isInitialLoading = isStatsLoading && isUsersLoading && isWithdrawsLoading;
+  const isAnyFetching = isStatsFetching || isUsersFetching || isWithdrawsFetching;
+
+  // Check Database connection health
+  const checkDbHealth = useCallback(async () => {
     try {
-      const [sData, uData, wData, pData, iData] = await Promise.all([
-        adminApi.getStats().catch(() => null),
-        adminApi.getUsers().catch(() => null),
-        adminApi.getWithdraws().catch(() => null),
-        adminApi.getSettings().catch(() => null),
-        adminApi.getImages().catch(() => null),
-      ]);
-
-      if (sData) {
-        setStats((prev) => {
-          if (!prev) return sData;
-          if (
-            prev.total_users === sData.total_users &&
-            prev.pending_users === sData.pending_users &&
-            prev.approved_users === sData.approved_users &&
-            prev.total_payouts === sData.total_payouts &&
-            prev.pending_withdraws === sData.pending_withdraws &&
-            prev.total_wallet_balance === sData.total_wallet_balance &&
-            prev.active_images === sData.active_images &&
-            prev.total_images === sData.total_images &&
-            prev.app_status === sData.app_status &&
-            prev.todays_withdrawals === sData.todays_withdrawals &&
-            prev.registration_bonus === sData.registration_bonus
-          ) {
-            return prev;
-          }
-          return sData;
+      const res = await adminApi.getDbHealth();
+      if (res && res.success) {
+        setDbHealth({
+          connected: res.connected,
+          host: res.diagnostics.host,
+          db: res.diagnostics.db,
+          isNeon: res.diagnostics.isNeon,
+          latencyMs: res.latencyMs,
         });
       }
-
-      if (Array.isArray(uData) && uData.length >= 0) {
-        setUsers((prev) => (areUsersEqual(prev, uData) ? prev : uData));
-      }
-      if (Array.isArray(wData) && wData.length >= 0) {
-        setWithdraws((prev) => (areWithdrawsEqual(prev, wData) ? prev : wData));
-      }
-      if (pData) {
-        setPaymentSettings((prev) => (JSON.stringify(prev) === JSON.stringify(pData) ? prev : pData));
-      }
-      if (Array.isArray(iData) && iData.length > 0) {
-        setImages((prev) => (areImagesEqual(prev, iData) ? prev : iData));
-      }
     } catch {
-      // ignore network errors silently in background
-    } finally {
-      if (!isSilent) {
-        setLoading(false);
-      }
+      setDbHealth({
+        connected: false,
+        host: 'Unknown',
+        db: 'Unknown',
+        isNeon: false,
+        latencyMs: -1,
+      });
     }
   }, []);
 
   useEffect(() => {
-    loadAllAdminData();
-    // Real-time polling for admin dashboard every 4 seconds
-    const interval = setInterval(() => {
-      loadAllAdminData(true);
-    }, 4000);
+    checkDbHealth();
+  }, [checkDbHealth]);
 
-    return () => clearInterval(interval);
-  }, [loadAllAdminData]);
+  // Unified explicit refresh function passed to child components
+  const handleManualRefresh = useCallback(async () => {
+    await Promise.all([
+      refetchStats(),
+      refetchUsers(),
+      refetchWithdraws(),
+      refetchPaymentSettings(),
+      refetchImages(),
+      invalidateAll(),
+      checkDbHealth(),
+    ]);
+  }, [refetchStats, refetchUsers, refetchWithdraws, refetchPaymentSettings, refetchImages, invalidateAll, checkDbHealth]);
 
   interface NavItem {
     id: 'dashboard' | 'users' | 'withdrawals' | 'payment-settings' | 'app-control' | 'security';
@@ -181,21 +137,25 @@ export const AdminPanel: React.FC = () => {
     badge?: number;
   }
 
+  const safeWithdraws = useMemo(() => (Array.isArray(withdraws) ? withdraws : []), [withdraws]);
+  const safeUsers = useMemo(() => (Array.isArray(users) ? users : []), [users]);
+  const safeImages = useMemo(() => (Array.isArray(images) ? images : []), [images]);
+
   const pendingWithdrawsCount = useMemo(
-    () => withdraws.filter((w) => w.status === 'pending').length,
-    [withdraws]
+    () => safeWithdraws.filter((w) => w && w.status === 'pending').length,
+    [safeWithdraws]
   );
 
   const navItems = useMemo<NavItem[]>(
     () => [
       { id: 'dashboard', label: '📊 Dashboard', icon: LayoutDashboard },
-      { id: 'users', label: '👥 Users', icon: Users, badge: users.length },
+      { id: 'users', label: '👥 Users', icon: Users, badge: safeUsers.length },
       { id: 'withdrawals', label: '💸 Withdrawals', icon: ArrowUpRight, badge: pendingWithdrawsCount },
       { id: 'payment-settings', label: '⚙ Payment Settings', icon: CreditCard },
       { id: 'app-control', label: '📱 App Control', icon: Sliders },
       { id: 'security', label: '🔒 Admin Security', icon: ShieldCheck },
     ],
-    [users.length, pendingWithdrawsCount]
+    [safeUsers.length, pendingWithdrawsCount]
   );
 
   return (
@@ -209,10 +169,41 @@ export const AdminPanel: React.FC = () => {
             </div>
             <div>
               <h2 className="font-black text-slate-900 dark:text-white text-base tracking-tight">TwigaMart</h2>
-              <span className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                ADMIN SYSTEM
-              </span>
+              <div className="flex items-center space-x-1.5 mt-0.5">
+                <span className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  ADMIN SYSTEM
+                </span>
+              </div>
             </div>
+          </div>
+
+          {/* Database Connection Status Badge */}
+          <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold">
+              <div className="flex items-center space-x-1.5">
+                <Database className="w-3.5 h-3.5 text-indigo-500" />
+                <span className="text-slate-700 dark:text-slate-300">PostgreSQL</span>
+              </div>
+              {dbHealth?.connected ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3 h-3" />
+                  ONLINE
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-500">
+                  <AlertCircle className="w-3 h-3" />
+                  CONNECTING
+                </span>
+              )}
+            </div>
+            {dbHealth && (
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                Host: <span className="font-mono">{dbHealth.host}</span>
+                {dbHealth.latencyMs >= 0 && (
+                  <span className="ml-1 text-slate-400">({dbHealth.latencyMs}ms)</span>
+                )}
+              </div>
+            )}
           </div>
 
           <nav className="space-y-1.5">
@@ -337,46 +328,54 @@ export const AdminPanel: React.FC = () => {
         {/* Top Header Controls */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-white/10">
           <div>
-            <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
-              ADMINISTRATIVE CONTROL PANEL
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
+                ADMINISTRATIVE CONTROL PANEL
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30">
+                <Database className="w-3 h-3" />
+                PostgreSQL Direct
+              </span>
+            </div>
             <h2 className="text-lg font-black text-slate-900 dark:text-white capitalize">{(activeAdminTab || '').replace('-', ' ')}</h2>
           </div>
 
-          <button
-            onClick={() => loadAllAdminData()}
-            disabled={loading}
-            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition"
-            title="Refresh Data"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-500' : ''}`} />
-            <span className="hidden sm:inline">Refresh Data</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleManualRefresh}
+              disabled={isAnyFetching}
+              className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm active:scale-95 cursor-pointer"
+              title="Refresh Data Now"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isAnyFetching ? 'animate-spin text-emerald-500' : ''}`} />
+              <span className="hidden sm:inline">Refresh Data</span>
+            </button>
+          </div>
         </div>
 
         {/* View Routing */}
         {activeAdminTab === 'dashboard' && (
-          <AdminDashboardOverview stats={stats} loading={loading} />
+          <AdminDashboardOverview stats={stats} loading={isInitialLoading} />
         )}
 
         {activeAdminTab === 'users' && (
-          <AdminUsersManagement users={users} onRefresh={loadAllAdminData} />
+          <AdminUsersManagement users={safeUsers} onRefresh={handleManualRefresh} />
         )}
 
         {activeAdminTab === 'withdrawals' && (
-          <AdminWithdrawalsManagement withdraws={withdraws} onRefresh={loadAllAdminData} />
+          <AdminWithdrawalsManagement withdraws={safeWithdraws} onRefresh={handleManualRefresh} />
         )}
 
         {activeAdminTab === 'payment-settings' && (
-          <AdminPaymentSettings initialSettings={paymentSettings} onRefresh={loadAllAdminData} />
+          <AdminPaymentSettings initialSettings={paymentSettings} onRefresh={handleManualRefresh} />
         )}
 
         {activeAdminTab === 'app-control' && (
-          <AdminAppControl images={images} onRefresh={loadAllAdminData} />
+          <AdminAppControl images={safeImages} onRefresh={handleManualRefresh} />
         )}
 
         {activeAdminTab === 'security' && (
-          <AdminSecurity onRefresh={loadAllAdminData} />
+          <AdminSecurity onRefresh={handleManualRefresh} />
         )}
       </main>
     </div>

@@ -1,4 +1,6 @@
 import React from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient.js';
 import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { UserLayout } from './components/UserLayout.js';
 import { AdminPanel } from './components/AdminPanel.js';
@@ -32,8 +34,11 @@ const MainAppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <MainAppContent />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <MainAppContent />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
+

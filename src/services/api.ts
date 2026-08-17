@@ -226,4 +226,13 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  getDbHealth: () =>
+    request<{
+      success: boolean;
+      postgresConfigured: boolean;
+      connected: boolean;
+      latencyMs: number;
+      diagnostics: { host: string; db: string; isNeon: boolean };
+      counts: { users: number; withdraws: number; images: number; wallets: number };
+    }>('/api/admin/db-health'),
 };

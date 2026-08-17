@@ -53,16 +53,19 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  const safeUsers = useMemo(() => (Array.isArray(users) ? users : []), [users]);
+
   const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
+    return safeUsers.filter((u) => {
+      if (!u) return false;
       const matchesSearch =
-        u.username.toLowerCase().includes(search.toLowerCase()) ||
-        u.phone_number.includes(search) ||
+        (u.username && u.username.toLowerCase().includes(search.toLowerCase())) ||
+        (u.phone_number && u.phone_number.includes(search)) ||
         (u.country && u.country.toLowerCase().includes(search.toLowerCase()));
       const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [users, search, statusFilter]);
+  }, [safeUsers, search, statusFilter]);
 
   const handleUpdateStatus = async (id: string, status: UserStatus) => {
     try {

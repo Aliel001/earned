@@ -5,7 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import compression from 'compression';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { db } from './server/db.js';
+import { db, dbDiagnostics, isPostgresConfigured, getPrismaClient } from './server/db.js';
 import { UserStatus } from './types.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'twigamart_jwt_secret_key_2026_super_secure';
@@ -736,6 +736,56 @@ app.get('/api/payment-settings', async (req: Request, res: Response) => {
 });
 
 // --- ADMIN ROUTES ---
+
+// Admin: Database Health & Diagnostics
+app.get('/api/admin/db-health', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma = getPrismaClient();
+    let connected = false;
+    let latencyMs = -1;
+    let counts = { users: 0, withdraws: 0, images: 0, wallets: 0 };
+
+    if (isPostgresConfigured && prisma) {
+      const start = Date.now();
+      await prisma.$queryRaw`SELECT 1`;
+      latencyMs = Date.now() - start;
+      connected = true;
+
+      const [uCount, wCount, iCount, walCount] = await Promise.all([
+        prisma.user.count(),
+        prisma.withdrawRequest.count(),
+        prisma.image.count(),
+        prisma.wallet.count(),
+      ]);
+      counts = { users: uCount, withdraws: wCount, images: iCount, wallets: walCount };
+    }
+
+    res.json({
+      success: true,
+      postgresConfigured: isPostgresConfigured,
+      connected,
+      latencyMs,
+      diagnostics: {
+        host: dbDiagnostics.host,
+        db: dbDiagnostics.db,
+        isNeon: dbDiagnostics.isNeon,
+      },
+      counts,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err?.message || 'Database connection error',
+      postgresConfigured: isPostgresConfigured,
+      diagnostics: {
+        host: dbDiagnostics.host,
+        db: dbDiagnostics.db,
+        isNeon: dbDiagnostics.isNeon,
+      },
+    });
+  }
+});
 
 // Admin Dashboard Stats
 app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {

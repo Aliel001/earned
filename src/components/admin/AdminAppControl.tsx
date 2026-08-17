@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GeneralSettings, ImageItem } from '../../types.js';
 import { adminApi } from '../../services/api.js';
 import { compressImage } from '../../utils/imageUtils.js';
@@ -32,6 +32,7 @@ interface AdminAppControlProps {
 }
 
 export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefresh }) => {
+  const safeImages = useMemo(() => (Array.isArray(images) ? images : []), [images]);
   const [activeTab, setActiveTab] = useState<'images' | 'settings' | 'security'>('images');
 
   // --- SECTION A: IMAGE MANAGEMENT STATES ---
@@ -242,7 +243,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
           }`}
         >
           <ImageIcon className="w-4 h-4" />
-          <span>Image Management ({images.length})</span>
+          <span>Image Management ({safeImages.length})</span>
         </button>
 
         <button
@@ -287,7 +288,7 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {images.map((img) => (
+            {safeImages.map((img) => (
               <div
                 key={img.id}
                 className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-lg dark:shadow-2xl flex flex-col justify-between transition-colors duration-300"
