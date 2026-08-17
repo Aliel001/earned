@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
@@ -20,23 +23,13 @@ import {
 const DEFAULT_ADMIN_HASH = bcrypt.hashSync('admin123', 10);
 
 let prisma: PrismaClient | null = null;
-
-export function disablePrisma(reason?: string) {
-  if (prisma) {
-    console.warn(`[Database] Disabling Prisma (${reason || 'timeout/error'}). All DB queries will instantly use high-performance local store.`);
-    try {
-      prisma.$disconnect().catch(() => {});
-    } catch (_) {}
-    prisma = null;
-  }
-}
+let isPostgresInitialized = false;
 
 export function handlePrismaError(err: any, context: string) {
-  console.warn(`[Prisma] ${context} error:`, err?.message || err);
-  disablePrisma(`${context} - ${err?.message || 'Prisma error'}`);
+  console.warn(`[Prisma] ${context} warning:`, err?.message || err);
 }
 
-export async function withPrismaTimeout<T>(promise: Promise<T>, timeoutMs = 800): Promise<T> {
+export async function withPrismaTimeout<T>(promise: Promise<T>, timeoutMs = 8000): Promise<T> {
   let timer: any;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error(`Prisma operation timed out (${timeoutMs}ms)`)), timeoutMs);
@@ -44,21 +37,171 @@ export async function withPrismaTimeout<T>(promise: Promise<T>, timeoutMs = 800)
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
 }
 
-if (process.env.DATABASE_URL) {
+async function ensurePostgresSchema(client: PrismaClient) {
   try {
-    const client = new PrismaClient();
-    prisma = client;
-    withPrismaTimeout(client.$connect(), 800)
-      .then(() => {
-        console.log('[Database] PrismaClient connected successfully.');
-      })
-      .catch((err) => {
-        handlePrismaError(err, 'ConnectionTest');
-      });
+    await client.$executeRawUnsafe(`
+      DO $$ BEGIN
+        CREATE TYPE "UserStatus" AS ENUM ('pending', 'approved', 'rejected', 'suspended');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE "WithdrawStatus" AS ENUM ('pending', 'approved', 'rejected');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+
+      CREATE TABLE IF NOT EXISTS "User" (
+        "id" TEXT PRIMARY KEY,
+        "username" TEXT UNIQUE NOT NULL,
+        "phone_country_code" TEXT NOT NULL,
+        "phone_number" TEXT UNIQUE NOT NULL,
+        "password_hash" TEXT NOT NULL,
+        "country" TEXT,
+        "email" TEXT,
+        "profile_picture" TEXT,
+        "language" TEXT NOT NULL DEFAULT 'rn',
+        "status" "UserStatus" NOT NULL DEFAULT 'pending',
+        "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "country" TEXT;
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "email" TEXT;
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "profile_picture" TEXT;
+
+      CREATE TABLE IF NOT EXISTS "Admin" (
+        "id" TEXT PRIMARY KEY,
+        "username" TEXT UNIQUE NOT NULL,
+        "password_hash" TEXT NOT NULL,
+        "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "Wallet" (
+        "id" TEXT PRIMARY KEY,
+        "user_id" TEXT UNIQUE NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+        "balance" DOUBLE PRECISION NOT NULL DEFAULT 15000.0,
+        "currency" TEXT NOT NULL DEFAULT '',
+        "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "Image" (
+        "id" TEXT PRIMARY KEY,
+        "image_url" TEXT NOT NULL,
+        "title" TEXT NOT NULL,
+        "category" TEXT,
+        "reward" INTEGER NOT NULL DEFAULT 1000,
+        "active" BOOLEAN NOT NULL DEFAULT true,
+        "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      ALTER TABLE "Image" ADD COLUMN IF NOT EXISTS "category" TEXT;
+
+      CREATE TABLE IF NOT EXISTS "ImageLike" (
+        "id" TEXT PRIMARY KEY,
+        "user_id" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+        "image_id" TEXT NOT NULL REFERENCES "Image"("id") ON DELETE CASCADE,
+        "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "ImageLike_user_id_image_id_key" UNIQUE ("user_id", "image_id")
+      );
+
+      CREATE TABLE IF NOT EXISTS "WithdrawRequest" (
+        "id" TEXT PRIMARY KEY,
+        "user_id" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+        "amount" DOUBLE PRECISION NOT NULL,
+        "payment_account" TEXT NOT NULL,
+        "status" "WithdrawStatus" NOT NULL DEFAULT 'pending',
+        "admin_message" TEXT,
+        "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "PaymentSettings" (
+        "id" TEXT PRIMARY KEY DEFAULT 'default',
+        "account_number" TEXT NOT NULL DEFAULT '+257 69 00 11 22',
+        "whatsapp_number" TEXT NOT NULL DEFAULT '+257 69 00 11 22',
+        "ussd_code" TEXT NOT NULL DEFAULT '*163#',
+        "payment_instructions" TEXT NOT NULL DEFAULT 'Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.',
+        "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "GeneralSettings" (
+        "id" TEXT PRIMARY KEY DEFAULT 'default',
+        "registration_bonus" INTEGER NOT NULL DEFAULT 15000,
+        "like_reward" INTEGER NOT NULL DEFAULT 1000,
+        "min_withdraw_amount" INTEGER NOT NULL DEFAULT 5000,
+        "enabled_languages" TEXT[] NOT NULL DEFAULT ARRAY['rn', 'rw', 'en', 'fr'],
+        "maintenance_mode" BOOLEAN NOT NULL DEFAULT false,
+        "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "Notification" (
+        "id" TEXT PRIMARY KEY,
+        "user_id" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
+        "title" TEXT NOT NULL,
+        "message" TEXT NOT NULL,
+        "read" BOOLEAN NOT NULL DEFAULT false,
+        "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('[Database] PostgreSQL schema verified/created successfully.');
   } catch (err: any) {
-    handlePrismaError(err, 'PrismaInit');
+    console.warn('[Database] PostgreSQL schema check warning:', err?.message || err);
   }
 }
+
+async function initPostgres(client: PrismaClient) {
+  if (isPostgresInitialized) return;
+  try {
+    await withPrismaTimeout(client.$connect(), 8000);
+    console.log('[Database] PrismaClient connected successfully.');
+    await ensurePostgresSchema(client);
+    isPostgresInitialized = true;
+    await seedDefaultAdmin(client);
+  } catch (err) {
+    handlePrismaError(err, 'initPostgres');
+  }
+}
+
+export function getPrismaClient(): PrismaClient | null {
+  if (prisma) return prisma;
+
+  const dbUrl =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_POSTGRES_URL ||
+    process.env.NEON_DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.DIRECT_URL;
+
+  if (dbUrl) {
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = dbUrl;
+    }
+    try {
+      prisma = new PrismaClient({
+        datasources: {
+          db: {
+            url: dbUrl,
+          },
+        },
+      });
+
+      initPostgres(prisma).catch((err) => {
+        console.warn('[Database] initPostgres background error:', err);
+      });
+
+      return prisma;
+    } catch (err: any) {
+      handlePrismaError(err, 'PrismaInit');
+    }
+  }
+  return null;
+}
+
+// Auto-initialize if URL exists
+getPrismaClient();
 
 interface StoreData {
   users: (User & { password_hash: string })[];
@@ -72,9 +215,11 @@ interface StoreData {
   notifications: NotificationItem[];
 }
 
+const BUNDLED_STORE_PATH = path.join(process.cwd(), 'data', 'twigamart_store.json');
+
 let STORE_PATH = process.env.VERCEL
   ? path.join('/tmp', 'twigamart_store.json')
-  : path.join(process.cwd(), 'data', 'twigamart_store.json');
+  : BUNDLED_STORE_PATH;
 
 function ensureDataDirExists() {
   try {
@@ -125,26 +270,25 @@ const INITIAL_STORE: StoreData = {
   notifications: [],
 };
 
-async function seedDefaultAdmin() {
-  if (prisma) {
+async function seedDefaultAdmin(client?: PrismaClient) {
+  const p = client || getPrismaClient();
+  if (p) {
     try {
-      const adminCount = await withPrismaTimeout(prisma.admin.count(), 800);
+      const adminCount = await withPrismaTimeout(p.admin.count(), 8000);
       if (adminCount === 0) {
         await withPrismaTimeout(
-          prisma.admin.create({
+          p.admin.create({
             data: {
               username: 'admin',
               password_hash: DEFAULT_ADMIN_HASH,
             },
-          }),
-          800
-        );
+          }), 8000);
         console.log('[Database] Default admin account seeded in PostgreSQL.');
       }
 
       // Purge demo users if present in PostgreSQL
       await withPrismaTimeout(
-        prisma.user.deleteMany({
+        p.user.deleteMany({
           where: {
             OR: [
               { id: 'usr_demo_1' },
@@ -153,9 +297,7 @@ async function seedDefaultAdmin() {
               { username: 'eric_gitega' },
             ],
           },
-        }),
-        800
-      ).catch(() => {});
+        }), 8000).catch(() => {});
     } catch (err) {
       handlePrismaError(err, 'seedDefaultAdmin');
     }
@@ -248,11 +390,16 @@ class LocalDatabase {
   private loadStore(): StoreData {
     try {
       ensureDataDirExists();
-      if (fs.existsSync(STORE_PATH)) {
-        const stat = fs.statSync(STORE_PATH);
+      let targetPath = STORE_PATH;
+      if (!fs.existsSync(targetPath) && fs.existsSync(BUNDLED_STORE_PATH)) {
+        targetPath = BUNDLED_STORE_PATH;
+      }
+
+      if (fs.existsSync(targetPath)) {
+        const stat = fs.statSync(targetPath);
         this.lastMtime = stat.mtimeMs;
         this.lastCheckTime = Date.now();
-        const raw = fs.readFileSync(STORE_PATH, 'utf-8');
+        const raw = fs.readFileSync(targetPath, 'utf-8');
         const parsed = JSON.parse(raw);
         if (!parsed.images || parsed.images.length < 100) {
           parsed.images = PRODUCT_LIBRARY;
@@ -275,7 +422,12 @@ class LocalDatabase {
             ...(parsed.generalSettings || {}),
           },
         };
-        return this.sanitizeDemoUsers(merged);
+        const sanitized = this.sanitizeDemoUsers(merged);
+        if (targetPath !== STORE_PATH) {
+          this.store = sanitized;
+          this.flushSaveToDiskSync();
+        }
+        return sanitized;
       }
     } catch (err) {
       console.error('Failed to load store, using defaults:', err);
@@ -311,7 +463,7 @@ class LocalDatabase {
   private async syncUserToPrismaIfNeeded(userId: string) {
     if (!prisma) return null;
     try {
-      let dbUser = await withPrismaTimeout(prisma.user.findUnique({ where: { id: userId } }), 800);
+      let dbUser = await withPrismaTimeout(prisma.user.findUnique({ where: { id: userId } }), 8000);
       if (!dbUser) {
         const memUser = this.store.users.find((u) => u.id === userId);
         if (memUser) {
@@ -326,18 +478,14 @@ class LocalDatabase {
                 language: memUser.language || 'rn',
                 status: memUser.status || 'approved',
               },
-            }),
-            800
-          );
+            }), 8000);
           const userCurrency = this.resolveCurrencyAndCountry(memUser.country, memUser.phone_country_code).currency;
           await withPrismaTimeout(
             prisma.wallet.upsert({
               where: { user_id: memUser.id },
               create: { user_id: memUser.id, balance: 15000.0, currency: userCurrency },
               update: {},
-            }),
-            800
-          ).catch(() => {});
+            }), 8000).catch(() => {});
         }
       }
       return dbUser;
@@ -350,7 +498,7 @@ class LocalDatabase {
   private async syncImageToPrismaIfNeeded(imageId: string) {
     if (!prisma) return null;
     try {
-      let dbImage = await withPrismaTimeout(prisma.image.findUnique({ where: { id: imageId } }), 800);
+      let dbImage = await withPrismaTimeout(prisma.image.findUnique({ where: { id: imageId } }), 8000);
       if (!dbImage) {
         const memImg = this.store.images.find((i) => i.id === imageId) || PRODUCT_LIBRARY.find((p) => p.id === imageId);
         if (memImg) {
@@ -363,9 +511,7 @@ class LocalDatabase {
                 reward: memImg.reward || 1000,
                 active: memImg.active ?? true,
               },
-            }),
-            800
-          );
+            }), 8000);
         }
       }
       return dbImage;
@@ -389,9 +535,7 @@ class LocalDatabase {
                 mode: 'insensitive',
               },
             },
-          }),
-          800
-        );
+          }), 8000);
         if (dbUser) {
           return {
             id: dbUser.id,
@@ -434,9 +578,7 @@ class LocalDatabase {
                 ...(digitsOnly.length >= 4 ? [{ phone_number: { contains: digitsOnly } }] : []),
               ],
             },
-          }),
-          800
-        );
+          }), 8000);
 
         if (dbUser) {
           return {
@@ -497,9 +639,7 @@ class LocalDatabase {
                 ...(cleanNumber ? [{ phone_number: { contains: cleanNumber } }] : []),
               ],
             },
-          }),
-          800
-        );
+          }), 8000);
         if (dbUser) {
           return {
             id: dbUser.id,
@@ -531,9 +671,7 @@ class LocalDatabase {
         const dbUser = await withPrismaTimeout(
           prisma.user.findUnique({
             where: { id },
-          }),
-          800
-        );
+          }), 8000);
         if (dbUser) {
           return {
             id: dbUser.id,
@@ -626,9 +764,7 @@ class LocalDatabase {
             include: {
               wallet: true,
             },
-          }),
-          800
-        );
+          }), 8000);
 
         const formattedUser = {
           id: createdUser.id,
@@ -710,9 +846,7 @@ class LocalDatabase {
           prisma.user.update({
             where: { id },
             data: { password_hash },
-          }),
-          800
-        );
+          }), 8000);
       } catch (err) {
         handlePrismaError(err, 'updateUserPassword');
       }
@@ -751,9 +885,7 @@ class LocalDatabase {
                 },
               },
             },
-          }),
-          800
-        );
+          }), 8000);
       } catch (err) {
         handlePrismaError(err, 'updateUserStatus');
       }
@@ -800,9 +932,7 @@ class LocalDatabase {
               ...(updates.phone_number ? { phone_number: updates.phone_number } : {}),
               ...(updates.status ? { status: updates.status as any } : {}),
             },
-          }),
-          800
-        );
+          }), 8000);
       } catch (err) {
         handlePrismaError(err, 'updateUserAccount');
       }
@@ -846,9 +976,7 @@ class LocalDatabase {
           prisma.user.findMany({
             include: { wallet: true },
             orderBy: { created_at: 'desc' },
-          }),
-          800
-        );
+          }), 8000);
         if (dbUsers && dbUsers.length > 0) {
           dbUsersList = dbUsers.map((u) => {
             const { password_hash, ...rest } = u;
@@ -906,17 +1034,15 @@ class LocalDatabase {
                 { username: `@${userId}` },
               ],
             },
-          }),
-          800
-        );
+          }), 8000);
         const dbUserIds = dbUsers.map((u) => u.id);
         const allIds = Array.from(new Set([targetId, userId, ...dbUserIds]));
 
-        await withPrismaTimeout(prisma.withdrawRequest.deleteMany({ where: { user_id: { in: allIds } } }), 800);
-        await withPrismaTimeout(prisma.notification.deleteMany({ where: { user_id: { in: allIds } } }), 800);
-        await withPrismaTimeout(prisma.imageLike.deleteMany({ where: { user_id: { in: allIds } } }), 800);
-        await withPrismaTimeout(prisma.wallet.deleteMany({ where: { user_id: { in: allIds } } }), 800);
-        await withPrismaTimeout(prisma.user.deleteMany({ where: { id: { in: allIds } } }), 800);
+        await withPrismaTimeout(prisma.withdrawRequest.deleteMany({ where: { user_id: { in: allIds } } }), 8000);
+        await withPrismaTimeout(prisma.notification.deleteMany({ where: { user_id: { in: allIds } } }), 8000);
+        await withPrismaTimeout(prisma.imageLike.deleteMany({ where: { user_id: { in: allIds } } }), 8000);
+        await withPrismaTimeout(prisma.wallet.deleteMany({ where: { user_id: { in: allIds } } }), 8000);
+        await withPrismaTimeout(prisma.user.deleteMany({ where: { id: { in: allIds } } }), 8000);
       } catch (err: any) {
         handlePrismaError(err, 'deleteUser');
       }
@@ -1008,9 +1134,9 @@ class LocalDatabase {
   async getWalletByUserId(userId: string) {
     if (prisma) {
       try {
-        let wallet = await withPrismaTimeout(prisma.wallet.findUnique({ where: { user_id: userId } }), 800);
+        let wallet = await withPrismaTimeout(prisma.wallet.findUnique({ where: { user_id: userId } }), 8000);
         if (!wallet) {
-          const dbUser = await withPrismaTimeout(prisma.user.findUnique({ where: { id: userId } }), 800);
+          const dbUser = await withPrismaTimeout(prisma.user.findUnique({ where: { id: userId } }), 8000);
           if (dbUser) {
             const userCurrency = dbUser ? this.resolveCurrencyAndCountry((dbUser as any).country, dbUser.phone_country_code).currency : 'RWF';
             wallet = await withPrismaTimeout(
@@ -1022,9 +1148,7 @@ class LocalDatabase {
                   currency: userCurrency,
                 },
                 update: {},
-              }),
-              800
-            );
+              }), 8000);
           }
         }
         if (wallet) {
@@ -1061,7 +1185,7 @@ class LocalDatabase {
   async updateUserBalance(userId: string, action: 'add' | 'reduce' | 'set', amount: number, note?: string) {
     if (prisma) {
       try {
-        const dbUser = await withPrismaTimeout(prisma.user.findUnique({ where: { id: userId } }), 800);
+        const dbUser = await withPrismaTimeout(prisma.user.findUnique({ where: { id: userId } }), 8000);
         if (dbUser) {
           const current = await this.getWalletByUserId(userId);
           let newBal = current.balance;
@@ -1080,9 +1204,7 @@ class LocalDatabase {
               update: {
                 balance: newBal,
               },
-            }),
-            800
-          );
+            }), 8000);
 
           await withPrismaTimeout(
             prisma.notification.create({
@@ -1094,9 +1216,7 @@ class LocalDatabase {
                 }`,
                 read: false,
               },
-            }),
-            800
-          ).catch((e) => console.warn('[Prisma] notification create error:', e?.message));
+            }), 8000).catch((e) => console.warn('[Prisma] notification create error:', e?.message));
 
           return {
             id: updated.id,
@@ -1151,12 +1271,10 @@ class LocalDatabase {
         let dbAdmin = await withPrismaTimeout(
           prisma.admin.findFirst({
             where: { username: { equals: clean, mode: 'insensitive' } },
-          }),
-          800
-        );
+          }), 8000);
 
         if (!dbAdmin) {
-          const adminCount = await withPrismaTimeout(prisma.admin.count(), 800);
+          const adminCount = await withPrismaTimeout(prisma.admin.count(), 8000);
           if (adminCount === 0) {
             dbAdmin = await withPrismaTimeout(
               prisma.admin.create({
@@ -1164,12 +1282,10 @@ class LocalDatabase {
                   username: 'admin',
                   password_hash: DEFAULT_ADMIN_HASH,
                 },
-              }),
-              800
-            );
+              }), 8000);
             console.log('[Database] Default admin account auto-seeded in PostgreSQL.');
           } else if (clean === 'admin' || clean === 'administrator') {
-            dbAdmin = await withPrismaTimeout(prisma.admin.findFirst(), 800);
+            dbAdmin = await withPrismaTimeout(prisma.admin.findFirst(), 8000);
           }
         }
 
@@ -1195,7 +1311,7 @@ class LocalDatabase {
   async getAdminById(id: string) {
     if (prisma) {
       try {
-        const dbAdmin = await withPrismaTimeout(prisma.admin.findUnique({ where: { id } }), 800);
+        const dbAdmin = await withPrismaTimeout(prisma.admin.findUnique({ where: { id } }), 8000);
         if (dbAdmin) {
           return {
             id: dbAdmin.id,
@@ -1223,22 +1339,18 @@ class LocalDatabase {
         const updateData: any = { password_hash: newPasswordHash };
         if (newUsername) updateData.username = newUsername;
 
-        const dbAdmin = await withPrismaTimeout(prisma.admin.findUnique({ where: { id: adminId } }), 800);
+        const dbAdmin = await withPrismaTimeout(prisma.admin.findUnique({ where: { id: adminId } }), 8000);
         if (dbAdmin) {
           await withPrismaTimeout(
             prisma.admin.update({
               where: { id: adminId },
               data: updateData,
-            }),
-            800
-          );
+            }), 8000);
         } else {
           await withPrismaTimeout(
             prisma.admin.updateMany({
               data: updateData,
-            }),
-            800
-          );
+            }), 8000);
         }
       } catch (err) {
         handlePrismaError(err, 'updateAdminPassword');
@@ -1268,7 +1380,7 @@ class LocalDatabase {
   async getAllImages(userId?: string) {
     if (prisma) {
       try {
-        const count = await withPrismaTimeout(prisma.image.count(), 800);
+        const count = await withPrismaTimeout(prisma.image.count(), 8000);
         if (count === 0 && PRODUCT_LIBRARY && PRODUCT_LIBRARY.length > 0) {
           console.log('[Prisma] Seeding PRODUCT_LIBRARY into Image table asynchronously...');
           prisma.image
@@ -1289,9 +1401,7 @@ class LocalDatabase {
           prisma.image.findMany({
             include: { likes: true },
             orderBy: { created_at: 'asc' },
-          }),
-          800
-        );
+          }), 8000);
 
         if (dbImages && dbImages.length > 0) {
           return dbImages.map((img) => {
@@ -1338,9 +1448,7 @@ class LocalDatabase {
               reward: Number(data.reward) || 1000,
               active: data.active ?? true,
             },
-          }),
-          800
-        );
+          }), 8000);
         return {
           id: img.id,
           title: img.title,
@@ -1379,9 +1487,7 @@ class LocalDatabase {
               ...(data.reward !== undefined && { reward: Number(data.reward) }),
               ...(data.active !== undefined && { active: data.active }),
             },
-          }),
-          800
-        );
+          }), 8000);
         return {
           id: updated.id,
           title: updated.title,
@@ -1409,8 +1515,8 @@ class LocalDatabase {
   async deleteImage(id: string) {
     if (prisma) {
       try {
-        await withPrismaTimeout(prisma.imageLike.deleteMany({ where: { image_id: id } }), 800);
-        await withPrismaTimeout(prisma.image.deleteMany({ where: { id } }), 800);
+        await withPrismaTimeout(prisma.imageLike.deleteMany({ where: { image_id: id } }), 8000);
+        await withPrismaTimeout(prisma.image.deleteMany({ where: { id } }), 8000);
       } catch (err) {
         handlePrismaError(err, 'deleteImage');
       }
@@ -1441,9 +1547,7 @@ class LocalDatabase {
               where: {
                 user_id_image_id: { user_id: userId, image_id: imageId },
               },
-            }),
-            800
-          );
+            }), 8000);
           if (existing) {
             throw new Error('Wamaze gukunda iyi foto! (Already liked this image)');
           }
@@ -1454,9 +1558,7 @@ class LocalDatabase {
                 user_id: userId,
                 image_id: imageId,
               },
-            }),
-            800
-          );
+            }), 8000);
 
           const rewardAmount = dbImage.reward || 1000;
           const wallet = await withPrismaTimeout(
@@ -1464,9 +1566,7 @@ class LocalDatabase {
               where: { user_id: userId },
               create: { user_id: userId, balance: 15000.0 + rewardAmount, currency: 'RWF' },
               update: { balance: { increment: rewardAmount } },
-            }),
-            800
-          );
+            }), 8000);
 
           await withPrismaTimeout(
             prisma.notification.create({
@@ -1475,9 +1575,7 @@ class LocalDatabase {
                 title: `Wakoreye ${rewardAmount.toLocaleString()}!`,
                 message: `Urakoze gukunda: "${dbImage.title}". Agashimwe k'amafaranga ${rewardAmount.toLocaleString()} kagiriwe mu gapuri kawe.`,
               },
-            }),
-            800
-          ).catch((e) => console.warn('[Prisma] notification warning:', e?.message));
+            }), 8000).catch((e) => console.warn('[Prisma] notification warning:', e?.message));
 
           return {
             success: true,
@@ -1565,9 +1663,7 @@ class LocalDatabase {
             prisma.wallet.update({
               where: { user_id: userId },
               data: { balance: { decrement: amount } },
-            }),
-            800
-          );
+            }), 8000);
 
           const request = await withPrismaTimeout(
             prisma.withdrawRequest.create({
@@ -1577,9 +1673,7 @@ class LocalDatabase {
                 payment_account: paymentAccount,
                 status: 'pending',
               },
-            }),
-            800
-          );
+            }), 8000);
 
           await withPrismaTimeout(
             prisma.notification.create({
@@ -1588,9 +1682,7 @@ class LocalDatabase {
                 title: 'Ubusabe bwo kwaka amafaranga bwagize success',
                 message: `Ubusabe bwawe bwa ${amount.toLocaleString()} kuri numero ${paymentAccount} bwagize success. Buririndiriye kuremurwa n'ubuyobozi.`,
               },
-            }),
-            800
-          ).catch(() => {});
+            }), 8000).catch(() => {});
 
           return {
             id: request.id,
@@ -1663,9 +1755,7 @@ class LocalDatabase {
             where: { user_id: userId },
             include: { user: true },
             orderBy: { created_at: 'desc' },
-          }),
-          800
-        );
+          }), 8000);
         if (dbRequests) {
           return dbRequests.map((w) => ({
             id: w.id,
@@ -1694,9 +1784,7 @@ class LocalDatabase {
           prisma.withdrawRequest.findMany({
             include: { user: true },
             orderBy: { created_at: 'desc' },
-          }),
-          800
-        );
+          }), 8000);
         if (dbRequests) {
           return dbRequests.map((w) => ({
             id: w.id,
@@ -1721,7 +1809,7 @@ class LocalDatabase {
   async updateWithdrawRequestStatus(id: string, status: WithdrawStatus, adminMessage?: string) {
     if (prisma) {
       try {
-        const req = await withPrismaTimeout(prisma.withdrawRequest.findUnique({ where: { id } }), 800);
+        const req = await withPrismaTimeout(prisma.withdrawRequest.findUnique({ where: { id } }), 8000);
         if (!req) throw new Error('Withdrawal request not found');
 
         const oldStatus = req.status;
@@ -1733,9 +1821,7 @@ class LocalDatabase {
               admin_message: adminMessage,
             },
             include: { user: true },
-          }),
-          800
-        );
+          }), 8000);
 
         // Refund if rejected from pending
         if (oldStatus === 'pending' && status === 'rejected') {
@@ -1743,9 +1829,7 @@ class LocalDatabase {
             prisma.wallet.update({
               where: { user_id: req.user_id },
               data: { balance: { increment: req.amount } },
-            }),
-            800
-          );
+            }), 8000);
         }
 
         await withPrismaTimeout(
@@ -1757,9 +1841,7 @@ class LocalDatabase {
                 adminMessage ? ` Ubumenyeshi bw'Admin: "${adminMessage}"` : ''
               }`,
             },
-          }),
-          800
-        );
+          }), 8000);
 
         return {
           id: updated.id,
@@ -1816,7 +1898,7 @@ class LocalDatabase {
   async getPaymentSettings(): Promise<PaymentSettings> {
     if (prisma) {
       try {
-        let ps = await withPrismaTimeout(prisma.paymentSettings.findUnique({ where: { id: 'default' } }), 800);
+        let ps = await withPrismaTimeout(prisma.paymentSettings.findUnique({ where: { id: 'default' } }), 8000);
         if (!ps) {
           ps = await withPrismaTimeout(
             prisma.paymentSettings.create({
@@ -1827,9 +1909,7 @@ class LocalDatabase {
                 ussd_code: '*163#',
                 payment_instructions: 'Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.',
               },
-            }),
-            800
-          );
+            }), 8000);
         }
         if (ps) {
           return {
@@ -1868,9 +1948,7 @@ class LocalDatabase {
               ...(data.ussd_code !== undefined && { ussd_code: data.ussd_code }),
               ...(data.payment_instructions !== undefined && { payment_instructions: data.payment_instructions }),
             },
-          }),
-          800
-        );
+          }), 8000);
         return {
           account_number: ps.account_number,
           whatsapp_number: ps.whatsapp_number,
@@ -1892,9 +1970,7 @@ class LocalDatabase {
           prisma.notification.findMany({
             where: { user_id: userId },
             orderBy: { created_at: 'desc' },
-          }),
-          800
-        );
+          }), 8000);
         if (dbNotifs) {
           return dbNotifs.map((n) => ({
             id: n.id,
@@ -1919,9 +1995,7 @@ class LocalDatabase {
           prisma.notification.updateMany({
             where: { user_id: userId, read: false },
             data: { read: true },
-          }),
-          800
-        );
+          }), 8000);
       } catch (err) {
         handlePrismaError(err, 'markNotificationsRead');
       }
@@ -1952,9 +2026,7 @@ class LocalDatabase {
               ...(data.country && { country: data.country }),
               ...(data.language && { language: data.language }),
             },
-          }),
-          800
-        );
+          }), 8000);
 
         // Update wallet currency if country changed
         if (data.country || data.phone_country_code) {
@@ -1963,9 +2035,7 @@ class LocalDatabase {
               prisma.wallet.updateMany({
                 where: { user_id: userId },
                 data: { currency: resolvedCurrency },
-              }),
-              800
-            );
+              }), 8000);
           } catch {
             // ignore
           }
@@ -2019,6 +2089,39 @@ class LocalDatabase {
 
   // General Settings
   async getGeneralSettings(): Promise<GeneralSettings> {
+    const prisma = getPrismaClient();
+    if (prisma) {
+      try {
+        let gs = await withPrismaTimeout(prisma.generalSettings.findUnique({ where: { id: 'default' } }), 8000);
+        if (!gs) {
+          gs = await withPrismaTimeout(
+            prisma.generalSettings.create({
+              data: {
+                id: 'default',
+                registration_bonus: 15000,
+                like_reward: 1000,
+                min_withdraw_amount: 5000,
+                enabled_languages: ['rn', 'rw', 'en', 'fr'],
+                maintenance_mode: false,
+              },
+            }),
+            8000
+          );
+        }
+        if (gs) {
+          return {
+            registration_bonus: gs.registration_bonus,
+            like_reward: gs.like_reward,
+            min_withdraw_amount: gs.min_withdraw_amount,
+            enabled_languages: gs.enabled_languages as any,
+            maintenance_mode: gs.maintenance_mode,
+          };
+        }
+      } catch (err) {
+        handlePrismaError(err, 'getGeneralSettings');
+      }
+    }
+
     if (!this.store.generalSettings) {
       this.store.generalSettings = {
         registration_bonus: 15000,
@@ -2036,6 +2139,42 @@ class LocalDatabase {
     const current = await this.getGeneralSettings();
     this.store.generalSettings = { ...current, ...data };
     this.saveStore();
+
+    const prisma = getPrismaClient();
+    if (prisma) {
+      try {
+        const gs = await withPrismaTimeout(
+          prisma.generalSettings.upsert({
+            where: { id: 'default' },
+            create: {
+              id: 'default',
+              registration_bonus: data.registration_bonus ?? 15000,
+              like_reward: data.like_reward ?? 1000,
+              min_withdraw_amount: data.min_withdraw_amount ?? 5000,
+              enabled_languages: data.enabled_languages ?? ['rn', 'rw', 'en', 'fr'],
+              maintenance_mode: data.maintenance_mode ?? false,
+            },
+            update: {
+              ...(data.registration_bonus !== undefined && { registration_bonus: data.registration_bonus }),
+              ...(data.like_reward !== undefined && { like_reward: data.like_reward }),
+              ...(data.min_withdraw_amount !== undefined && { min_withdraw_amount: data.min_withdraw_amount }),
+              ...(data.enabled_languages !== undefined && { enabled_languages: data.enabled_languages }),
+              ...(data.maintenance_mode !== undefined && { maintenance_mode: data.maintenance_mode }),
+            },
+          }),
+          8000
+        );
+        return {
+          registration_bonus: gs.registration_bonus,
+          like_reward: gs.like_reward,
+          min_withdraw_amount: gs.min_withdraw_amount,
+          enabled_languages: gs.enabled_languages as any,
+          maintenance_mode: gs.maintenance_mode,
+        };
+      } catch (err) {
+        handlePrismaError(err, 'updateGeneralSettings');
+      }
+    }
     return this.store.generalSettings;
   }
 
@@ -2044,27 +2183,38 @@ class LocalDatabase {
     this.refreshStore();
     if (prisma) {
       try {
-        const total_users = await withPrismaTimeout(prisma.user.count(), 800);
-        const pending_users = await withPrismaTimeout(prisma.user.count({ where: { status: 'pending' } }), 800);
-        const approved_users = await withPrismaTimeout(prisma.user.count({ where: { status: 'approved' } }), 800);
-        const total_images = await withPrismaTimeout(prisma.image.count(), 800);
-        const active_images = await withPrismaTimeout(prisma.image.count({ where: { active: true } }), 800);
-        const total_withdrawals_count = await withPrismaTimeout(prisma.withdrawRequest.count(), 800);
-        const pending_withdraws = await withPrismaTimeout(prisma.withdrawRequest.count({ where: { status: 'pending' } }), 800);
-        
-        const approvedWithdraws = await withPrismaTimeout(prisma.withdrawRequest.findMany({ where: { status: 'approved' } }), 800);
-        const total_payouts = approvedWithdraws.reduce((sum, w) => sum + w.amount, 0);
-
-        const walletAgg = await withPrismaTimeout(prisma.wallet.aggregate({ _sum: { balance: true } }), 800);
-        const total_wallet_balance = walletAgg._sum.balance || 0;
-
-        const gen = await this.getGeneralSettings();
-
-        const recentUsers = await withPrismaTimeout(prisma.user.findMany({ take: 5, orderBy: { created_at: 'desc' } }), 800);
-        const recentWithdraws = await withPrismaTimeout(
-          prisma.withdrawRequest.findMany({ take: 5, orderBy: { created_at: 'desc' }, include: { user: true } }),
-          800
+        const [
+          total_users,
+          pending_users,
+          approved_users,
+          total_images,
+          active_images,
+          total_withdrawals_count,
+          pending_withdraws,
+          approvedWithdraws,
+          walletAgg,
+          recentUsers,
+          recentWithdraws,
+        ] = await withPrismaTimeout(
+          Promise.all([
+            prisma.user.count(),
+            prisma.user.count({ where: { status: 'pending' } }),
+            prisma.user.count({ where: { status: 'approved' } }),
+            prisma.image.count(),
+            prisma.image.count({ where: { active: true } }),
+            prisma.withdrawRequest.count(),
+            prisma.withdrawRequest.count({ where: { status: 'pending' } }),
+            prisma.withdrawRequest.findMany({ where: { status: 'approved' } }),
+            prisma.wallet.aggregate({ _sum: { balance: true } }),
+            prisma.user.findMany({ take: 5, orderBy: { created_at: 'desc' } }),
+            prisma.withdrawRequest.findMany({ take: 5, orderBy: { created_at: 'desc' }, include: { user: true } }),
+          ]),
+          8000
         );
+
+        const total_payouts = approvedWithdraws.reduce((sum, w) => sum + w.amount, 0);
+        const total_wallet_balance = walletAgg._sum.balance || 0;
+        const gen = await this.getGeneralSettings();
 
         const userActs = recentUsers.map((u) => ({
           id: `act-u-${u.id}`,
@@ -2102,7 +2252,7 @@ class LocalDatabase {
           recent_activities,
         };
       } catch (err) {
-        console.error('[Prisma] getAdminStats error:', err);
+        handlePrismaError(err, 'getAdminStats');
       }
     }
 

@@ -26,6 +26,9 @@ model User {
   phone_country_code String
   phone_number       String             @unique
   password_hash      String
+  country            String?
+  email              String?
+  profile_picture    String?
   language           String             @default("rn")
   status             UserStatus         @default(pending)
   created_at         DateTime           @default(now())
@@ -58,6 +61,7 @@ model Image {
   id         String      @id @default(uuid())
   image_url  String
   title      String
+  category   String?
   reward     Int         @default(1000)
   active     Boolean     @default(true)
   created_at DateTime    @default(now())
@@ -97,6 +101,16 @@ model PaymentSettings {
   ussd_code            String   @default("*163#")
   payment_instructions String   @default("Koresha Lumicash cyangwa Ecocash kugirango ukore ubwishyu. Rungika numero ya Lumicash/Ecocash mu kwaka amafaranga.")
   updated_at           DateTime @updatedAt
+}
+
+model GeneralSettings {
+  id                  String   @id @default("default")
+  registration_bonus  Int      @default(15000)
+  like_reward         Int      @default(1000)
+  min_withdraw_amount Int      @default(5000)
+  enabled_languages   String[] @default(["rn", "rw", "en", "fr"])
+  maintenance_mode    Boolean  @default(false)
+  updated_at          DateTime @updatedAt
 }
 
 model Notification {

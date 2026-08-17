@@ -46,12 +46,11 @@ export const AdminPanel: React.FC = () => {
   const areUsersEqual = (prev: User[], next: User[]): boolean => {
     if (!Array.isArray(prev) || !Array.isArray(next)) return false;
     if (prev.length !== next.length) return false;
-    for (let i = 0; i < prev.length; i++) {
-      const a = prev[i];
-      const b = next[i];
+    const prevMap = new Map(prev.map((u) => [u.id, u]));
+    for (const b of next) {
+      const a = prevMap.get(b.id);
+      if (!a) return false;
       if (
-        !a || !b ||
-        a.id !== b.id ||
         a.status !== b.status ||
         a.username !== b.username ||
         a.phone_number !== b.phone_number ||
@@ -70,12 +69,11 @@ export const AdminPanel: React.FC = () => {
   const areWithdrawsEqual = (prev: WithdrawRequest[], next: WithdrawRequest[]): boolean => {
     if (!Array.isArray(prev) || !Array.isArray(next)) return false;
     if (prev.length !== next.length) return false;
-    for (let i = 0; i < prev.length; i++) {
-      const a = prev[i];
-      const b = next[i];
+    const prevMap = new Map(prev.map((w) => [w.id, w]));
+    for (const b of next) {
+      const a = prevMap.get(b.id);
+      if (!a) return false;
       if (
-        !a || !b ||
-        a.id !== b.id ||
         a.status !== b.status ||
         a.amount !== b.amount ||
         a.payment_account !== b.payment_account ||
@@ -92,12 +90,11 @@ export const AdminPanel: React.FC = () => {
   const areImagesEqual = (prev: ImageItem[], next: ImageItem[]): boolean => {
     if (!Array.isArray(prev) || !Array.isArray(next)) return false;
     if (prev.length !== next.length) return false;
-    for (let i = 0; i < prev.length; i++) {
-      const a = prev[i];
-      const b = next[i];
+    const prevMap = new Map(prev.map((img) => [img.id, img]));
+    for (const b of next) {
+      const a = prevMap.get(b.id);
+      if (!a) return false;
       if (
-        !a || !b ||
-        a.id !== b.id ||
         a.user_liked !== b.user_liked ||
         a.likes_count !== b.likes_count ||
         a.active !== b.active ||
@@ -112,6 +109,9 @@ export const AdminPanel: React.FC = () => {
   };
 
   const loadAllAdminData = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     try {
       const [sData, uData, wData, pData, iData] = await Promise.all([
         adminApi.getStats().catch(() => null),
@@ -143,14 +143,24 @@ export const AdminPanel: React.FC = () => {
         });
       }
 
-      if (Array.isArray(uData)) setUsers((prev) => (areUsersEqual(prev, uData) ? prev : uData));
-      if (Array.isArray(wData)) setWithdraws((prev) => (areWithdrawsEqual(prev, wData) ? prev : wData));
-      if (pData) setPaymentSettings((prev) => (JSON.stringify(prev) === JSON.stringify(pData) ? prev : pData));
-      if (Array.isArray(iData) && iData.length > 0) setImages((prev) => (areImagesEqual(prev, iData) ? prev : iData));
+      if (Array.isArray(uData) && uData.length >= 0) {
+        setUsers((prev) => (areUsersEqual(prev, uData) ? prev : uData));
+      }
+      if (Array.isArray(wData) && wData.length >= 0) {
+        setWithdraws((prev) => (areWithdrawsEqual(prev, wData) ? prev : wData));
+      }
+      if (pData) {
+        setPaymentSettings((prev) => (JSON.stringify(prev) === JSON.stringify(pData) ? prev : pData));
+      }
+      if (Array.isArray(iData) && iData.length > 0) {
+        setImages((prev) => (areImagesEqual(prev, iData) ? prev : iData));
+      }
     } catch {
       // ignore network errors silently in background
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   }, []);
 
