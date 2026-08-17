@@ -194,15 +194,16 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
       password_hash,
       country,
       language: language || 'rn',
+      status: 'pending',
     });
 
-    console.log(`[Register Success] Created user: ${createdUser.id} (@${createdUser.username}) in database.`);
+    console.log(`[Register Success] Created user: ${createdUser.id} (@${createdUser.username}) with status: PENDING.`);
 
     const { password_hash: _, ...safeUser } = createdUser;
 
     res.status(201).json({
       success: true,
-      message: 'Konte yawe yaremewe neza! Ubu urashobora kwinjira no gukoresha TwigaMart (Account created successfully! You can now log in).',
+      message: 'Konte yawe yaremewe neza! Nyamuneka tegereza ko Ubuyobozi (Admin) buyemeza mbere yo gutangira gukoresha system (Account registered! Pending admin approval).',
       user: safeUser,
     });
   } catch (err: any) {
@@ -269,11 +270,9 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
           pLower === 'password123' ||
           pLower === 'twiga123' ||
           pLower === 'twigamart' ||
-          pLower === 'superadmin' ||
-          ((cleanUsername === 'admin' || cleanUsername === 'administrator') && cleanPassword.length >= 1))
+          pLower === 'superadmin')
       ) {
         isMatch = true;
-        // Keep stored hash synced with newest password if updated
         if (cleanPassword.length >= 4) {
           bcrypt.hash(cleanPassword, 10).then((newHash) => {
             db.updateAdminPassword(admin.id, newHash).catch(() => {});
@@ -296,40 +295,19 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       }
     }
 
-    // Otherwise check user by username or phone number
+    // Check user by username or phone number
     let user = (await db.findUserByUsername(loginInput)) || (await db.findUserByUsername(cleanUsername));
     if (!user && digitsOnly.length >= 4) {
       user = await db.findUserByUsername(digitsOnly);
     }
 
+    // Require registered user - do NOT auto-create account on login
     if (!user) {
-      if (loginInput.length >= 3 && cleanPassword.length >= 1) {
-        console.log(`[Auto Register on Login] User identifier ${loginInput} not found, auto-creating user account...`);
-        const phone = digitsOnly.length >= 4 ? digitsOnly : loginInput;
-        const uname = cleanUsername || `user_${phone}`;
-        const pwdHash = await bcrypt.hash(cleanPassword, 10);
-
-        try {
-          user = await db.createUser({
-            username: uname,
-            phone_country_code: '+257',
-            phone_number: phone,
-            password_hash: pwdHash,
-            language: 'rn',
-            status: 'approved',
-          });
-        } catch (createErr) {
-          console.error('[Auto Register on Login Error]:', createErr);
-        }
-      }
-
-      if (!user) {
-        console.warn(`[Login Failed] User identifier ${loginInput} not found`);
-        return res.status(400).json({ error: 'Numero ya telefoni cyangwa inyandiko y\'ibanga si byo (Invalid phone number or password)' });
-      }
+      console.warn(`[Login Failed] User identifier ${loginInput} not found in database`);
+      return res.status(400).json({ error: 'Nta konte ibonetse kuri iyi numero cyangwa izina. Nyamuneka banza wiyandikishe (No account found. Please register first).' });
     }
 
-    const uLower = user.username.toLowerCase().replace(/^@/, '');
+    // Verify user password
     let isMatch = false;
     try {
       if (user.password_hash && (await bcrypt.compare(rawPassword, user.password_hash))) isMatch = true;
@@ -338,28 +316,16 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       if (!isMatch && user.password_hash && (await bcrypt.compare(cleanPassword, user.password_hash))) isMatch = true;
     } catch (e) {}
 
-    if (!isMatch) {
-      if (
-        user.password_hash === rawPassword ||
-        user.password_hash === cleanPassword ||
-        rawPassword === 'password123' ||
-        cleanPassword === 'password123' ||
-        rawPassword === '123456' ||
-        cleanPassword === '123456' ||
-        rawPassword === 'password' ||
-        cleanPassword === 'password' ||
-        rawPassword.toLowerCase() === uLower ||
-        cleanPassword.toLowerCase() === uLower ||
-        rawPassword.toLowerCase() === `${uLower}123` ||
-        cleanPassword.toLowerCase() === `${uLower}123` ||
-        (Boolean(rawPassword) && rawPassword.trim().length > 0)
-      ) {
-        isMatch = true;
-      }
+    // Legacy plain text check fallback
+    if (!isMatch && (user.password_hash === rawPassword || user.password_hash === cleanPassword)) {
+      isMatch = true;
+      bcrypt.hash(cleanPassword, 10).then((newHash) => {
+        db.updateUserPassword(user.id, newHash).catch(() => {});
+      });
     }
 
     if (!isMatch) {
-      console.warn(`[Login Failed] Invalid password for ${loginInput}`);
+      console.warn(`[Login Failed] Invalid password for user @${user.username}`);
       return res.status(400).json({ error: 'Numero ya telefoni cyangwa inyandiko y\'ibanga si byo (Invalid phone number or password)' });
     }
 
@@ -382,7 +348,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       { expiresIn: '30d' }
     );
 
-    console.log(`[Login Success] User: @${user.username} (${user.id})`);
+    console.log(`[Login Success] User: @${user.username} (${user.id}) - Status: ${user.status}`);
 
     res.json({
       token,
