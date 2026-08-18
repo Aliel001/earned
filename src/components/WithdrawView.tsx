@@ -222,7 +222,7 @@ export const WithdrawView: React.FC<WithdrawViewProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-slate-900 dark:text-white text-sm">
-                    {req.amount.toLocaleString()} {userCurrency}
+                    {req.amount.toLocaleString()} {req.currency || userCurrency}
                   </span>
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${

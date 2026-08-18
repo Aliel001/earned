@@ -824,14 +824,15 @@ app.put('/api/admin/users/:id/status', authenticateToken, requireAdmin, async (r
   }
 });
 
-// Admin: Update full user details (username, phone, status)
+// Admin: Update full user details (username, phone, country, status)
 app.put('/api/admin/users/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { username, phone_country_code, phone_number, status } = req.body;
+    const { username, phone_country_code, phone_number, country, status } = req.body;
     const updatedUser = await db.updateUserAccount(req.params.id, {
       username,
       phone_country_code,
       phone_number,
+      country,
       status,
     });
     res.json({ success: true, user: updatedUser });

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { User, UserStatus } from '../../types.js';
 import { adminApi } from '../../services/api.js';
-import { getUserCurrency } from '../../utils/currency.js';
+import { getUserCurrency, getCountryFlag, getCountryName, getCountryCode, SUPPORTED_COUNTRIES } from '../../utils/currency.js';
 import {
   Users,
   Search,
@@ -104,6 +104,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
       await adminApi.updateUser(editingUser.id, {
         username: editUsername.trim(),
         phone_number: editPhone.trim(),
+        country: editCountry,
         status: editStatus,
       });
       onRefresh();
@@ -188,6 +189,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
             <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider font-extrabold border-b border-slate-200 dark:border-white/10">
               <tr>
                 <th className="py-3.5 px-4">User</th>
+                <th className="py-3.5 px-4">Country & Currency</th>
                 <th className="py-3.5 px-4">Phone</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4">Wallet Balance</th>
@@ -197,7 +199,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
             <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500 font-bold">
+                  <td colSpan={6} className="py-8 text-center text-slate-500 font-bold">
                     No users found matching your search.
                   </td>
                 </tr>
@@ -218,7 +220,18 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
                       )}
                       <div>
                         <p className="font-extrabold text-slate-900 dark:text-white">@{u.username}</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{u.country || 'Burundi'}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{u.email || 'No email'}</p>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="font-bold text-slate-900 dark:text-white text-xs">
+                          {getCountryFlag(u.country, u.phone_country_code)} {getCountryName(u.country, u.phone_country_code)}
+                        </span>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {u.currency || u.wallet?.currency || getUserCurrency(u)}
+                        </span>
                       </div>
                     </td>
 
@@ -272,7 +285,7 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
                             setEditingUser(u);
                             setEditUsername(u.username);
                             setEditPhone(u.phone_number);
-                            setEditCountry(u.country || 'Burundi');
+                            setEditCountry(getCountryCode(u.country, u.phone_country_code));
                             setEditStatus(u.status);
                           }}
                           className="p-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 rounded-xl transition"
@@ -372,9 +385,21 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
                 <span className="font-mono text-slate-200">{selectedUser.id}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-slate-400">Country:</span>
+                <span className="font-bold text-slate-200">
+                  {getCountryFlag(selectedUser.country, selectedUser.phone_country_code)} {getCountryName(selectedUser.country, selectedUser.phone_country_code)} ({getCountryCode(selectedUser.country, selectedUser.phone_country_code)})
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Account Currency:</span>
+                <span className="font-black text-emerald-400">
+                  {selectedUser.currency || selectedUser.wallet?.currency || getUserCurrency(selectedUser)}
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-400">Wallet Balance:</span>
                 <span className="font-extrabold text-emerald-400">
-                  {(selectedUser.wallet?.balance || 0).toLocaleString()} {selectedUser.wallet?.currency || getUserCurrency(selectedUser)}
+                  {(selectedUser.wallet?.balance || 0).toLocaleString()} {selectedUser.currency || selectedUser.wallet?.currency || getUserCurrency(selectedUser)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -445,6 +470,21 @@ export const AdminUsersManagement: React.FC<AdminUsersManagementProps> = ({ user
                   className="w-full bg-slate-950 border border-white/10 rounded-xl p-2.5 text-white font-bold"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Country & Currency</label>
+                <select
+                  value={editCountry}
+                  onChange={(e) => setEditCountry(e.target.value)}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl p-2.5 text-white font-bold cursor-pointer"
+                >
+                  {SUPPORTED_COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.name} ({c.currency})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

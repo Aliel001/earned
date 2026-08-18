@@ -189,31 +189,42 @@ class DatabaseService {
     }
   }
 
-  private resolveCurrencyAndCountry(country?: string, phoneCode?: string): { country: string; currency: string } {
-    let resolvedCountry = country || '';
-    if (!resolvedCountry && phoneCode) {
-      const p = phoneCode.trim().replace(/\D/g, '');
-      if (p === '250') resolvedCountry = 'Rwanda';
-      else if (p === '257') resolvedCountry = 'Burundi';
-      else if (p === '256') resolvedCountry = 'Uganda';
-      else if (p === '254') resolvedCountry = 'Kenya';
-      else if (p === '255') resolvedCountry = 'Tanzania';
-      else if (p === '243') resolvedCountry = 'DR Congo';
-      else resolvedCountry = 'Rwanda';
-    } else if (!resolvedCountry) {
-      resolvedCountry = 'Rwanda';
+  public resolveCurrencyAndCountry(country?: string, phoneCode?: string): { country: string; currency: string } {
+    let resolvedCountry = country ? country.trim() : '';
+    const cleanPhone = phoneCode ? phoneCode.trim().replace(/\D/g, '') : '';
+
+    if (resolvedCountry) {
+      const c = resolvedCountry.toLowerCase();
+      if (c === 'rw' || c.includes('rwanda')) {
+        return { country: 'Rwanda', currency: 'RWF' };
+      }
+      if (c === 'bi' || c.includes('burundi') || c === 'rn') {
+        return { country: 'Burundi', currency: 'BIF' };
+      }
+      if (c === 'ug' || c.includes('uganda')) {
+        return { country: 'Uganda', currency: 'UGX' };
+      }
+      if (c === 'ke' || c.includes('kenya')) {
+        return { country: 'Kenya', currency: 'KES' };
+      }
+      if (c === 'tz' || c.includes('tanzania') || c.includes('tanzanie')) {
+        return { country: 'Tanzania', currency: 'TZS' };
+      }
+      if (c === 'cd' || c.includes('congo') || c.includes('drc')) {
+        return { country: 'DR Congo', currency: 'CDF' };
+      }
     }
 
-    const c = resolvedCountry.toLowerCase();
-    let currency = 'RWF';
-    if (c.includes('rwanda') || c === 'rw') currency = 'RWF';
-    else if (c.includes('burundi') || c === 'bi' || c === 'rn') currency = '';
-    else if (c.includes('uganda') || c === 'ug') currency = 'UGX';
-    else if (c.includes('kenya') || c === 'ke') currency = 'KES';
-    else if (c.includes('tanzania') || c.includes('tanzanie') || c === 'tz') currency = 'TZS';
-    else if (c.includes('congo') || c.includes('drc') || c === 'cd') currency = 'CDF';
+    if (cleanPhone) {
+      if (cleanPhone === '250') return { country: 'Rwanda', currency: 'RWF' };
+      if (cleanPhone === '257') return { country: 'Burundi', currency: 'BIF' };
+      if (cleanPhone === '256') return { country: 'Uganda', currency: 'UGX' };
+      if (cleanPhone === '254') return { country: 'Kenya', currency: 'KES' };
+      if (cleanPhone === '255') return { country: 'Tanzania', currency: 'TZS' };
+      if (cleanPhone === '243') return { country: 'DR Congo', currency: 'CDF' };
+    }
 
-    return { country: resolvedCountry, currency };
+    return { country: 'Rwanda', currency: 'RWF' };
   }
 
   // --- USERS ---
@@ -230,18 +241,24 @@ class DatabaseService {
         },
       });
       if (!dbUser) return null;
+      const { country, currency } = this.resolveCurrencyAndCountry(dbUser.country || undefined, dbUser.phone_country_code);
       return {
         id: dbUser.id,
         username: dbUser.username,
         phone_country_code: dbUser.phone_country_code,
         phone_number: dbUser.phone_number,
         password_hash: dbUser.password_hash,
+        country: dbUser.country || country,
+        currency: dbUser.currency || currency,
         language: dbUser.language as any,
         status: dbUser.status as UserStatus,
         created_at: dbUser.created_at.toISOString(),
       };
     }
-    return this.localStore.users.find((u) => u.username.toLowerCase().replace(/^@/, '') === clean) || null;
+    const u = this.localStore.users.find((u) => u.username.toLowerCase().replace(/^@/, '') === clean);
+    if (!u) return null;
+    const { country, currency } = this.resolveCurrencyAndCountry(u.country, u.phone_country_code);
+    return { ...u, country: u.country || country, currency: u.currency || currency };
   }
 
   async findUserByUsername(username: string) {
@@ -266,30 +283,34 @@ class DatabaseService {
         },
       });
       if (!dbUser) return null;
+      const { country, currency } = this.resolveCurrencyAndCountry(dbUser.country || undefined, dbUser.phone_country_code);
       return {
         id: dbUser.id,
         username: dbUser.username,
         phone_country_code: dbUser.phone_country_code,
         phone_number: dbUser.phone_number,
         password_hash: dbUser.password_hash,
+        country: dbUser.country || country,
+        currency: dbUser.currency || currency,
         language: dbUser.language as any,
         status: dbUser.status as UserStatus,
         created_at: dbUser.created_at.toISOString(),
       };
     }
 
-    return (
-      this.localStore.users.find((u) => {
-        const uClean = u.username.trim().toLowerCase().replace(/^@/, '');
-        if (uClean === clean || u.username.trim() === rawClean) return true;
-        if (digitsOnly.length >= 4) {
-          const fullPhoneDigits = (u.phone_country_code + u.phone_number).replace(/\D/g, '');
-          const phoneOnlyDigits = u.phone_number.replace(/\D/g, '');
-          return fullPhoneDigits.includes(digitsOnly) || phoneOnlyDigits.includes(digitsOnly);
-        }
-        return false;
-      }) || null
-    );
+    const u = this.localStore.users.find((u) => {
+      const uClean = u.username.trim().toLowerCase().replace(/^@/, '');
+      if (uClean === clean || u.username.trim() === rawClean) return true;
+      if (digitsOnly.length >= 4) {
+        const fullPhoneDigits = (u.phone_country_code + u.phone_number).replace(/\D/g, '');
+        const phoneOnlyDigits = u.phone_number.replace(/\D/g, '');
+        return fullPhoneDigits.includes(digitsOnly) || phoneOnlyDigits.includes(digitsOnly);
+      }
+      return false;
+    });
+    if (!u) return null;
+    const { country, currency } = this.resolveCurrencyAndCountry(u.country, u.phone_country_code);
+    return { ...u, country: u.country || country, currency: u.currency || currency };
   }
 
   async findUserByPhone(phoneCountryCode: string, phoneNumber: string) {
@@ -306,24 +327,28 @@ class DatabaseService {
         },
       });
       if (!dbUser) return null;
+      const { country, currency } = this.resolveCurrencyAndCountry(dbUser.country || undefined, dbUser.phone_country_code);
       return {
         id: dbUser.id,
         username: dbUser.username,
         phone_country_code: dbUser.phone_country_code,
         phone_number: dbUser.phone_number,
         password_hash: dbUser.password_hash,
+        country: dbUser.country || country,
+        currency: dbUser.currency || currency,
         language: dbUser.language as any,
         status: dbUser.status as UserStatus,
         created_at: dbUser.created_at.toISOString(),
       };
     }
 
-    return (
-      this.localStore.users.find((u) => {
-        const dbPhone = u.phone_number.replace(/\D/g, '');
-        return dbPhone === cleanNumber || u.phone_number.trim() === phoneNumber.trim();
-      }) || null
-    );
+    const u = this.localStore.users.find((u) => {
+      const dbPhone = u.phone_number.replace(/\D/g, '');
+      return dbPhone === cleanNumber || u.phone_number.trim() === phoneNumber.trim();
+    });
+    if (!u) return null;
+    const { country, currency } = this.resolveCurrencyAndCountry(u.country, u.phone_country_code);
+    return { ...u, country: u.country || country, currency: u.currency || currency };
   }
 
   async findUserById(id: string) {
@@ -332,19 +357,24 @@ class DatabaseService {
         where: { id },
       });
       if (!dbUser) return null;
+      const { country, currency } = this.resolveCurrencyAndCountry(dbUser.country || undefined, dbUser.phone_country_code);
       return {
         id: dbUser.id,
         username: dbUser.username,
         phone_country_code: dbUser.phone_country_code,
         phone_number: dbUser.phone_number,
         password_hash: dbUser.password_hash,
-        country: dbUser.country || undefined,
+        country: dbUser.country || country,
+        currency: dbUser.currency || currency,
         language: dbUser.language as any,
         status: dbUser.status as UserStatus,
         created_at: dbUser.created_at.toISOString(),
       };
     }
-    return this.localStore.users.find((u) => u.id === id) || null;
+    const u = this.localStore.users.find((u) => u.id === id);
+    if (!u) return null;
+    const { country, currency } = this.resolveCurrencyAndCountry(u.country, u.phone_country_code);
+    return { ...u, country: u.country || country, currency: u.currency || currency };
   }
 
   async createUser(data: {
@@ -363,7 +393,7 @@ class DatabaseService {
     );
 
     if (isPostgresConfigured && prismaInstance) {
-      console.log(`[PostgreSQL Write] Creating User @${data.username} in Neon database...`);
+      console.log(`[PostgreSQL Write] Creating User @${data.username} (${resolvedCountry} -> ${resolvedCurrency}) in Neon database...`);
       const createdUser = await prismaInstance.user.create({
         data: {
           username: data.username,
@@ -371,6 +401,7 @@ class DatabaseService {
           phone_number: data.phone_number,
           password_hash: data.password_hash,
           country: resolvedCountry,
+          currency: resolvedCurrency,
           language: data.language || 'rn',
           status: userStatus as any,
           wallet: {
@@ -400,6 +431,7 @@ class DatabaseService {
         phone_number: createdUser.phone_number,
         password_hash: createdUser.password_hash,
         country: createdUser.country || resolvedCountry,
+        currency: createdUser.currency || resolvedCurrency,
         language: createdUser.language as any,
         status: createdUser.status as UserStatus,
         created_at: createdUser.created_at.toISOString(),
@@ -414,6 +446,7 @@ class DatabaseService {
       phone_number: data.phone_number,
       password_hash: data.password_hash,
       country: resolvedCountry,
+      currency: resolvedCurrency,
       language: data.language || 'rn',
       status: userStatus,
       created_at: new Date().toISOString(),
@@ -492,22 +525,43 @@ class DatabaseService {
 
   async updateUserAccount(
     id: string,
-    updates: { username?: string; phone_country_code?: string; phone_number?: string; status?: UserStatus }
+    updates: { username?: string; phone_country_code?: string; phone_number?: string; country?: string; status?: UserStatus }
   ) {
     if (isPostgresConfigured && prismaInstance) {
+      let derivedCountry = updates.country;
+      let derivedCurrency: string | undefined = undefined;
+      if (updates.country || updates.phone_country_code) {
+        const resolved = this.resolveCurrencyAndCountry(updates.country, updates.phone_country_code);
+        derivedCountry = resolved.country;
+        derivedCurrency = resolved.currency;
+      }
+
       const updated = await prismaInstance.user.update({
         where: { id },
         data: {
           ...(updates.username ? { username: updates.username } : {}),
           ...(updates.phone_country_code ? { phone_country_code: updates.phone_country_code } : {}),
           ...(updates.phone_number ? { phone_number: updates.phone_number } : {}),
+          ...(derivedCountry ? { country: derivedCountry } : {}),
+          ...(derivedCurrency ? { currency: derivedCurrency } : {}),
           ...(updates.status ? { status: updates.status as any } : {}),
         },
         include: { wallet: true },
       });
+
+      if (derivedCurrency && updated.wallet) {
+        await prismaInstance.wallet.update({
+          where: { user_id: id },
+          data: { currency: derivedCurrency },
+        });
+      }
+
       const { password_hash, ...rest } = updated;
+      const finalResolved = this.resolveCurrencyAndCountry(rest.country || undefined, rest.phone_country_code);
       return {
         ...rest,
+        country: rest.country || finalResolved.country,
+        currency: rest.currency || finalResolved.currency,
         status: rest.status as UserStatus,
         language: rest.language as any,
         created_at: rest.created_at.toISOString(),
@@ -517,7 +571,7 @@ class DatabaseService {
               id: updated.wallet.id,
               user_id: updated.wallet.user_id,
               balance: updated.wallet.balance,
-              currency: updated.wallet.currency,
+              currency: derivedCurrency || updated.wallet.currency || finalResolved.currency,
               updated_at: updated.wallet.updated_at.toISOString(),
             }
           : undefined,
@@ -530,6 +584,13 @@ class DatabaseService {
     if (updates.phone_number) user.phone_number = updates.phone_number;
     if (updates.phone_country_code) user.phone_country_code = updates.phone_country_code;
     if (updates.status) user.status = updates.status;
+    if (updates.country || updates.phone_country_code) {
+      const resolved = this.resolveCurrencyAndCountry(updates.country || user.country, updates.phone_country_code || user.phone_country_code);
+      user.country = resolved.country;
+      user.currency = resolved.currency;
+      const w = this.localStore.wallets.find((w) => w.user_id === user.id);
+      if (w) w.currency = resolved.currency;
+    }
     this.saveLocalStore();
     const wallet = this.localStore.wallets.find((w) => w.user_id === user.id);
     const { password_hash, ...rest } = user;
@@ -544,8 +605,14 @@ class DatabaseService {
       });
       return dbUsers.map((u) => {
         const { password_hash, ...rest } = u;
+        const resolved = this.resolveCurrencyAndCountry(u.country || undefined, u.phone_country_code);
+        const userCurrency = u.currency || u.wallet?.currency || resolved.currency;
+        const userCountry = u.country || resolved.country;
+
         return {
           ...rest,
+          country: userCountry,
+          currency: userCurrency,
           language: u.language as any,
           status: u.status as UserStatus,
           created_at: u.created_at.toISOString(),
@@ -555,7 +622,7 @@ class DatabaseService {
                 id: u.wallet.id,
                 user_id: u.wallet.user_id,
                 balance: u.wallet.balance,
-                currency: u.wallet.currency,
+                currency: u.wallet.currency || userCurrency,
                 updated_at: u.wallet.updated_at.toISOString(),
               }
             : undefined,
@@ -566,7 +633,14 @@ class DatabaseService {
     return this.localStore.users.map((u) => {
       const { password_hash, ...rest } = u;
       const wallet = this.localStore.wallets.find((w) => w.user_id === u.id);
-      return { ...rest, wallet };
+      const resolved = this.resolveCurrencyAndCountry(u.country, u.phone_country_code);
+      const userCurrency = u.currency || wallet?.currency || resolved.currency;
+      return {
+        ...rest,
+        country: u.country || resolved.country,
+        currency: userCurrency,
+        wallet: wallet ? { ...wallet, currency: wallet.currency || userCurrency } : undefined,
+      };
     });
   }
 
@@ -651,11 +725,12 @@ class DatabaseService {
   async getWalletByUserId(userId: string) {
     if (isPostgresConfigured && prismaInstance) {
       let wallet = await prismaInstance.wallet.findUnique({ where: { user_id: userId } });
+      const dbUser = await prismaInstance.user.findUnique({ where: { id: userId } });
+      const userCurrency = dbUser?.currency || (dbUser
+        ? this.resolveCurrencyAndCountry(dbUser.country || undefined, dbUser.phone_country_code).currency
+        : 'RWF');
+
       if (!wallet) {
-        const dbUser = await prismaInstance.user.findUnique({ where: { id: userId } });
-        const userCurrency = dbUser
-          ? this.resolveCurrencyAndCountry(dbUser.country || undefined, dbUser.phone_country_code).currency
-          : 'RWF';
         wallet = await prismaInstance.wallet.upsert({
           where: { user_id: userId },
           create: {
@@ -665,26 +740,40 @@ class DatabaseService {
           },
           update: {},
         });
+      } else if (!wallet.currency || wallet.currency === '') {
+        wallet = await prismaInstance.wallet.update({
+          where: { user_id: userId },
+          data: { currency: userCurrency },
+        });
       }
+
       return {
         id: wallet.id,
         user_id: wallet.user_id,
         balance: wallet.balance,
-        currency: wallet.currency,
+        currency: wallet.currency || userCurrency,
         updated_at: wallet.updated_at.toISOString(),
       };
     }
 
     let wallet = this.localStore.wallets.find((w) => w.user_id === userId);
+    const localUser = this.localStore.users.find((u) => u.id === userId);
+    const userCurrency = localUser?.currency || (localUser
+      ? this.resolveCurrencyAndCountry(localUser.country, localUser.phone_country_code).currency
+      : 'RWF');
+
     if (!wallet) {
       wallet = {
         id: `w_${Date.now()}`,
         user_id: userId,
         balance: 15000.0,
-        currency: 'RWF',
+        currency: userCurrency,
         updated_at: new Date().toISOString(),
       };
       this.localStore.wallets.push(wallet);
+      this.saveLocalStore();
+    } else if (!wallet.currency) {
+      wallet.currency = userCurrency;
       this.saveLocalStore();
     }
     return wallet;
@@ -727,7 +816,7 @@ class DatabaseService {
         id: updated.id,
         user_id: updated.user_id,
         balance: updated.balance,
-        currency: updated.currency,
+        currency: updated.currency || current.currency,
         updated_at: updated.updated_at.toISOString(),
       };
     }
@@ -995,10 +1084,12 @@ class DatabaseService {
         },
       });
 
+      const wallet = await this.getWalletByUserId(userId);
+      const userCurrency = dbUser.currency || wallet.currency || 'RWF';
       const rewardAmount = dbImage.reward || 1000;
-      const wallet = await prismaInstance.wallet.upsert({
+      const updatedWallet = await prismaInstance.wallet.upsert({
         where: { user_id: userId },
-        create: { user_id: userId, balance: 15000.0 + rewardAmount, currency: 'RWF' },
+        create: { user_id: userId, balance: 15000.0 + rewardAmount, currency: userCurrency },
         update: { balance: { increment: rewardAmount } },
       });
 
@@ -1006,8 +1097,8 @@ class DatabaseService {
         .create({
           data: {
             user_id: userId,
-            title: `Wakoreye ${rewardAmount.toLocaleString()}!`,
-            message: `Urakoze gukunda: "${dbImage.title}". Agashimwe k'amafaranga ${rewardAmount.toLocaleString()} kagiriwe mu gapuri kawe.`,
+            title: `Wakoreye ${rewardAmount.toLocaleString()} ${userCurrency}!`,
+            message: `Urakoze gukunda: "${dbImage.title}". Agashimwe k'amafaranga ${rewardAmount.toLocaleString()} ${userCurrency} kagiriwe mu gapuri kawe.`,
           },
         })
         .catch(() => {});
@@ -1015,7 +1106,8 @@ class DatabaseService {
       return {
         success: true,
         reward: rewardAmount,
-        new_balance: wallet.balance,
+        currency: updatedWallet.currency || userCurrency,
+        new_balance: updatedWallet.balance,
       };
     }
 
@@ -1041,6 +1133,7 @@ class DatabaseService {
     return {
       success: true,
       reward: rewardAmount,
+      currency: wallet.currency || user.currency || 'RWF',
       new_balance: wallet.balance,
     };
   }
@@ -1061,8 +1154,10 @@ class DatabaseService {
       }
 
       const wallet = await this.getWalletByUserId(userId);
+      const userCurrency = wallet.currency || dbUser.currency || 'RWF';
+
       if (wallet.balance < amount) {
-        throw new Error('Nta mafaranga ahagije ari mu gapuri kawe (Insufficient wallet balance).');
+        throw new Error(`Nta mafaranga ahagije ari mu gapuri kawe (${wallet.balance.toLocaleString()} ${userCurrency} gusa afitemo).`);
       }
 
       // Deduct balance and create request in PostgreSQL
@@ -1075,6 +1170,7 @@ class DatabaseService {
         data: {
           user_id: userId,
           amount,
+          currency: userCurrency,
           payment_account: paymentAccount,
           status: 'pending',
         },
@@ -1085,7 +1181,7 @@ class DatabaseService {
           data: {
             user_id: userId,
             title: 'Ubusabe bwo kwaka amafaranga bwagize success',
-            message: `Ubusabe bwawe bwa ${amount.toLocaleString()} kuri numero ${paymentAccount} bwagize success. Buririndiriye kwemerwa n'ubuyobozi.`,
+            message: `Ubusabe bwawe bwa ${amount.toLocaleString()} ${userCurrency} kuri numero ${paymentAccount} bwagize success. Buririndiriye kwemerwa n'ubuyobozi.`,
           },
         })
         .catch(() => {});
@@ -1094,6 +1190,8 @@ class DatabaseService {
         id: request.id,
         user_id: request.user_id,
         username: dbUser.username,
+        country: dbUser.country || 'Rwanda',
+        currency: request.currency || userCurrency,
         phone_number: `${dbUser.phone_country_code}${dbUser.phone_number}`,
         amount: request.amount,
         payment_account: request.payment_account,
@@ -1108,13 +1206,16 @@ class DatabaseService {
     if (user.status !== 'approved') throw new Error('Konte igomba kwemerwa');
     if (amount < 5000) throw new Error('Minimum withdrawal is 5,000');
     const wallet = await this.getWalletByUserId(userId);
-    if (wallet.balance < amount) throw new Error('Insufficient balance');
+    const userCurrency = wallet.currency || user.currency || 'RWF';
+    if (wallet.balance < amount) throw new Error(`Insufficient balance (${wallet.balance.toLocaleString()} ${userCurrency})`);
 
     wallet.balance -= amount;
     const req: WithdrawRequest = {
       id: `wdr_${Date.now()}`,
       user_id: userId,
       username: user.username,
+      country: user.country || 'Rwanda',
+      currency: userCurrency,
       phone_number: `${user.phone_country_code}${user.phone_number}`,
       amount,
       payment_account: paymentAccount,
@@ -1137,6 +1238,8 @@ class DatabaseService {
         id: w.id,
         user_id: w.user_id,
         username: w.user?.username || '',
+        country: w.user?.country || 'Rwanda',
+        currency: w.currency || w.user?.currency || 'RWF',
         phone_number: w.user ? `${w.user.phone_country_code}${w.user.phone_number}` : '',
         amount: w.amount,
         payment_account: w.payment_account,
@@ -1159,6 +1262,8 @@ class DatabaseService {
         id: w.id,
         user_id: w.user_id,
         username: w.user?.username || '',
+        country: w.user?.country || 'Rwanda',
+        currency: w.currency || w.user?.currency || 'RWF',
         phone_number: w.user ? `${w.user.phone_country_code}${w.user.phone_number}` : '',
         amount: w.amount,
         payment_account: w.payment_account,
@@ -1195,12 +1300,14 @@ class DatabaseService {
         });
       }
 
+      const reqCurrency = updated.currency || updated.user?.currency || 'RWF';
+
       await prismaInstance.notification
         .create({
           data: {
             user_id: req.user_id,
-            title: `Ubusabe bwa ${req.amount.toLocaleString()}: ${status.toUpperCase()}`,
-            message: `Ubusabe bwawe bwa ${req.amount.toLocaleString()} bwagize inyifato: ${status}.${
+            title: `Ubusabe bwa ${req.amount.toLocaleString()} ${reqCurrency}: ${status.toUpperCase()}`,
+            message: `Ubusabe bwawe bwa ${req.amount.toLocaleString()} ${reqCurrency} bwagize inyifato: ${status}.${
               adminMessage ? ` Ubumenyeshi bw'Admin: "${adminMessage}"` : ''
             }`,
           },
@@ -1211,6 +1318,8 @@ class DatabaseService {
         id: updated.id,
         user_id: updated.user_id,
         username: updated.user?.username || '',
+        country: updated.user?.country || 'Rwanda',
+        currency: reqCurrency,
         phone_number: updated.user ? `${updated.user.phone_country_code}${updated.user.phone_number}` : '',
         amount: updated.amount,
         payment_account: updated.payment_account,
@@ -1406,7 +1515,7 @@ class DatabaseService {
           ...(data.username && { username: data.username }),
           ...(data.phone_number && { phone_number: data.phone_number }),
           ...(data.phone_country_code && { phone_country_code: data.phone_country_code }),
-          ...(data.country && { country: data.country }),
+          ...(data.country && { country: resolvedCountry, currency: resolvedCurrency }),
           ...(data.language && { language: data.language }),
           ...(data.profile_picture !== undefined && { profile_picture: data.profile_picture }),
         },
@@ -1425,6 +1534,8 @@ class DatabaseService {
       const { password_hash, ...rest } = updatedUser;
       return {
         ...rest,
+        country: rest.country || resolvedCountry,
+        currency: rest.currency || resolvedCurrency,
         language: rest.language as any,
         status: rest.status as any,
         created_at: rest.created_at.toISOString(),
@@ -1438,7 +1549,10 @@ class DatabaseService {
     if (data.username) user.username = data.username;
     if (data.phone_number) user.phone_number = data.phone_number;
     if (data.phone_country_code) user.phone_country_code = data.phone_country_code;
-    if (data.country) user.country = data.country;
+    if (data.country) {
+      user.country = resolvedCountry;
+      user.currency = resolvedCurrency;
+    }
     if (data.language) user.language = data.language;
     if (data.profile_picture !== undefined) user.profile_picture = data.profile_picture;
     this.saveLocalStore();

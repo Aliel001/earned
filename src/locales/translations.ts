@@ -8,10 +8,10 @@ export const SUPPORTED_LANGUAGES: { code: Language; name: string; nativeName: st
 ];
 
 export const COUNTRY_CODES = [
-  { code: '+257', country: 'Burundi', currency: '', flag: '🇧🇮' },
   { code: '+250', country: 'Rwanda', currency: 'RWF', flag: '🇷🇼' },
-  { code: '+256', country: 'Uganda', currency: 'UGX', flag: '🇺🇬' },
+  { code: '+257', country: 'Burundi', currency: 'BIF', flag: '🇧🇮' },
   { code: '+254', country: 'Kenya', currency: 'KES', flag: '🇰🇪' },
+  { code: '+256', country: 'Uganda', currency: 'UGX', flag: '🇺🇬' },
   { code: '+255', country: 'Tanzania', currency: 'TZS', flag: '🇹🇿' },
   { code: '+243', country: 'DR Congo', currency: 'CDF', flag: '🇨🇩' },
 ];

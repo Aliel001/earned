@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { COUNTRY_CODES, SUPPORTED_LANGUAGES, t } from '../locales/translations.js';
 import { Language } from '../types.js';
 import { X, Lock, Phone, User, Globe, Gift, ShieldAlert, Sparkles, CheckCircle2, Mail } from 'lucide-react';
-import { getCurrencyForCountry } from '../utils/currency.js';
+import { getCurrencyForCountry, SUPPORTED_COUNTRIES } from '../utils/currency.js';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,7 +18,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
   // Form states
   const [username, setUsername] = useState(initialMode === 'admin' ? 'admin' : '');
   const [email, setEmail] = useState('');
-  const [countryCode, setCountryCode] = useState('+257');
+  const [selectedCountry, setSelectedCountry] = useState<string>('RW');
+  const [countryCode, setCountryCode] = useState('+250');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -106,6 +107,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
         const res = await register({
           username: username.trim(),
           email: email.trim(),
+          country: selectedCountry,
           phone_country_code: countryCode,
           phone_number: phoneNumber.trim(),
           password,
@@ -133,7 +135,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
     }
   };
 
-  const regCurrency = getCurrencyForCountry(undefined, countryCode);
+  const currentCountryConfig =
+    SUPPORTED_COUNTRIES.find((c) => c.code === selectedCountry) ||
+    SUPPORTED_COUNTRIES.find((c) => c.phoneCode === countryCode) ||
+    SUPPORTED_COUNTRIES[0];
+  const regCurrency = currentCountryConfig.currency;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-2xl animate-fade-in overflow-y-auto">
@@ -248,6 +254,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
 
           {mode === 'register' && (
             <>
+              {/* Country Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span className="flex items-center space-x-1.5">
+                    <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Igihugu (Country)</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Ifaranga: {currentCountryConfig.currency} ({currentCountryConfig.currencyName})
+                  </span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedCountry}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedCountry(val);
+                      const matching = SUPPORTED_COUNTRIES.find((c) => c.code === val);
+                      if (matching) {
+                        setCountryCode(matching.phoneCode);
+                      }
+                    }}
+                    className="w-full bg-slate-950/90 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-bold appearance-none cursor-pointer"
+                  >
+                    {SUPPORTED_COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code} className="bg-slate-900 text-white">
+                        {c.flag} {c.name} ({c.currency})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">
+                    ▼
+                  </div>
+                </div>
+              </div>
+
               {/* Username */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">{t('username', language)}</label>
@@ -290,12 +332,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
                   <div className="col-span-5 relative">
                     <select
                       value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 appearance-none font-semibold"
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        setCountryCode(code);
+                        const match = SUPPORTED_COUNTRIES.find((c) => c.phoneCode === code);
+                        if (match) setSelectedCountry(match.code);
+                      }}
+                      className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 appearance-none font-semibold cursor-pointer"
                     >
-                      {COUNTRY_CODES.map((c) => (
-                        <option key={c.code} value={c.code} className="bg-slate-900 text-white">
-                          {c.flag} {c.country} ({c.code})
+                      {SUPPORTED_COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.phoneCode} className="bg-slate-900 text-white">
+                          {c.flag} {c.name} ({c.phoneCode})
                         </option>
                       ))}
                     </select>
@@ -307,7 +354,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
                       required
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="69 11 22 33"
+                      placeholder={currentCountryConfig.phonePlaceholder}
                       className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-10 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                     />
                   </div>

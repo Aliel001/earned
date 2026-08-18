@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { WithdrawRequest, WithdrawStatus } from '../../types.js';
 import { adminApi } from '../../services/api.js';
+import { getCountryFlag, getCountryName, getCountryCode } from '../../utils/currency.js';
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -127,6 +128,8 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
             <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider font-extrabold border-b border-slate-200 dark:border-white/10">
               <tr>
                 <th className="py-3.5 px-4">User</th>
+                <th className="py-3.5 px-4">Country</th>
+                <th className="py-3.5 px-4">Currency</th>
                 <th className="py-3.5 px-4">Amount</th>
                 <th className="py-3.5 px-4">Payment Account</th>
                 <th className="py-3.5 px-4">Status</th>
@@ -137,22 +140,32 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
             <tbody className="divide-y divide-white/5">
               {filteredWithdraws.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500 font-bold">
+                  <td colSpan={8} className="py-8 text-center text-slate-500 font-bold">
                     No withdrawal requests found matching your filter.
                   </td>
                 </tr>
               ) : (
                 filteredWithdraws.map((w) => (
                   <tr key={w.id} className="hover:bg-white/5 transition">
-                    <td className="py-3.5 px-4 font-bold text-white">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                       @{w.username || w.user_id}
                     </td>
 
-                    <td className="py-3.5 px-4 font-black text-rose-400">
-                      {w.amount.toLocaleString()}
+                    <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-white">
+                      {getCountryFlag(w.country, w.phone_number)} {getCountryName(w.country, w.phone_number)}
                     </td>
 
-                    <td className="py-3.5 px-4 font-mono text-slate-200">
+                    <td className="py-3.5 px-4">
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {w.currency || 'RWF'}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-black text-rose-600 dark:text-rose-400">
+                      {w.amount.toLocaleString()} <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">{w.currency || 'RWF'}</span>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-200">
                       {w.payment_account}
                     </td>
 
@@ -224,8 +237,18 @@ export const AdminWithdrawalsManagement: React.FC<AdminWithdrawalsManagementProp
                 <span className="font-bold text-white">@{selectedWithdraw.username}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-slate-400">Country:</span>
+                <span className="font-bold text-slate-200">
+                  {getCountryFlag(selectedWithdraw.country, selectedWithdraw.phone_number)} {getCountryName(selectedWithdraw.country, selectedWithdraw.phone_number)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Currency:</span>
+                <span className="font-black text-emerald-400">{selectedWithdraw.currency || 'RWF'}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-400">Amount:</span>
-                <span className="font-black text-rose-400">{selectedWithdraw.amount.toLocaleString()}</span>
+                <span className="font-black text-rose-400">{selectedWithdraw.amount.toLocaleString()} {selectedWithdraw.currency || 'RWF'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Payment Account:</span>

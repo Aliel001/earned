@@ -21,6 +21,7 @@ export interface User {
   status: UserStatus;
   profile_picture?: string;
   country?: string;
+  currency?: string;
   role?: 'user' | 'admin';
   created_at: string;
   updated_at?: string;
@@ -58,6 +59,8 @@ export interface WithdrawRequest {
   id: string;
   user_id: string;
   username?: string;
+  country?: string;
+  currency?: string;
   phone_number?: string;
   amount: number;
   payment_account: string;

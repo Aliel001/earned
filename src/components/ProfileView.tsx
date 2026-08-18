@@ -5,6 +5,13 @@ import { Language } from '../types.js';
 import { authApi, userApi } from '../services/api.js';
 import { compressImage } from '../utils/imageUtils.js';
 import {
+  SUPPORTED_COUNTRIES,
+  getUserCurrency,
+  getCountryFlag,
+  getCountryName,
+  getCountryCode,
+} from '../utils/currency.js';
+import {
   User as UserIcon,
   Phone,
   Globe,
@@ -30,7 +37,7 @@ export const ProfileView: React.FC = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [editUsername, setEditUsername] = useState(user?.username || '');
   const [editPhone, setEditPhone] = useState(user?.phone_number || '');
-  const [editCountry, setEditCountry] = useState(user?.country || 'Burundi');
+  const [editCountry, setEditCountry] = useState(getCountryCode(user?.country, user?.phone_country_code));
   const [profilePicUrl, setProfilePicUrl] = useState(user?.profile_picture || '');
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -171,6 +178,10 @@ export const ProfileView: React.FC = () => {
               <span>
                 {user.phone_country_code} {user.phone_number}
               </span>
+              <span className="mx-1 text-slate-400">•</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                {getCountryFlag(user.country, user.phone_country_code)} {getCountryName(user.country, user.phone_country_code)} ({user.currency || getUserCurrency(user)})
+              </span>
             </p>
             {role === 'admin' && (
               <span className="mt-1 inline-block bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/40 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">
@@ -185,7 +196,7 @@ export const ProfileView: React.FC = () => {
             setEditingProfile(!editingProfile);
             setEditUsername(user.username);
             setEditPhone(user.phone_number);
-            setEditCountry(user.country || 'Burundi');
+            setEditCountry(getCountryCode(user.country, user.phone_country_code));
             setProfilePicUrl(user.profile_picture || '');
           }}
           className="w-full bg-slate-100 dark:bg-slate-950/80 hover:bg-slate-200 dark:hover:bg-slate-950 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 p-3 rounded-2xl text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center space-x-2 transition"
@@ -276,15 +287,14 @@ export const ProfileView: React.FC = () => {
                 <select
                   value={editCountry}
                   onChange={(e) => setEditCountry(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 focus:border-emerald-500 rounded-xl p-2.5 text-white font-bold"
+                  className="w-full bg-slate-950 border border-white/10 focus:border-emerald-500 rounded-xl p-2.5 text-white font-bold cursor-pointer"
                   required
                 >
-                  <option value="Rwanda">🇷🇼 Rwanda</option>
-                  <option value="Burundi">🇧🇮 Burundi</option>
-                  <option value="Uganda">🇺🇬 Uganda</option>
-                  <option value="Kenya">🇰🇪 Kenya</option>
-                  <option value="Tanzania">🇹🇿 Tanzania</option>
-                  <option value="DR Congo">🇨🇩 DR Congo</option>
+                  {SUPPORTED_COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.name} ({c.currency})
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

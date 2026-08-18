@@ -95,11 +95,12 @@ export const authApi = {
   register: (data: {
     username: string;
     email?: string;
+    country?: string;
     phone_country_code: string;
     phone_number: string;
     password: string;
     language: string;
-  }) => request<{ success: boolean; message: string }>('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  }) => request<{ success: boolean; message: string; user?: User }>('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
 
   login: (data: { username: string; password: string }) =>
     request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify(data) }),
@@ -177,7 +178,7 @@ export const adminApi = {
     }),
   updateUser: (
     id: string,
-    data: { username?: string; phone_country_code?: string; phone_number?: string; status?: UserStatus }
+    data: { username?: string; phone_country_code?: string; phone_number?: string; country?: string; status?: UserStatus }
   ) =>
     request<{ success: boolean; user: User }>(`/api/admin/users/${id}`, {
       method: 'PUT',

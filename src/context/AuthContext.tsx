@@ -14,11 +14,12 @@ interface AuthContextType {
   register: (data: {
     username: string;
     email?: string;
+    country?: string;
     phone_country_code: string;
     phone_number: string;
     password: string;
     language: string;
-  }) => Promise<{ success: boolean; message: string }>;
+  }) => Promise<{ success: boolean; message: string; user?: User }>;
   adminLogin: (username?: string, password?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -144,6 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = useCallback(async (data: {
     username: string;
+    email?: string;
+    country?: string;
     phone_country_code: string;
     phone_number: string;
     password: string;
