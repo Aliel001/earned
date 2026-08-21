@@ -29,7 +29,7 @@ import {
 } from '../utils/currency.js';
 
 export const PendingApprovalView: React.FC = () => {
-  const { user, language, refreshUser, logout } = useAuth();
+  const { user, language, refreshUser, logout, registrationBonus } = useAuth();
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export const PendingApprovalView: React.FC = () => {
             {isSuspended && <ShieldAlert className="w-10 h-10 text-orange-500" />}
           </div>
           <span className="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 font-black text-xs px-2.5 py-0.5 rounded-full border-2 border-white dark:border-slate-950 shadow-lg flex items-center space-x-1">
-            <span>15K</span>
+            <span>{registrationBonus >= 1000 ? `${Math.round(registrationBonus / 1000)}K` : registrationBonus.toLocaleString()}</span>
             <span className="text-[10px] uppercase">{userCurrency}</span>
           </span>
         </div>
@@ -115,7 +115,7 @@ export const PendingApprovalView: React.FC = () => {
           </div>
 
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            {isPending && t('registration_pending_title', language)}
+            {isPending && t('registration_pending_title', language, { currency: userCurrency, bonus: registrationBonus })}
             {isRejected && 'Konte Yawe Yanzwe (Account Rejected)'}
             {isSuspended && 'Konte Yawe Irahagaritswe (Account Suspended)'}
           </h1>
@@ -135,14 +135,14 @@ export const PendingApprovalView: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-300 font-black text-sm">
               <Gift className="w-5 h-5 text-emerald-500 fill-emerald-500/20 shrink-0" />
-              <span>{t('welcome_bonus_badge', language, userCurrency)} ({userCurrency})</span>
+              <span>{t('welcome_bonus_badge', language, { currency: userCurrency, bonus: registrationBonus })} ({userCurrency})</span>
             </div>
             <span className="bg-emerald-500 text-slate-950 font-black text-xs px-2.5 py-0.5 rounded-full shadow-sm">
-              +15,000 {userCurrency}
+              +{registrationBonus.toLocaleString()} {userCurrency}
             </span>
           </div>
           <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-            Agashimwe kawe k'ikaze k'amafaranga <strong>15,000 {userCurrency}</strong> kamaze kubikwa mu gasanduku/gapuri kawe. Uzatangira kuyakoresha no kuyabikuza ukimara kwemerwa n'Ubuyobozi (Admin).
+            Agashimwe kawe k'ikaze k'amafaranga <strong>{registrationBonus.toLocaleString()} {userCurrency}</strong> kamaze kubikwa mu gasanduku/gapuri kawe. Uzatangira kuyakoresha no kuyabikuza ukimara kwemerwa n'Ubuyobozi (Admin).
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export const PendingApprovalView: React.FC = () => {
               <span>{t('notice_pending_approval', language)}</span>
             </div>
             <p className="text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
-              {t('notice_pending_desc', language)}
+              {t('notice_pending_desc', language, { currency: userCurrency, bonus: registrationBonus })}
             </p>
           </div>
         )}

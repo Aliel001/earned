@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { Language, User } from '../types.js';
-import { authApi, getAuthToken, setAuthToken, userApi } from '../services/api.js';
+import { GeneralSettings, Language, User } from '../types.js';
+import { authApi, generalSettingsApi, getAuthToken, setAuthToken, userApi } from '../services/api.js';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +10,9 @@ interface AuthContextType {
   darkMode: boolean;
   setDarkMode: (dark: boolean) => void;
   isLoading: boolean;
+  generalSettings: GeneralSettings | null;
+  registrationBonus: number;
+  refreshSettings: () => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   register: (data: {
     username: string;
@@ -37,6 +40,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return localStorage.getItem('twigamart_dark') === 'true';
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettings | null>(null);
+
+  const refreshSettings = useCallback(async () => {
+    try {
+      const res = await generalSettingsApi.getSettings();
+      if (res) {
+        setGeneralSettings(res);
+      }
+    } catch {
+      // silent fallback
+    }
+  }, []);
+
+  const registrationBonus = useMemo(() => {
+    if (generalSettings && typeof generalSettings.registration_bonus === 'number') {
+      return generalSettings.registration_bonus;
+    }
+    return 15000;
+  }, [generalSettings]);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
@@ -92,9 +114,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
+    refreshSettings();
     refreshUser();
-    // Real-time polling to auto-update user status when admin approves
+    // Real-time polling to auto-update user status and settings
     const interval = setInterval(() => {
+      refreshSettings();
       const token = getAuthToken();
       if (token) {
         userApi
@@ -126,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [refreshUser]);
+  }, [refreshUser, refreshSettings]);
 
   const login = useCallback(async (username: string, password: string) => {
     setIsLoading(true);
@@ -188,6 +212,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       darkMode,
       setDarkMode,
       isLoading,
+      generalSettings,
+      registrationBonus,
+      refreshSettings,
       login,
       register,
       adminLogin,
@@ -202,6 +229,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       darkMode,
       setDarkMode,
       isLoading,
+      generalSettings,
+      registrationBonus,
+      refreshSettings,
       login,
       register,
       adminLogin,

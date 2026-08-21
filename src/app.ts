@@ -611,22 +611,10 @@ app.put('/api/user/profile', authenticateToken, requireApprovedUser, async (req:
 app.get('/api/general-settings', async (req: Request, res: Response) => {
   try {
     const settings = await db.getGeneralSettings();
-    res.json(settings || {
-      registration_bonus: 15000,
-      like_reward: 1000,
-      min_withdraw_amount: 5000,
-      enabled_languages: ['rn', 'rw', 'en', 'fr'],
-      maintenance_mode: false,
-    });
+    res.json(settings);
   } catch (err: any) {
     console.error('[API Error] /api/general-settings:', err);
-    res.json({
-      registration_bonus: 15000,
-      like_reward: 1000,
-      min_withdraw_amount: 5000,
-      enabled_languages: ['rn', 'rw', 'en', 'fr'],
-      maintenance_mode: false,
-    });
+    res.status(500).json({ error: 'Failed to load general settings' });
   }
 });
 

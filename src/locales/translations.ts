@@ -35,7 +35,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Injira nka Admin',
     admin_login_desc: 'Shyiramo inyandiko y\'ibanga ya Admin',
     back_to_user_login: 'Subira ku kwinjira kwasanzwe',
-    welcome_bonus_badge: 'Bonus y\'Ikaze: 15,000',
+    welcome_bonus_badge: 'Bonus y\'Ikaze: {bonus}',
     username: 'Izina ryo kwinjiraho',
     phone_number: 'Numero za telefoni',
     password: 'Inyandiko y\'ibanga',
@@ -45,7 +45,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Ufise konte? Injira',
     no_account_yet: 'Nta konte ufise? Izangishe',
     registration_pending_title: 'Konte Yawe Irarindiriye Kwemerwa',
-    registration_pending_desc: 'Murakoze kwirangisha kuri TwigaMart! Bonus y\'ikaze ya 15,000 yabitswe mu gapuri kawe. Ubuyobozi buriko burasuzuma konte yawe. Uzoyikoresha uheza kwemerwa.',
+    registration_pending_desc: 'Murakoze kwirangisha kuri TwigaMart! Bonus y\'ikaze ya {bonus} {currency} yabitswe mu gapuri kawe. Ubuyobozi buriko burasuzuma konte yawe. Uzoyikoresha uheza kwemerwa.',
     account_rejected: 'Konte Yawe Yanzwe',
     account_suspended: 'Konte Yawe Irahagaritswe',
     notice_pending_approval: 'ITANGAZO: Konte Irindiriye Kwemerwa',
@@ -61,7 +61,7 @@ export const translations: Record<Language, Record<string, string>> = {
     payout_guide_desc: 'Iyo konte yawe imaze kwemerwa, amafaranga yose ukorera uzajya uyabikuza kuri telefone yawe (Mobile Money / Lumicash / Ecocash) guhera ku 5,000 {currency}.',
     admin_instructions_title: 'Amabwiriza y\'Ubuyobozi (Admin Instructions)',
     step_1_title: '1. Kwiyandikisha Kwakozwe Neza',
-    step_1_desc: 'Winjiye agashimwe k\'ikaze ka 15,000 {currency} kari mu gapuri kawe.',
+    step_1_desc: 'Winjiye agashimwe k\'ikaze ka {bonus} {currency} kari mu gapuri kawe.',
     step_2_title: '2. Kwemeza Konte (Account Activation)',
     step_2_desc: 'Kanda Pay Now ukoresheje USSD cyangwa wandikire Admin kuri WhatsApp uhehereze izina ryawe kugira ngo bakwemeze ako kanya.',
     step_3_title: '3. Gukorera Amafaranga ku Mafoto',
@@ -172,7 +172,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Injira nka Admin',
     admin_login_desc: 'Shyiramo ijambo ry\'ibanga rya Admin',
     back_to_user_login: 'Subira ku kwinjira kwasanzwe',
-    welcome_bonus_badge: 'Bonus y\'Ikaze: 15,000',
+    welcome_bonus_badge: 'Bonus y\'Ikaze: {bonus}',
     username: 'Izina ryo kwinjiraho',
     phone_number: 'Numero za terefoni',
     password: 'Ijambo ry\'ibanga',
@@ -182,7 +182,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Ufite konte? Injira',
     no_account_yet: 'Nta konte ufite? Iyandikishe',
     registration_pending_title: 'Konte Yawe Irategereje Kwemerwa',
-    registration_pending_desc: 'Murakoze kwiyandikisha kuri TwigaMart! Bonus y\'ikaze ya 15,000 yabitswe mu gasanduku kawe. Ubuyobozi buri gusuzuma konte yawe. Uzayikoresha uheza kwemerwa.',
+    registration_pending_desc: 'Murakoze kwiyandikisha kuri TwigaMart! Bonus y\'ikaze ya {bonus} {currency} yabitswe mu gasanduku kawe. Ubuyobozi buri gusuzuma konte yawe. Uzayikoresha uheza kwemerwa.',
     account_rejected: 'Konte Yawe Yanzwe',
     account_suspended: 'Konte Yawe Irahagaritswe',
     notice_pending_approval: 'ITANGAZO: Konte Irategereje Kwemerwa',
@@ -198,7 +198,7 @@ export const translations: Record<Language, Record<string, string>> = {
     payout_guide_desc: 'Iyo konte yawe imaze kwemerwa, amafaranga yose ukorera uzajya uyabikuza kuri telefone yawe (Mobile Money / Lumicash / Ecocash) guhera ku 5,000 {currency}.',
     admin_instructions_title: 'Amabwiriza y\'Ubuyobozi (Admin Instructions)',
     step_1_title: '1. Kwiyandikisha Byarangiye',
-    step_1_desc: 'Winjiye agashimwe k\'ikaze ka 15,000 {currency} kari mu gasanduku kawe.',
+    step_1_desc: 'Winjiye agashimwe k\'ikaze ka {bonus} {currency} kari mu gasanduku kawe.',
     step_2_title: '2. Kwemeza Konte (Account Activation)',
     step_2_desc: 'Kanda Pay Now ukoresheje USSD cyangwa wandikire Admin kuri WhatsApp uhehereze izina ryawe kugira ngo bakwemeze ako kanya.',
     step_3_title: '3. Gukorera Amafaranga ku Mafoto',
@@ -309,7 +309,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Admin Login',
     admin_login_desc: 'Enter Admin password to log in',
     back_to_user_login: 'Back to User Login',
-    welcome_bonus_badge: 'Welcome Bonus: 15,000',
+    welcome_bonus_badge: 'Welcome Bonus: {bonus}',
     username: 'Username',
     phone_number: 'Phone Number',
     password: 'Password',
@@ -319,7 +319,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Already have an account? Log In',
     no_account_yet: "Don't have an account? Register",
     registration_pending_title: 'Account Pending Approval',
-    registration_pending_desc: 'Thank you for registering on TwigaMart! Your 15,000 welcome bonus is credited. An administrator is reviewing your account.',
+    registration_pending_desc: 'Thank you for registering on TwigaMart! Your {bonus} {currency} welcome bonus is credited. An administrator is reviewing your account.',
     account_rejected: 'Account Rejected',
     account_suspended: 'Account Suspended',
     notice_pending_approval: 'NOTICE: Account Pending Approval',
@@ -335,7 +335,7 @@ export const translations: Record<Language, Record<string, string>> = {
     payout_guide_desc: 'Once approved, all your earnings can be withdrawn directly to your mobile phone (Mobile Money / Lumicash / Ecocash) from a minimum of 5,000 {currency}.',
     admin_instructions_title: 'Admin Instructions',
     step_1_title: '1. Registration Completed',
-    step_1_desc: 'Your 15,000 {currency} welcome bonus has been safely added to your wallet balance.',
+    step_1_desc: 'Your {bonus} {currency} welcome bonus has been safely added to your wallet balance.',
     step_2_title: '2. Account Activation & Admin Approval',
     step_2_desc: 'Click Pay Now via USSD or message Admin on WhatsApp with your username to activate your account instantly.',
     step_3_title: '3. Earn Rewards by Liking Photos',
@@ -446,7 +446,7 @@ export const translations: Record<Language, Record<string, string>> = {
     admin_login_title: 'Connexion Admin',
     admin_login_desc: 'Entrez le mot de passe Admin pour vous connecter',
     back_to_user_login: 'Retour à la connexion utilisateur',
-    welcome_bonus_badge: 'Bonus de bienvenue: 15,000',
+    welcome_bonus_badge: 'Bonus de bienvenue: {bonus}',
     username: "Nom d'utilisateur",
     phone_number: 'Numéro de téléphone',
     password: 'Mot de passe',
@@ -456,7 +456,7 @@ export const translations: Record<Language, Record<string, string>> = {
     already_have_account: 'Déjà un compte ? Se connecter',
     no_account_yet: "Pas encore de compte ? S'inscrire",
     registration_pending_title: 'Compte en attente d\'approbation',
-    registration_pending_desc: 'Merci de vous être inscrit sur TwigaMart ! Votre bonus de 15,000 a été crédité. Un administrateur examine votre compte.',
+    registration_pending_desc: 'Merci de vous être inscrit sur TwigaMart ! Votre bonus de {bonus} {currency} a été crédité. Un administrateur examine votre compte.',
     account_rejected: 'Compte rejeté',
     account_suspended: 'Compte suspendu',
     notice_pending_approval: 'AVIS: Compte en attente d\'approbation',
@@ -472,7 +472,7 @@ export const translations: Record<Language, Record<string, string>> = {
     payout_guide_desc: 'Une fois votre compte approuvé, vous pouvez retirer vos gains directement sur votre téléphone dès 5 000 {currency}.',
     admin_instructions_title: 'Instructions de l\'Administration',
     step_1_title: '1. Inscription réussie',
-    step_1_desc: 'Votre bonus de bienvenue de 15 000 {currency} a été crédité sur votre portefeuille.',
+    step_1_desc: 'Votre bonus de bienvenue de {bonus} {currency} a été crédité sur votre portefeuille.',
     step_2_title: '2. Activation du compte & Approbation Admin',
     step_2_desc: 'Cliquez sur Pay Now par USSD ou contactez l\'Admin sur WhatsApp avec votre nom d\'utilisateur pour une activation rapide.',
     step_3_title: '3. Gagnez de l\'argent en aimant les photos',
@@ -567,11 +567,35 @@ export const translations: Record<Language, Record<string, string>> = {
   },
 };
 
-export function t(key: string, lang: Language = 'rn', currency?: string): string {
+export function t(
+  key: string,
+  lang: Language = 'rn',
+  paramsOrCurrency?: string | { currency?: string; bonus?: string | number },
+  bonusValue?: string | number
+): string {
   const dict = translations[lang] || translations['rn'];
-  let text = dict[key] || translations['en'][key] || key;
-  if (currency) {
-    text = text.replace(/RWF/g, currency);
+  let text = dict[key] || translations['en']?.[key] || key;
+
+  let currencyStr = '';
+  let bonusStr = '';
+
+  if (typeof paramsOrCurrency === 'string') {
+    currencyStr = paramsOrCurrency;
+    if (bonusValue !== undefined) {
+      bonusStr = typeof bonusValue === 'number' ? bonusValue.toLocaleString() : String(bonusValue);
+    }
+  } else if (paramsOrCurrency && typeof paramsOrCurrency === 'object') {
+    if (paramsOrCurrency.currency) currencyStr = paramsOrCurrency.currency;
+    if (paramsOrCurrency.bonus !== undefined) {
+      bonusStr = typeof paramsOrCurrency.bonus === 'number' ? paramsOrCurrency.bonus.toLocaleString() : String(paramsOrCurrency.bonus);
+    }
+  }
+
+  if (currencyStr) {
+    text = text.replace(/RWF/g, currencyStr).replace(/\{currency\}/g, currencyStr);
+  }
+  if (bonusStr) {
+    text = text.replace(/\{bonus\}/g, bonusStr);
   }
   return text;
 }

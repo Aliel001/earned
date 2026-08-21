@@ -78,7 +78,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
     },
     {
       title: 'Registration Bonus',
-      value: `${(stats.registration_bonus || 15000).toLocaleString()}`,
+      value: `${(stats.registration_bonus ?? 0).toLocaleString()}`,
       subtext: 'Welcome bonus per new user',
       icon: Gift,
       color: 'from-teal-500 to-emerald-600',

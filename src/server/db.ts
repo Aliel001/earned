@@ -392,8 +392,11 @@ class DatabaseService {
       data.phone_country_code
     );
 
+    const genSettings = await this.getGeneralSettings();
+    const bonusAmount = Number(genSettings?.registration_bonus) || 0;
+
     if (isPostgresConfigured && prismaInstance) {
-      console.log(`[PostgreSQL Write] Creating User @${data.username} (${resolvedCountry} -> ${resolvedCurrency}) in Neon database...`);
+      console.log(`[PostgreSQL Write] Creating User @${data.username} (${resolvedCountry} -> ${resolvedCurrency}) in Neon database with bonus ${bonusAmount}...`);
       const createdUser = await prismaInstance.user.create({
         data: {
           username: data.username,
@@ -406,14 +409,14 @@ class DatabaseService {
           status: userStatus as any,
           wallet: {
             create: {
-              balance: 15000.0,
+              balance: bonusAmount,
               currency: resolvedCurrency,
             },
           },
           notifications: {
             create: {
               title: "Bonus y'Ikaze (Welcome Bonus)",
-              message: `Urakoze kwirangisha kuri TwigaMart! Bonus ya 15,000 ${resolvedCurrency} yongewe mu gapuri kawe. Konte yawe irindiriye kwemerwa n'ubuyobozi.`,
+              message: `Urakoze kwirangisha kuri TwigaMart! Bonus ya ${bonusAmount.toLocaleString()} ${resolvedCurrency} yongewe mu gapuri kawe. Konte yawe irindiriye kwemerwa n'ubuyobozi.`,
               read: false,
             },
           },
@@ -455,9 +458,17 @@ class DatabaseService {
     this.localStore.wallets.unshift({
       id: `w_${Date.now()}`,
       user_id: id,
-      balance: 15000.0,
+      balance: bonusAmount,
       currency: resolvedCurrency,
       updated_at: new Date().toISOString(),
+    });
+    this.localStore.notifications.unshift({
+      id: `notif_${Date.now()}`,
+      user_id: id,
+      title: "Bonus y'Ikaze (Welcome Bonus)",
+      message: `Urakoze kwirangisha kuri TwigaMart! Bonus ya ${bonusAmount.toLocaleString()} ${resolvedCurrency} yongewe mu gapuri kawe. Konte yawe irindiriye kwemerwa n'ubuyobozi.`,
+      read: false,
+      created_at: new Date().toISOString(),
     });
     this.saveLocalStore();
     return user;
@@ -723,6 +734,9 @@ class DatabaseService {
   // --- WALLET ---
 
   async getWalletByUserId(userId: string) {
+    const genSettings = await this.getGeneralSettings();
+    const bonusAmount = Number(genSettings?.registration_bonus) || 0;
+
     if (isPostgresConfigured && prismaInstance) {
       let wallet = await prismaInstance.wallet.findUnique({ where: { user_id: userId } });
       const dbUser = await prismaInstance.user.findUnique({ where: { id: userId } });
@@ -735,7 +749,7 @@ class DatabaseService {
           where: { user_id: userId },
           create: {
             user_id: userId,
-            balance: 15000.0,
+            balance: bonusAmount,
             currency: userCurrency,
           },
           update: {},
@@ -766,7 +780,7 @@ class DatabaseService {
       wallet = {
         id: `w_${Date.now()}`,
         user_id: userId,
-        balance: 15000.0,
+        balance: bonusAmount,
         currency: userCurrency,
         updated_at: new Date().toISOString(),
       };
@@ -1087,9 +1101,11 @@ class DatabaseService {
       const wallet = await this.getWalletByUserId(userId);
       const userCurrency = dbUser.currency || wallet.currency || 'RWF';
       const rewardAmount = dbImage.reward || 1000;
+      const genSettings = await this.getGeneralSettings();
+      const bonusAmount = Number(genSettings?.registration_bonus) || 0;
       const updatedWallet = await prismaInstance.wallet.upsert({
         where: { user_id: userId },
-        create: { user_id: userId, balance: 15000.0 + rewardAmount, currency: userCurrency },
+        create: { user_id: userId, balance: bonusAmount + rewardAmount, currency: userCurrency },
         update: { balance: { increment: rewardAmount } },
       });
 

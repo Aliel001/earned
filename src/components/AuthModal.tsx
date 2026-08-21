@@ -12,7 +12,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'login', onClose }) => {
-  const { login, register, adminLogin, language, setLanguage } = useAuth();
+  const { login, register, adminLogin, language, setLanguage, registrationBonus } = useAuth();
   const [mode, setMode] = useState<'login' | 'register' | 'admin'>(initialMode);
 
   // Form states
@@ -177,11 +177,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
             <Gift className="w-8 h-8 text-emerald-400 flex-shrink-0 animate-bounce" />
             <div>
               <p className="text-xs font-bold text-white flex items-center space-x-1">
-                <span>Bonus y'Ikaze: 15,000 {regCurrency}</span>
+                <span>Bonus y'Ikaze: {registrationBonus.toLocaleString()} {regCurrency}</span>
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </p>
               <p className="text-[11px] text-slate-300 leading-tight mt-0.5">
-                Rungika form ugire 15,000 {regCurrency} ya bonus mu gapuri kawe uwo mwanya!
+                Rungika form ugire {registrationBonus.toLocaleString()} {regCurrency} ya bonus mu gapuri kawe uwo mwanya!
               </p>
             </div>
           </div>
@@ -429,7 +429,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
             ) : mode === 'admin' ? (
               <span>Injira nka Admin (Admin Login)</span>
             ) : mode === 'register' ? (
-              <span>{t('register', language, regCurrency)} (+15,000 {regCurrency})</span>
+              <span>{t('register', language, regCurrency)} (+{registrationBonus.toLocaleString()} {regCurrency})</span>
             ) : (
               <span>{t('login', language)}</span>
             )}
