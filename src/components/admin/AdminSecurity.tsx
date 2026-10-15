@@ -1,16 +1,33 @@
 import React, { useState } from 'react';
 import { adminApi } from '../../services/api.js';
-import { ShieldCheck, Lock, User, KeyRound, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.js';
+import {
+  ShieldCheck,
+  Lock,
+  User,
+  KeyRound,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Database,
+} from 'lucide-react';
 
 interface AdminSecurityProps {
   onRefresh?: () => void;
 }
 
 export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
-  const [currentUsername, setCurrentUsername] = useState('admin');
+  const { user, setAuthToken, setUser } = useAuth();
+  const [currentUsername, setCurrentUsername] = useState(user?.username || 'admin');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -50,7 +67,21 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
         newUsername: currentUsername.trim() || undefined,
       });
 
-      setSuccess(res.message || 'Inyandiko y\'ibanga n\'izina bya Admin byahinduwe neza!');
+      if (res.token) {
+        setAuthToken(res.token);
+        if (setUser) {
+          setUser((prev) =>
+            prev
+              ? { ...prev, username: res.username || currentUsername.trim() }
+              : prev
+          );
+        }
+      }
+
+      setSuccess(
+        res.message ||
+          'Inyandiko y\'ibanga nshya yabitswe neza muri Database! Iyasanzwemo yasimbuwe burundu.'
+      );
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -72,12 +103,18 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
-            <span className="text-[10px] font-black tracking-widest uppercase text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-              Admin Access & Security
-            </span>
-            <h2 className="text-xl font-black text-white mt-1">Umutekano wa Admin (Admin Security)</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black tracking-widest uppercase text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                Admin Access & Security
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-full border border-indigo-500/30">
+                <Database className="w-2.5 h-2.5" />
+                PostgreSQL Database
+              </span>
+            </div>
+            <h2 className="text-xl font-black text-white mt-1">Guhindura Password ya Admin muri Database</h2>
             <p className="text-xs text-slate-300 mt-0.5">
-              Hindura inyandiko y'ibanga (Password) cyangwa izina ry'admin hano kugira ngo urinde konte y'ubuyobozi.
+              Iyo uhinduye inyandiko y'ibanga hano, ihita isimbura iyari muri Database ako kanya. Nta muntu ushobora kongera gukoresha password ya kera.
             </p>
           </div>
         </div>
@@ -86,9 +123,14 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
       {/* Security Form Card */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-xl space-y-6 transition-colors duration-300">
         {success && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 rounded-2xl text-xs font-bold flex items-center space-x-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-            <span>{success}</span>
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 rounded-2xl text-xs font-bold space-y-1">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+              <span className="font-extrabold text-sm">{success}</span>
+            </div>
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 pl-7">
+              Password nshya yasimbuye iyari isanzwe muri Database (PostgreSQL). Uzakoresha iyi nshya mu kwinjira ubutaha.
+            </p>
           </div>
         )}
 
@@ -116,7 +158,7 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
               />
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
-              Izina ukoresha uyingira nka Admin (urashobora korigumana nka 'admin').
+              Izina ukoresha winjira nka Admin (urashobora korigumana nka 'admin').
             </p>
           </div>
 
@@ -128,13 +170,20 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
               <input
-                type="password"
+                type={showCurrent ? 'text' : 'password'}
                 required
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-3 text-sm text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none"
               />
+              <button
+                type="button"
+                onClick={() => setShowCurrent(!showCurrent)}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
@@ -146,15 +195,24 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
             <div className="relative">
               <KeyRound className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
               <input
-                type="password"
+                type={showNew ? 'text' : 'password'}
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-3 text-sm text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none"
               />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Nyamuneka ikore igire nibura inyuguti 6.</p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Shyiramo password nshya y'ubuyobozi (nibura inyuguti 6).
+            </p>
           </div>
 
           {/* Confirm New Password */}
@@ -165,13 +223,20 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
             <div className="relative">
               <KeyRound className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
               <input
-                type="password"
+                type={showConfirm ? 'text' : 'password'}
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-3 text-sm text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
@@ -179,14 +244,14 @@ export const AdminSecurity: React.FC<AdminSecurityProps> = ({ onRefresh }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 transition active:scale-98 flex items-center justify-center space-x-2 disabled:opacity-50 text-sm mt-4"
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 transition active:scale-98 flex items-center justify-center space-x-2 disabled:opacity-50 text-sm mt-4 cursor-pointer"
           >
             {loading ? (
               <RefreshCw className="w-5 h-5 animate-spin" />
             ) : (
               <>
                 <ShieldCheck className="w-4 h-4" />
-                <span>Bika Impinduka za Security (Save Password)</span>
+                <span>Hindura Password muri Database (Save to Database)</span>
               </>
             )}
           </button>

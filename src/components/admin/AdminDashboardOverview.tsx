@@ -16,9 +16,10 @@ import {
 interface AdminDashboardOverviewProps {
   stats: AdminStats | null;
   loading: boolean;
+  onNavigateTab?: (tab: string) => void;
 }
 
-export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ stats, loading }) => {
+export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ stats, loading, onNavigateTab }) => {
   if (!stats) {
     return (
       <div className="flex items-center justify-center p-12 text-slate-400 font-bold text-xs">
@@ -104,6 +105,37 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({ 
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Quick Security & Database Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 border border-slate-800 text-white rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center space-x-3.5">
+          <div className="p-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl shrink-0">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black text-white">
+                Umutekano n'Inyandiko y'ibanga ya Admin
+              </h3>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                PostgreSQL
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Urashobora guhindura password yawe n'izina bya Admin igihe cyose ubishakiye, igahita isimbura iyari muri Database.
+            </p>
+          </div>
+        </div>
+        {onNavigateTab && (
+          <button
+            onClick={() => onNavigateTab('security')}
+            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow transition shrink-0 self-start sm:self-auto cursor-pointer flex items-center space-x-1.5 active:scale-95"
+          >
+            <span>Hindura Password</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((card, idx) => {
           const Icon = card.icon;

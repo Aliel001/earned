@@ -191,8 +191,8 @@ export const AdminAppControl: React.FC<AdminAppControlProps> = ({ images, onRefr
     setSecurityError('');
     setSecuritySuccess('');
 
-    if (newAdminPassword.length < 6) {
-      setSecurityError('Inyandiko y\'ibanga inshya igomba kuba ifite inyuguti nibura 6 (Min 6 characters)');
+    if (newAdminPassword.length < 4) {
+      setSecurityError('Inyandiko y\'ibanga inshya igomba kuba ifite inyuguti nibura 4 (Min 4 characters)');
       return;
     }
 

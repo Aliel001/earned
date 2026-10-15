@@ -223,7 +223,7 @@ export const adminApi = {
       body: JSON.stringify(data),
     }),
   changeAdminPassword: (data: { currentPassword: string; newPassword: string; newUsername?: string }) =>
-    request<{ success: boolean; message: string; username?: string }>('/api/admin/change-password', {
+    request<{ success: boolean; message: string; username?: string; token?: string }>('/api/admin/change-password', {
       method: 'POST',
       body: JSON.stringify(data),
     }),

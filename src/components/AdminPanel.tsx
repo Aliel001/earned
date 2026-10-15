@@ -31,6 +31,7 @@ import {
   Database,
   CheckCircle2,
   AlertCircle,
+  KeyRound,
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
@@ -342,6 +343,19 @@ export const AdminPanel: React.FC = () => {
 
           <div className="flex items-center space-x-2">
             <button
+              onClick={() => setActiveAdminTab('security')}
+              className={`p-2 bg-white dark:bg-slate-900 border rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm active:scale-95 cursor-pointer ${
+                activeAdminTab === 'security'
+                  ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                  : 'border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-emerald-500/40'
+              }`}
+              title="Hindura Password ya Admin muri Database"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="hidden sm:inline">Password</span>
+            </button>
+
+            <button
               onClick={handleManualRefresh}
               disabled={isAnyFetching}
               className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:border-emerald-500/40 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm active:scale-95 cursor-pointer"
@@ -355,7 +369,11 @@ export const AdminPanel: React.FC = () => {
 
         {/* View Routing */}
         {activeAdminTab === 'dashboard' && (
-          <AdminDashboardOverview stats={stats} loading={isInitialLoading} />
+          <AdminDashboardOverview
+            stats={stats}
+            loading={isInitialLoading}
+            onNavigateTab={setActiveAdminTab}
+          />
         )}
 
         {activeAdminTab === 'users' && (

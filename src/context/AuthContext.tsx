@@ -23,7 +23,7 @@ interface AuthContextType {
     password: string;
     language: string;
   }) => Promise<{ success: boolean; message: string; user?: User }>;
-  adminLogin: (username?: string, password?: string) => Promise<void>;
+  adminLogin: (username: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -185,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const adminLogin = useCallback(async (username = 'admin', password = 'admin123') => {
+  const adminLogin = useCallback(async (username: string, password: string) => {
     setIsLoading(true);
     try {
       const res = await authApi.adminLogin({ username, password });

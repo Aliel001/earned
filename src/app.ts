@@ -5,7 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import compression from 'compression';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { db, dbDiagnostics, isPostgresConfigured, getPrismaClient } from './server/db.js';
+import { db, dbDiagnostics, isPostgresConfigured, getPrismaClient, verifyAdminPassword, DEFAULT_ADMIN_HASH } from './server/db.js';
 import { UserStatus } from './types.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'twigamart_jwt_secret_key_2026_super_secure';
@@ -248,40 +248,11 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       admin = {
         id: 'admin_1',
         username: 'admin',
-        password_hash: bcrypt.hashSync('admin123', 10),
+        password_hash: DEFAULT_ADMIN_HASH,
       };
     }
     if (admin) {
-      let isMatch = false;
-      try {
-        if (admin.password_hash && (await bcrypt.compare(rawPassword, admin.password_hash))) isMatch = true;
-      } catch (e) {}
-      try {
-        if (!isMatch && admin.password_hash && (await bcrypt.compare(cleanPassword, admin.password_hash))) isMatch = true;
-      } catch (e) {}
-
-      const pLower = cleanPassword.toLowerCase();
-      if (
-        !isMatch &&
-        (admin.password_hash === rawPassword ||
-          admin.password_hash === cleanPassword ||
-          pLower === 'admin123' ||
-          pLower === 'admin' ||
-          pLower === 'admin@123' ||
-          pLower === '123456' ||
-          pLower === 'password' ||
-          pLower === 'password123' ||
-          pLower === 'twiga123' ||
-          pLower === 'twigamart' ||
-          pLower === 'superadmin')
-      ) {
-        isMatch = true;
-        if (cleanPassword.length >= 4) {
-          bcrypt.hash(cleanPassword, 10).then((newHash) => {
-            db.updateAdminPassword(admin.id, newHash).catch(() => {});
-          });
-        }
-      }
+      const isMatch = await verifyAdminPassword(cleanPassword, admin.password_hash);
 
       if (isMatch) {
         const token = jwt.sign(
@@ -295,6 +266,9 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
           user: { id: admin.id, username: admin.username, status: 'approved', role: 'admin' },
           role: 'admin',
         });
+      } else if (cleanUsername === 'admin' || cleanUsername === 'administrator' || cleanUsername === admin.username.toLowerCase()) {
+        console.warn(`[Login Failed] Invalid password attempt for admin account @${admin.username}`);
+        return res.status(401).json({ error: 'Inyandiko y\'ibanga ya Admin si yo (Invalid admin password).' });
       }
     }
 
@@ -382,50 +356,20 @@ app.post('/api/auth/admin-login', async (req: Request, res: Response) => {
       admin = {
         id: 'admin_1',
         username: 'admin',
-        password_hash: bcrypt.hashSync('admin123', 10),
+        password_hash: DEFAULT_ADMIN_HASH,
       };
     }
 
     if (!admin) {
-      console.warn(`[Admin Login Failed] Admin username '${cleanUsername}' not found`);
-      return res.status(400).json({ error: 'Konte y\'Ubuyobozi ntizwi (Admin account not found)' });
+      console.warn(`[Admin Login Failed] Admin account not found for '${cleanUsername}'`);
+      return res.status(401).json({ error: 'Konte y\'Ubuyobozi ntizwi cyangwa inyandiko y\'ibanga si yo (Admin credentials invalid)' });
     }
 
-    let isMatch = false;
-    try {
-      if (admin.password_hash && (await bcrypt.compare(rawPassword, admin.password_hash))) isMatch = true;
-    } catch (e) {}
-    try {
-      if (!isMatch && admin.password_hash && (await bcrypt.compare(cleanPassword, admin.password_hash))) isMatch = true;
-    } catch (e) {}
-
-    const pLower = cleanPassword.toLowerCase();
-    if (
-      !isMatch &&
-      (admin.password_hash === rawPassword ||
-        admin.password_hash === cleanPassword ||
-        pLower === 'admin123' ||
-        pLower === 'admin' ||
-        pLower === 'admin@123' ||
-        pLower === '123456' ||
-        pLower === 'password' ||
-        pLower === 'password123' ||
-        pLower === 'twiga123' ||
-        pLower === 'twigamart' ||
-        pLower === 'superadmin' ||
-        ((cleanUsername === 'admin' || cleanUsername === 'administrator') && cleanPassword.length >= 1))
-    ) {
-      isMatch = true;
-      if (cleanPassword.length >= 4) {
-        bcrypt.hash(cleanPassword, 10).then((newHash) => {
-          db.updateAdminPassword(admin.id, newHash).catch(() => {});
-        });
-      }
-    }
+    const isMatch = await verifyAdminPassword(cleanPassword, admin.password_hash);
 
     if (!isMatch) {
-      console.warn(`[Admin Login Failed] Password incorrect for admin '${cleanUsername}'`);
-      return res.status(400).json({ error: 'Inyandiko y\'ibanga ya Admin si yo (Invalid admin password)' });
+      console.warn(`[Admin Login Failed] Incorrect password entered for admin '${cleanUsername}'`);
+      return res.status(401).json({ error: 'Inyandiko y\'ibanga ya Admin si yo (Invalid admin password).' });
     }
 
     const token = jwt.sign(
@@ -434,7 +378,7 @@ app.post('/api/auth/admin-login', async (req: Request, res: Response) => {
       { expiresIn: '30d' }
     );
 
-    console.log(`[Admin Login Success] @${admin.username}`);
+    console.log(`[Admin Login Success] Logged in admin: @${admin.username}`);
 
     res.json({
       token,
@@ -452,56 +396,55 @@ app.post('/api/admin/change-password', authenticateToken, requireAdmin, async (r
   try {
     const { currentPassword, newPassword, newUsername } = req.body;
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Uzuzaza inyandiko y\'ibanga ya none n\'inshya (Fill current and new password)' });
+      return res.status(400).json({ error: 'Uzuza inyandiko y\'ibanga ya none n\'inshya (Fill current and new password)' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Inyandiko y\'ibanga inshya igomba kuba ifite inyuguti nibura 6 (Min 6 chars)' });
+    if (String(newPassword).trim().length < 4) {
+      return res.status(400).json({ error: 'Inyandiko y\'ibanga inshya igomba kuba ifite inyuguti nibura 4 (Password must be at least 4 characters)' });
     }
 
-    const adminId = req.user!.id;
-    const admin = (await db.getAdminById(adminId)) || (await db.getAdminByUsername(req.user!.username));
+    const adminId = req.user?.id || 'admin_1';
+    const reqUsername = req.user?.username || 'admin';
+    let admin = (await db.getAdminById(adminId)) || (await db.getAdminByUsername(reqUsername)) || (await db.getAdminByUsername('admin'));
 
     if (!admin) {
-      return res.status(404).json({ error: 'Admin account not found' });
+      admin = {
+        id: adminId,
+        username: reqUsername,
+        password_hash: DEFAULT_ADMIN_HASH,
+      };
     }
 
-    let isMatch = false;
-    try {
-      if (admin.password_hash && (await bcrypt.compare(currentPassword, admin.password_hash))) isMatch = true;
-    } catch (e) {}
-    try {
-      if (!isMatch && admin.password_hash && (await bcrypt.compare(currentPassword.trim(), admin.password_hash))) isMatch = true;
-    } catch (e) {}
+    const rawCurrentPassword = String(currentPassword);
+    const cleanCurrentPassword = rawCurrentPassword.trim();
 
-    const curLower = currentPassword.trim().toLowerCase();
-    if (
-      !isMatch &&
-      (curLower === 'admin123' ||
-        curLower === 'admin' ||
-        curLower === 'admin@123' ||
-        curLower === '123456' ||
-        curLower === 'password' ||
-        curLower === 'password123' ||
-        curLower === 'twiga123' ||
-        curLower === 'twigamart' ||
-        curLower.length >= 1)
-    ) {
-      isMatch = true;
-    }
+    const isMatch =
+      (await verifyAdminPassword(cleanCurrentPassword, admin.password_hash)) ||
+      (await verifyAdminPassword(rawCurrentPassword, admin.password_hash));
 
     if (!isMatch) {
+      console.warn(`[Admin Change Password Failed] Current password incorrect for admin id ${admin.id}`);
       return res.status(400).json({ error: 'Inyandiko y\'ibanga ya none si yo (Current password incorrect)' });
     }
 
-    const newHash = await bcrypt.hash(newPassword, 10);
-    const cleanUsername = newUsername ? newUsername.trim() : undefined;
+    const newHash = await bcrypt.hash(String(newPassword).trim(), 10);
+    const cleanUsername = newUsername ? String(newUsername).trim() : undefined;
     await db.updateAdminPassword(admin.id, newHash, cleanUsername);
+
+    const updatedUsername = cleanUsername || admin.username;
+    const newToken = jwt.sign(
+      { id: admin.id, username: updatedUsername, role: 'admin' },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    console.log(`[Admin Security] Successfully changed password for admin ${admin.id} (${updatedUsername}) and replaced in database`);
 
     res.json({
       success: true,
-      message: 'Inyandiko y\'ibanga ya Admin yahinduwe neza! (Admin password updated successfully)',
-      username: cleanUsername || admin.username,
+      message: 'Inyandiko y\'ibanga ya Admin yahinduwe neza muri Database! (Admin password updated successfully in database)',
+      username: updatedUsername,
+      token: newToken,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -516,23 +459,34 @@ app.post('/api/auth/change-password', authenticateToken, async (req: AuthRequest
       return res.status(400).json({ error: 'Uzuzaza amagambo yose y\'ibanga (Fill both current and new password)' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Ijambo rishya ry\'ibanga rigomba kuba nibura rifite inyuguti 6 (Min 6 chars)' });
+    if (newPassword.length < 4) {
+      return res.status(400).json({ error: 'Ijambo rishya ry\'ibanga rigomba kuba nibura rifite inyuguti 4 (Min 4 chars)' });
     }
 
     if (req.user?.role === 'admin') {
-      const admin = (await db.getAdminById(req.user.id)) || (await db.getAdminByUsername(req.user.username));
-      if (!admin) return res.status(404).json({ error: 'Admin not found' });
+      const adminId = req.user?.id || 'admin_1';
+      const reqUsername = req.user?.username || 'admin';
+      let admin = (await db.getAdminById(adminId)) || (await db.getAdminByUsername(reqUsername)) || (await db.getAdminByUsername('admin'));
+      if (!admin) {
+        admin = {
+          id: adminId,
+          username: reqUsername,
+          password_hash: DEFAULT_ADMIN_HASH,
+        };
+      }
 
+      const rawCurrentPassword = String(currentPassword);
+      const cleanCurrentPassword = rawCurrentPassword.trim();
       const isMatch =
-        (await bcrypt.compare(currentPassword, admin.password_hash)) ||
-        (await bcrypt.compare(currentPassword.trim(), admin.password_hash));
+        (await verifyAdminPassword(cleanCurrentPassword, admin.password_hash)) ||
+        (await verifyAdminPassword(rawCurrentPassword, admin.password_hash));
 
       if (!isMatch) {
+        console.warn(`[Admin Change Password Failed] Current password incorrect for admin id ${admin.id}`);
         return res.status(400).json({ error: 'Inyandiko y\'ibanga ya none si yo (Current password incorrect)' });
       }
 
-      const newHash = await bcrypt.hash(newPassword, 10);
+      const newHash = await bcrypt.hash(String(newPassword).trim(), 10);
       await db.updateAdminPassword(admin.id, newHash);
       return res.json({ success: true, message: 'Inyandiko y\'ibanga ya Admin yahinduwe neza!' });
     }
